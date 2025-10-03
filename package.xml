@@ -4,22 +4,33 @@
   <name>laser_gazebo_resources</name>
   <version>1.0.0</version>
   <description>This package contains the Gazebo files for the simulation environment.</description>
-  
+
   <maintainer email="thulioguilherme@hotmail.com">thulioamorim</maintainer>
-  
+
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <build_depend>rosidl_default_generators</build_depend>
+  <build_depend>ament_cmake</build_depend>
+
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
   <depend>rclcpp</depend>
   <depend>tf2_ros</depend>
   <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
   <depend>gazebo_dev</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
     <build_type>ament_cmake</build_type>
+    <gazebo_ros gazebo_model_path="models" />
+    <gazebo_ros gazebo_resource_path="." />
   </export>
-  
+
 </package>
