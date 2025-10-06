@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(laser_gazebo_resources)
 
-# --- Políticas do CMake ---
-cmake_policy(SET CMP0148 OLD)
-cmake_policy(SET CMP0167 OLD)
-cmake_policy(SET CMP0144 OLD)
-
 # --- 1. Padrão C++ e Opções de Compilação ---
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
