@@ -18,6 +18,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # --- 3. Gerar Mensagens e Serviços ---
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -26,8 +27,32 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES std_msgs
 )
 
+set(PROTOBUF_IMPORT_DIRS "")
+foreach(ITR ${GAZEBO_INCLUDE_DIRS})
+  if(ITR MATCHES ".*gazebo-[0-9.]+$")
+    set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
+  endif()
+endforeach()
+
+find_package(Protobuf REQUIRED)
+pkg_check_modules(PROTOBUF protobuf)
+
+set(GAZEBO_MSG_INCLUDE_DIRS)
+foreach(ITR ${GAZEBO_INCLUDE_DIRS})
+  if(ITR MATCHES ".*gazebo-[0-9.]+$")
+    set(GAZEBO_MSG_INCLUDE_DIRS "${ITR}/gazebo/msgs")
+  endif()
+endforeach()
+
 # --- 4. Definir Bibliotecas, Executáveis e Dependências ---
-include_directories(include)
+include_directories(
+  include
+  ${Boost_INCLUDE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${GAZEBO_INCLUDE_DIRS}
+  ${GAZEBO_MSG_INCLUDE_DIRS}
+  ${GAZEBO_LIBRARY_DIRS}
+  )
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
@@ -62,8 +87,6 @@ target_link_libraries(LivoxPluginGazebo
     ${cpp_typesupport_target}
     ${GAZEBO_LIBRARIES}
 )
-
-# -- Executável: csv_main --
 add_executable(csv_main src/csv_main.cpp)
 ament_target_dependencies(csv_main rclcpp)
 target_include_directories(csv_main PUBLIC
@@ -71,11 +94,37 @@ target_include_directories(csv_main PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
+set(proto_msg
+  proto_msg/CommandMotorSpeed.proto
+  proto_msg/Float.proto
+  proto_msg/MotorSpeed.proto
+  proto_msg/Wind.proto
+)
+
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_msg})
+add_library(proto_msg SHARED ${PROTO_SRCS})
+
+# Adicionar build do motor model
+add_library(MotorPluginGazebo SHARED
+    src/gazebo_motor_model.cpp
+)
+target_include_directories(MotorPluginGazebo PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(MotorPluginGazebo
+    ${Boost_LIBRARIES}
+    ${GAZEBO_LIBRARIES}
+    proto_msg
+)
+
 # --- 5. Instalação ---
 # CORREÇÃO 2: Simplificado o destino da instalação para 'lib'
 install(TARGETS
   link_static_tf_publisher
   LivoxPluginGazebo
+  MotorPluginGazebo
   csv_main
   DESTINATION lib
 )
