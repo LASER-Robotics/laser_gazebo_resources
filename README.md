@@ -43,11 +43,3 @@ These plugins are exported as shared libraries and can be referenced in SDF/URDF
 ### Worlds (`/worlds`)
 -   **`custom_empty.world`**: A basic world with a physics setup optimized for UAV flight (proper gravity, sun, and ground plane).
 -   **`forest.world`**: A generated environment populated with `tree_simple` models to test obstacle avoidance and mapping algorithms in cluttered spaces.
-
-## Integration
-
-To use these resources in another package, ensure you add `laser_gazebo_resources` as a dependency in your `package.xml` and source the workspace so Gazebo can find the plugins and models paths.
-
-```xml
-<depend>laser_gazebo_resources</depend>
-````
