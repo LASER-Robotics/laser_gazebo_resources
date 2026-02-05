@@ -596,6 +596,12 @@ void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo& /*_info*/) {
   last_time_ = current_time;
 
   auto motor_speed_estimation                     = laser_msgs::msg::MotorSpeedStamped{};
+
+  gazebo::common::Time sim_time = world_->SimTime();
+  motor_speed_estimation.header.stamp.sec             = sim_time.sec;
+  motor_speed_estimation.header.stamp.nanosec             = sim_time.nsec;
+
+  motor_speed_estimation.header.frame_id          = "";
   motor_speed_estimation.data.unit_of_measurement = "rad/s";
   for (int i = 0; i < rotors_joints_.size(); i++) {
     motor_speed_estimation.data.data.push_back(std::abs(rotors_joints_[i]->GetVelocity(0)));
