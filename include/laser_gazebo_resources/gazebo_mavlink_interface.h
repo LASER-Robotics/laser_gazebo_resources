@@ -175,6 +175,7 @@ private:
   bool send_odometry_{false};
 
   std::vector<physics::JointPtr> joints_;
+  std::vector<physics::JointPtr> rotors_joints_;
   std::vector<common::PID> pids_;
   std::vector<double> joint_max_errors_;
 

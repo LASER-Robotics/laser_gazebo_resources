@@ -18,11 +18,9 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(gazebo_ros REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(laser_msgs REQUIRED)
 find_package(MAVLink REQUIRED)
+find_package(Protobuf REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CustomMsg.msg"
@@ -31,21 +29,24 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 set(PROTOBUF_IMPORT_DIRS "")
+set(GAZEBO_MSG_INCLUDE_DIRS "")
+
 foreach(ITR ${GAZEBO_INCLUDE_DIRS})
-  if(ITR MATCHES ".*gazebo-[0-9.]+$")
+  if(EXISTS "${ITR}/gazebo/msgs/proto")
     set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
-  endif()
-endforeach()
-
-find_package(Protobuf REQUIRED)
-pkg_check_modules(PROTOBUF protobuf)
-
-set(GAZEBO_MSG_INCLUDE_DIRS)
-foreach(ITR ${GAZEBO_INCLUDE_DIRS})
-  if(ITR MATCHES ".*gazebo-[0-9.]+$")
     set(GAZEBO_MSG_INCLUDE_DIRS "${ITR}/gazebo/msgs")
+    break()
   endif()
 endforeach()
+
+if(NOT PROTOBUF_IMPORT_DIRS)
+  set(PROTOBUF_IMPORT_DIRS "/usr/include/gazebo-11/gazebo/msgs/proto")
+  set(GAZEBO_MSG_INCLUDE_DIRS "/usr/include/gazebo-11/gazebo/msgs")
+endif()
+
+message(STATUS "Gazebo Proto Path: ${PROTOBUF_IMPORT_DIRS}")
+
+pkg_check_modules(PROTOBUF protobuf)
 
 include_directories(
   include
@@ -56,12 +57,33 @@ include_directories(
   ${GAZEBO_LIBRARY_DIRS}
   ${MAVLINK_INCLUDE_DIRS}
   ${MAVLINK_INCLUDE_DIRS}/mavlink/v2.0 
-  )
+)
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-# -- Plugin: link_static_tf_publisher --
+set(proto_msg_files
+  proto_msg/Airspeed.proto
+  proto_msg/OpticalFlow.proto
+  proto_msg/Odometry.proto
+  proto_msg/Range.proto
+  proto_msg/SITLGps.proto
+  proto_msg/IRLock.proto
+  proto_msg/TargetRelative.proto
+  proto_msg/Groundtruth.proto
+  proto_msg/MagneticField.proto
+  proto_msg/Pressure.proto
+  proto_msg/Imu.proto
+  proto_msg/CommandMotorSpeed.proto
+  proto_msg/Float.proto
+  proto_msg/MotorSpeed.proto
+  proto_msg/Wind.proto
+  proto_msg/Int32.proto
+)
+
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_msg_files})
+add_library(proto_msg SHARED ${PROTO_SRCS})
+
 add_library(link_static_tf_publisher SHARED
     plugins/link_static_tf_publisher.cpp
 )
@@ -73,7 +95,6 @@ target_include_directories(link_static_tf_publisher PUBLIC
 )
 target_link_libraries(link_static_tf_publisher ${GAZEBO_LIBRARIES})
 
-# -- Plugin: livox_points_plugin --
 add_library(LivoxPluginGazebo SHARED
     src/livox_points_plugin.cpp
     src/livox_ode_multiray_shape.cpp
@@ -90,33 +111,13 @@ target_link_libraries(LivoxPluginGazebo
     ${cpp_typesupport_target}
     ${GAZEBO_LIBRARIES}
 )
+
 add_executable(csv_main src/csv_main.cpp)
 ament_target_dependencies(csv_main rclcpp)
 target_include_directories(csv_main PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-
-set(proto_msg
-  proto_msg/Airspeed.proto
-  proto_msg/OpticalFlow.proto
-  proto_msg/Odometry.proto
-  proto_msg/Range.proto
-  proto_msg/SITLGps.proto
-  proto_msg/IRLock.proto
-  proto_msg/TargetRelative.proto
-  proto_msg/Groundtruth.proto
-  proto_msg/MagneticField.proto
-  proto_msg/Pressure.proto
-  proto_msg/Imu.proto
-  proto_msg/CommandMotorSpeed.proto
-  proto_msg/Float.proto
-  proto_msg/MotorSpeed.proto
-  proto_msg/Wind.proto
-)
-
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_msg})
-add_library(proto_msg SHARED ${PROTO_SRCS})
 
 add_library(MotorPluginGazebo SHARED
     src/gazebo_motor_model.cpp
@@ -150,15 +151,19 @@ target_link_libraries(MavlinkPluginGazebo
     proto_msg
 )
 
-# --- 5. Instalação ---
-# CORREÇÃO 2: Simplificado o destino da instalação para 'lib'
 install(TARGETS
+  proto_msg
   link_static_tf_publisher
   LivoxPluginGazebo
   MotorPluginGazebo
   MavlinkPluginGazebo
-  csv_main
-  DESTINATION lib
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(TARGETS csv_main
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY models worlds resources DESTINATION share/${PROJECT_NAME})
