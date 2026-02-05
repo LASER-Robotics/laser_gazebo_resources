@@ -14,6 +14,7 @@
   <build_depend>rosidl_default_generators</build_depend>
   <build_depend>ament_cmake</build_depend>
   <build_depend>protobuf-dev</build_depend>
+  <build_depend>mavlink</build_depend>
 
   <exec_depend>rosidl_default_runtime</exec_depend>
 
@@ -22,6 +23,8 @@
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>gazebo_dev</depend>
+  <depend>gazebo_ros</depend>
+  <depend>laser_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
