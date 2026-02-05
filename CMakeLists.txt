@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 project(laser_gazebo_resources)
 
-# --- 1. Padrão C++ e Opções de Compilação ---
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# --- 2. Encontrar Dependências ---
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 find_package(ament_cmake REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gazebo_ros REQUIRED)
@@ -18,9 +18,10 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(std_msgs REQUIRED)
+find_package(laser_msgs REQUIRED)
+find_package(MAVLink REQUIRED)
+find_package(Protobuf REQUIRED)
 
-# --- 3. Gerar Mensagens e Serviços ---
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CustomMsg.msg"
   "msg/CustomPoint.msg"
@@ -28,23 +29,25 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 set(PROTOBUF_IMPORT_DIRS "")
+set(GAZEBO_MSG_INCLUDE_DIRS "")
+
 foreach(ITR ${GAZEBO_INCLUDE_DIRS})
-  if(ITR MATCHES ".*gazebo-[0-9.]+$")
+  if(EXISTS "${ITR}/gazebo/msgs/proto")
     set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
+    set(GAZEBO_MSG_INCLUDE_DIRS "${ITR}/gazebo/msgs")
+    break()
   endif()
 endforeach()
 
-find_package(Protobuf REQUIRED)
+if(NOT PROTOBUF_IMPORT_DIRS)
+  set(PROTOBUF_IMPORT_DIRS "/usr/include/gazebo-11/gazebo/msgs/proto")
+  set(GAZEBO_MSG_INCLUDE_DIRS "/usr/include/gazebo-11/gazebo/msgs")
+endif()
+
+message(STATUS "Gazebo Proto Path: ${PROTOBUF_IMPORT_DIRS}")
+
 pkg_check_modules(PROTOBUF protobuf)
 
-set(GAZEBO_MSG_INCLUDE_DIRS)
-foreach(ITR ${GAZEBO_INCLUDE_DIRS})
-  if(ITR MATCHES ".*gazebo-[0-9.]+$")
-    set(GAZEBO_MSG_INCLUDE_DIRS "${ITR}/gazebo/msgs")
-  endif()
-endforeach()
-
-# --- 4. Definir Bibliotecas, Executáveis e Dependências ---
 include_directories(
   include
   ${Boost_INCLUDE_DIR}
@@ -52,12 +55,35 @@ include_directories(
   ${GAZEBO_INCLUDE_DIRS}
   ${GAZEBO_MSG_INCLUDE_DIRS}
   ${GAZEBO_LIBRARY_DIRS}
-  )
+  ${MAVLINK_INCLUDE_DIRS}
+  ${MAVLINK_INCLUDE_DIRS}/mavlink/v2.0 
+)
 
 rosidl_get_typesupport_target(cpp_typesupport_target
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-# -- Plugin: link_static_tf_publisher --
+set(proto_msg_files
+  proto_msg/Airspeed.proto
+  proto_msg/OpticalFlow.proto
+  proto_msg/Odometry.proto
+  proto_msg/Range.proto
+  proto_msg/SITLGps.proto
+  proto_msg/IRLock.proto
+  proto_msg/TargetRelative.proto
+  proto_msg/Groundtruth.proto
+  proto_msg/MagneticField.proto
+  proto_msg/Pressure.proto
+  proto_msg/Imu.proto
+  proto_msg/CommandMotorSpeed.proto
+  proto_msg/Float.proto
+  proto_msg/MotorSpeed.proto
+  proto_msg/Wind.proto
+  proto_msg/Int32.proto
+)
+
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_msg_files})
+add_library(proto_msg SHARED ${PROTO_SRCS})
+
 add_library(link_static_tf_publisher SHARED
     plugins/link_static_tf_publisher.cpp
 )
@@ -69,8 +95,6 @@ target_include_directories(link_static_tf_publisher PUBLIC
 )
 target_link_libraries(link_static_tf_publisher ${GAZEBO_LIBRARIES})
 
-# -- Plugin: livox_points_plugin --
-# CORREÇÃO 1: Renomeado o alvo para corresponder ao nome no arquivo de mundo
 add_library(LivoxPluginGazebo SHARED
     src/livox_points_plugin.cpp
     src/livox_ode_multiray_shape.cpp
@@ -87,6 +111,7 @@ target_link_libraries(LivoxPluginGazebo
     ${cpp_typesupport_target}
     ${GAZEBO_LIBRARIES}
 )
+
 add_executable(csv_main src/csv_main.cpp)
 ament_target_dependencies(csv_main rclcpp)
 target_include_directories(csv_main PUBLIC
@@ -94,17 +119,6 @@ target_include_directories(csv_main PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-set(proto_msg
-  proto_msg/CommandMotorSpeed.proto
-  proto_msg/Float.proto
-  proto_msg/MotorSpeed.proto
-  proto_msg/Wind.proto
-)
-
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_msg})
-add_library(proto_msg SHARED ${PROTO_SRCS})
-
-# Adicionar build do motor model
 add_library(MotorPluginGazebo SHARED
     src/gazebo_motor_model.cpp
 )
@@ -119,19 +133,41 @@ target_link_libraries(MotorPluginGazebo
     proto_msg
 )
 
-# --- 5. Instalação ---
-# CORREÇÃO 2: Simplificado o destino da instalação para 'lib'
+add_library(MavlinkPluginGazebo SHARED
+    src/gazebo_mavlink_interface.cpp src/mavlink_interface.cpp
+)
+target_include_directories(MavlinkPluginGazebo PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(MavlinkPluginGazebo
+  laser_msgs
+  rclcpp
+)
+target_link_libraries(MavlinkPluginGazebo
+    ${Boost_LIBRARIES}
+    ${GAZEBO_LIBRARIES}
+    proto_msg
+)
+
 install(TARGETS
+  proto_msg
   link_static_tf_publisher
   LivoxPluginGazebo
   MotorPluginGazebo
-  csv_main
-  DESTINATION lib
+  MavlinkPluginGazebo
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(TARGETS csv_main
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY models worlds resources DESTINATION share/${PROJECT_NAME})
 
-# --- 6. Testes ---
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
@@ -139,13 +175,11 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-# --- 7. Hooks de Ambiente ---
 ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/laser_gazebo_resources.dsv.in")
 
-# --- 8. Exportar Dependências e Registrar Pacote ---
 ament_export_dependencies(
   rosidl_default_runtime rclcpp pcl_conversions tf2 tf2_ros tf2_msgs
-  geometry_msgs std_msgs sensor_msgs
+  geometry_msgs std_msgs sensor_msgs laser_msgs gazebo_ros rclcpp
 )
 
 ament_package()

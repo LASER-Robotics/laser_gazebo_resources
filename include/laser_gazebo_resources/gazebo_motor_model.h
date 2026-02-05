@@ -38,7 +38,6 @@
 
 #include "common.h"
 
-
 namespace turning_direction {
 const static int CCW = 1;
 const static int CW = -1;
@@ -71,6 +70,7 @@ static constexpr double kDefaulMaxRotVelocity = 838.0;
 static constexpr double kDefaultRotorDragCoefficient = 1.0e-4;
 static constexpr double kDefaultRollingMomentCoefficient = 1.0e-6;
 static constexpr double kDefaultRotorVelocitySlowdownSim = 10.0;
+static constexpr double kMotorModel = 0.1;
 
 class GazeboMotorModel : public MotorModel, public ModelPlugin {
  public:
@@ -116,6 +116,8 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   double rolling_moment_coefficient_{kDefaultRollingMomentCoefficient};
   double rotor_drag_coefficient_{kDefaultRotorDragCoefficient};
   double rotor_velocity_slowdown_sim_{kDefaultRotorVelocitySlowdownSim};
+  double motor_quadratic_a_{kMotorModel};
+  double motor_quadratic_b_{-kMotorModel};
   double time_constant_down_{kDefaultTimeConstantDown};
   double time_constant_up_{kDefaultTimeConstantUp};
 
