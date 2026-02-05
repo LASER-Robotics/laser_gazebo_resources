@@ -280,7 +280,6 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
 #endif
   }
 #else
-  // ta certo pai
   auto ref_motor_thrust = pow((ref_motor_rot_vel - motor_quadratic_b_) / motor_quadratic_a_, 2);
   joint_->SetVelocity(0, turning_direction_ * (ref_motor_rot_vel > 0.001 ? sqrt(ref_motor_thrust / motor_constant_) : 0.0));
 #endif /* if 0 */
