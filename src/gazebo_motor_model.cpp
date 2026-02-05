@@ -134,6 +134,8 @@ void GazeboMotorModel::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
   getSdfParam<double>(_sdf, "motorQuadraticA", motor_quadratic_a_, motor_quadratic_a_);
   getSdfParam<double>(_sdf, "motorQuadraticB", motor_quadratic_b_, motor_quadratic_b_);
 
+  std::cout << "Load A Parameter for Quadratic Motor Model: " << motor_quadratic_a_ << std::endl;
+  std::cout << "Load B Parameter for Quadratic Motor Model: " << motor_quadratic_b_ << std::endl;
   /*
   std::cout << "Subscribing to: " << motor_test_sub_topic_ << std::endl;
   motor_sub_ = node_handle_->Subscribe<mav_msgs::msgs::MotorSpeed>("~/" + model_->GetName() + motor_test_sub_topic_, &GazeboMotorModel::testProto, this);
@@ -280,7 +282,7 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
 #else
   // ta certo pai
   auto ref_motor_thrust = pow((ref_motor_rot_vel - motor_quadratic_b_) / motor_quadratic_a_, 2);
-  joint_->SetVelocity(0, turning_direction_ * (ref_motor_thrust > 0.5 ? sqrt(ref_motor_thrust / motor_constant_) : 0.0));
+  joint_->SetVelocity(0, turning_direction_ * (ref_motor_rot_vel > 0.001 ? sqrt(ref_motor_thrust / motor_constant_) : 0.0));
 #endif /* if 0 */
 }
 
