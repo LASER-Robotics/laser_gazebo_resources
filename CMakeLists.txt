@@ -165,6 +165,8 @@ ament_target_dependencies(VelodynePluginGazebo
   gazebo_ros
   sensor_msgs
   tf2
+  tf2_ros
+  geometry_msgs
 )
 target_link_libraries(VelodynePluginGazebo
     ${GAZEBO_LIBRARIES}
