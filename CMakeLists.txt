@@ -133,20 +133,37 @@ target_link_libraries(MotorPluginGazebo
     proto_msg
 )
 
-add_library(MavlinkPluginGazebo SHARED
+add_library(Px4PluginGazebo SHARED
     src/gazebo_mavlink_interface.cpp src/mavlink_interface.cpp
 )
-target_include_directories(MavlinkPluginGazebo PUBLIC
+target_include_directories(Px4PluginGazebo PUBLIC
     ${GAZEBO_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(MavlinkPluginGazebo
+ament_target_dependencies(Px4PluginGazebo
   laser_msgs
   rclcpp
 )
-target_link_libraries(MavlinkPluginGazebo
+target_link_libraries(Px4PluginGazebo
     ${Boost_LIBRARIES}
+    ${GAZEBO_LIBRARIES}
+    proto_msg
+)
+
+add_library(ArdupilotPluginGazebo SHARED
+    src/ardupilot_plugin.cpp
+)
+target_include_directories(ArdupilotPluginGazebo PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+# ament_target_dependencies(ArdupilotPluginGazebo
+#   laser_msgs
+#   rclcpp
+# )
+target_link_libraries(ArdupilotPluginGazebo
     ${GAZEBO_LIBRARIES}
     proto_msg
 )
@@ -156,7 +173,8 @@ install(TARGETS
   link_static_tf_publisher
   LivoxPluginGazebo
   MotorPluginGazebo
-  MavlinkPluginGazebo
+  Px4PluginGazebo
+  ArdupilotPluginGazebo
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
