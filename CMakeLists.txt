@@ -151,12 +151,32 @@ target_link_libraries(MavlinkPluginGazebo
     proto_msg
 )
 
+add_library(VelodynePluginGazebo SHARED 
+    src/gazebo_ros_velodyne_laser.cpp
+)
+target_include_directories(VelodynePluginGazebo PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(VelodynePluginGazebo
+  rclcpp
+  gazebo_dev
+  gazebo_ros
+  sensor_msgs
+  tf2
+)
+target_link_libraries(VelodynePluginGazebo
+    ${GAZEBO_LIBRARIES}
+)
+
 install(TARGETS
   proto_msg
   link_static_tf_publisher
   LivoxPluginGazebo
   MotorPluginGazebo
   MavlinkPluginGazebo
+  VelodynePluginGazebo
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
