@@ -367,9 +367,9 @@ void GazeboRosVelodyneLaser::Load(sensors::SensorPtr _parent, sdf::ElementPtr _s
 
   if (!_sdf->HasElement("frameName")) {
     RCLCPP_INFO(ros_node_->get_logger(), "Velodyne laser plugin missing <frameName>, defaults to /world");
-    frame_name_ = "/velodyne";
+    sensor_frame_name_ = "/velodyne_sensor";
   } else {
-    frame_name_ = _sdf->GetElement("frameName")->Get<std::string>();
+    sensor_frame_name_ = _sdf->GetElement("frameName")->Get<std::string>();
   }
 
   if (!_sdf->HasElement("min_range")) {
@@ -436,7 +436,7 @@ void GazeboRosVelodyneLaser::OnScan(ConstLaserScanStampedPtr& _msg) {
   // Populate message fields
   const uint32_t                POINT_STEP = 32;
   sensor_msgs::msg::PointCloud2 msg;
-  msg.header.frame_id      = frame_name_;
+  msg.header.frame_id      = lidar_frame_name_;
   msg.header.stamp.sec     = _msg->time().sec();
   msg.header.stamp.nanosec = _msg->time().nsec();
   msg.fields.resize(5);
@@ -576,7 +576,7 @@ void GazeboRosVelodyneLaser::createStaticTransforms() {
   geometry_msgs::msg::TransformStamped sensor_to_fcu_static_tf;
   sensor_to_fcu_static_tf.header.stamp            = stamp;
   sensor_to_fcu_static_tf.header.frame_id         = robot_namespace_ + "/" + parent_frame_name_;
-  sensor_to_fcu_static_tf.child_frame_id          = frame_name_;
+  sensor_to_fcu_static_tf.child_frame_id          = sensor_frame_name_;
   sensor_to_fcu_static_tf.transform.translation.x = sensor_x_;
   sensor_to_fcu_static_tf.transform.translation.y = sensor_y_;
   sensor_to_fcu_static_tf.transform.translation.z = sensor_z_;
@@ -592,7 +592,7 @@ void GazeboRosVelodyneLaser::createStaticTransforms() {
   // Lidar to Sensor
   geometry_msgs::msg::TransformStamped lidar_to_sensor_static_tf;
   lidar_to_sensor_static_tf.header.stamp            = stamp;
-  lidar_to_sensor_static_tf.header.frame_id         = frame_name_;
+  lidar_to_sensor_static_tf.header.frame_id         = sensor_frame_name_;
   lidar_to_sensor_static_tf.child_frame_id          = lidar_frame_name_;
   lidar_to_sensor_static_tf.transform.translation.x = lidar_x_;
   lidar_to_sensor_static_tf.transform.translation.y = lidar_y_;
@@ -609,7 +609,7 @@ void GazeboRosVelodyneLaser::createStaticTransforms() {
   // IMU to Sensor
   geometry_msgs::msg::TransformStamped imu_to_sensor_static_tf;
   imu_to_sensor_static_tf.header.stamp            = stamp;
-  imu_to_sensor_static_tf.header.frame_id         = frame_name_;
+  imu_to_sensor_static_tf.header.frame_id         = sensor_frame_name_;
   imu_to_sensor_static_tf.child_frame_id          = imu_frame_name_;
   imu_to_sensor_static_tf.transform.translation.x = imu_x_;
   imu_to_sensor_static_tf.transform.translation.y = imu_y_;

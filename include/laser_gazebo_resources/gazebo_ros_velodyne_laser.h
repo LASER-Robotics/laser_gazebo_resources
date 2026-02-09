@@ -132,10 +132,6 @@ private:
 private:
   std::string topic_name_;
 
-  /// \brief frame transform name, should match link name
-private:
-  std::string frame_name_;
-
   /// \brief the intensity beneath which points will be filtered
 private:
   double min_intensity_;
@@ -187,6 +183,7 @@ private:
   void                                                   createStaticTransforms();
 
   // Sensor parameters
+  std::string sensor_frame_name_;
   float sensor_x_;
   float sensor_y_;
   float sensor_z_;
