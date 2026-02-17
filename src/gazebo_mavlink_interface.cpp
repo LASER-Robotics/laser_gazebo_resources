@@ -254,7 +254,7 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
           if (channel->HasElement("joint_name")) {
             std::string joint_name = channel->Get<std::string>("joint_name");
             joints_[index]         = model_->GetJoint(joint_name);
-            std::cout << "sim" << std::endl;
+            // std::cout << "sim" << std::endl;
           }
 
           // setup joint control pid to control joint
@@ -517,14 +517,52 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
 
   mavlink_interface_->Load();
 
-  node_                       = gazebo_ros::Node::Get(_sdf);
-  pub_motor_speed_estimation_ = node_->create_publisher<laser_msgs::msg::MotorSpeedStamped>("/" + namespace_str_ + "/hw_api/motor_speed_estimated", 1);
+  if (_sdf->HasElement("wave_model")){
+    wave_model_ = _sdf->Get<std::string>("wave_model");
+    physics::ModelPtr wave = world_->ModelByName(wave_model_);
+
+    if (wave == nullptr){ 
+    	gzwarn << "[gazebo_mavlink_interface] No wave model <" << wave_model_ <<  "> found in the world.\n";
+      has_water_ = false; 
+    }
+    else{
+    	gzwarn << "[gazebo_mavlink_interface] Wave model <" << wave_model_ <<  "> found in the world.\n";
+      has_water_ = true; 
+    }
+  }
+  else{
+    gzwarn << "[gazebo_mavlink_interface] Parameter <wave_model> not found.\n";
+    has_water_ = false; 
+  }
+
+  wave_params_ = nullptr;
+
+  if (_sdf->HasElement("base_to_wheel_offset")) {
+    base_to_wheel_offset_ = _sdf->GetElement("base_to_wheel_offset")->Get<float>();
+  }
+
+  if (_sdf->HasElement("water_level")) {
+    water_level_ = _sdf->GetElement("water_level")->Get<float>();
+  }
+
+  node_ = gazebo_ros::Node::Get(_sdf);
+  pub_left_front_ = node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_front_wheel_cmd", 1);
+  pub_left_rear_ = node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_rear_wheel_cmd", 1);
+  pub_right_front_ = node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_front_wheel_cmd", 1);
+  pub_right_rear_ = node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_rear_wheel_cmd", 1);
 }
 
 // This gets called by the world update start event.
 void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo& /*_info*/) {
 
   std::unique_lock<std::mutex> lock(imu_received_mutex_);
+
+  // If we haven't yet, retrieve the wave parameters from ocean model plugin.
+  if ((wave_params_ == nullptr) && (has_water_))
+  { 
+    wave_params_ = asv::WavefieldModelPlugin::GetWaveParams(
+      world_, wave_model_);
+  }
 
   if (imu_received_once_) {
     while (!imu_received_ && IsRunning()) {
@@ -573,8 +611,37 @@ void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo& /*_info*/) {
   }
 
   handle_actuator_controls();
+	
+	ignition::math::Pose3d pose;
+  ignition::math::Vector3d X;
 
-  handle_control(dt);
+	double simTime = current_time.Double();
+	double depth = 0.0;
+
+	pose = model_->WorldPose();
+
+	X.X() = pose.Pos().X();
+	X.Y() = pose.Pos().Y();
+
+	if (wave_params_ && has_water_)
+	{
+		depth = asv::WavefieldSampler::ComputeDepthDirectly(*wave_params_, X, simTime) + water_level_;
+	}
+
+  // std::cout << "[gazebo_mavlink_plugin]: model: " << model_->GetName() << std::endl;
+  // std::cout << "[gazebo_mavlink_plugin]: pose x: " << X.X() << std::endl;
+  // std::cout << "[gazebo_mavlink_plugin]: pose y: " << X.Y() << std::endl;
+  // std::cout << "[gazebo_mavlink_plugin]: pose z: " << pose.Pos().Z() << std::endl;
+  // std::cout << "[gazebo_mavlink_plugin]: depth: " << depth << std::endl;
+	
+	if(pose.Pos().Z() - base_to_wheel_offset_ >= depth)
+	{
+		// std::cout << "[gazebo_mavlink_plugin]: not on water" << std::endl << std::endl;
+	  on_water_ = false;
+  	handle_control(dt);
+	}
+	else 
+		on_water_ = true;
 
   if (received_first_actuator_) {
     mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
@@ -594,22 +661,6 @@ void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo& /*_info*/) {
   }
 
   last_time_ = current_time;
-
-  auto motor_speed_estimation = laser_msgs::msg::MotorSpeedStamped{};
-
-  gazebo::common::Time sim_time               = world_->SimTime();
-  motor_speed_estimation.header.stamp.sec     = sim_time.sec;
-  motor_speed_estimation.header.stamp.nanosec = sim_time.nsec;
-
-  motor_speed_estimation.header.frame_id          = "";
-  motor_speed_estimation.data.unit_of_measurement = "rad/s";
-  for (int i = 0; i < rotors_joints_.size(); i++) {
-    if (dt <= 0.004) {
-      motor_speed_estimation.data.data.push_back(std::abs(rotors_joints_[i]->GetVelocity(0)));
-    }
-  }
-
-  pub_motor_speed_estimation_->publish(motor_speed_estimation);
 }
 
 template <class T>
@@ -1136,6 +1187,27 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
   input_reference_.resize(n_out_max);
 
   Eigen::VectorXd actuator_controls = mavlink_interface_->GetActuatorControls();
+	
+	if(actuator_controls.size() > 0 && on_water_ && has_water_)
+	{
+		// std::cout << "actuator controls:" << std::endl;
+		thrust_msg_.data = actuator_controls[0];
+		// std::cout << "[0]: " << thrust_msg_.data << std::endl;
+		pub_left_front_->publish(thrust_msg_);
+
+		thrust_msg_.data = actuator_controls[1];
+		// std::cout << "[1]: " << thrust_msg_.data << std::endl;
+		pub_left_rear_->publish(thrust_msg_);
+
+		thrust_msg_.data = actuator_controls[2];
+		// std::cout << "[2]: " << thrust_msg_.data << std::endl;
+		pub_right_front_->publish(thrust_msg_);
+
+		thrust_msg_.data = actuator_controls[3];
+		// std::cout << "[3]: " << thrust_msg_.data << std::endl << std::endl;
+		pub_right_rear_->publish(thrust_msg_);
+	}
+
   if (actuator_controls.size() < n_out_max)
     return;  // TODO: Handle this properly
   for (int i = 0; i < input_reference_.size(); i++) {

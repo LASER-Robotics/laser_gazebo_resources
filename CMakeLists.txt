@@ -9,6 +9,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(ament_cmake REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gazebo_ros REQUIRED)
+find_package(laser_rahcm_simulation REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(tf2 REQUIRED)
@@ -18,7 +19,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(laser_msgs REQUIRED)
 find_package(MAVLink REQUIRED)
 find_package(Protobuf REQUIRED)
 
@@ -142,8 +142,9 @@ target_include_directories(MavlinkPluginGazebo PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 ament_target_dependencies(MavlinkPluginGazebo
-  laser_msgs
   rclcpp
+	std_msgs
+	laser_rahcm_simulation
 )
 target_link_libraries(MavlinkPluginGazebo
     ${Boost_LIBRARIES}
@@ -179,7 +180,7 @@ ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/laser_gazebo_reso
 
 ament_export_dependencies(
   rosidl_default_runtime rclcpp pcl_conversions tf2 tf2_ros tf2_msgs
-  geometry_msgs std_msgs sensor_msgs laser_msgs gazebo_ros rclcpp
+  geometry_msgs std_msgs sensor_msgs gazebo_ros rclcpp laser_rahcm_simulation
 )
 
 ament_package()

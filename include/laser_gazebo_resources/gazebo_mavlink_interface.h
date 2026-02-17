@@ -76,7 +76,11 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <gazebo_ros/node.hpp>
-#include <laser_msgs/msg/motor_speed_stamped.hpp> 
+#include <std_msgs/msg/float32.hpp>
+
+#include "laser_rahcm_simulation/Wavefield.hh"
+#include "laser_rahcm_simulation/WavefieldEntity.hh"
+#include "laser_rahcm_simulation/WavefieldModelPlugin.hh"
 
 //! Default distance sensor model joint naming
 static const std::regex kDefaultLidarModelNaming(".*(lidar|sf10a)(.*)");
@@ -150,7 +154,18 @@ protected:
 
 private:
   gazebo_ros::Node::SharedPtr node_;
-  rclcpp::Publisher<laser_msgs::msg::MotorSpeedStamped>::SharedPtr pub_motor_speed_estimation_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_left_front_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_left_rear_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_right_front_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_right_rear_;
+	std_msgs::msg::Float32 thrust_msg_;
+
+  std::shared_ptr<const asv::WaveParameters> wave_params_;
+  std::string wave_model_;
+  float water_level_{0.0};
+  float base_to_wheel_offset_{0.5};
+	bool on_water_{false};
+	bool has_water_{false};
 
   bool received_first_actuator_{false};
   Eigen::VectorXd input_reference_;
