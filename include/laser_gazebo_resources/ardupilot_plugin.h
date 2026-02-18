@@ -22,11 +22,15 @@
 
 #include <laser_gazebo_resources/common.h>
 #include <CommandMotorSpeed.pb.h>
+#include <Imu.pb.h>
 
 namespace gazebo
 {
 
+typedef const boost::shared_ptr<const sensor_msgs::msgs::Imu> ImuPtr;
+
 static const std::string kDefaultMotorVelocityReferencePubTopic = "/gazebo/command/motor_speed";
+static const std::string kDefaultImuTopic = "/imu";
 
 // Forward declare private data class
 class ArduPilotSocketPrivate;
@@ -109,9 +113,16 @@ private:
   ignition::math::Pose3d gazeboXYZToNED;
 
 private:
-  std::string motor_velocity_reference_pub_topic_{kDefaultMotorVelocityReferencePubTopic};
+  void ImuCallback(ImuPtr& imu_msg);
 
-  transport::NodePtr node_handle_;
+private:
+  std::string     motor_velocity_reference_pub_topic_{kDefaultMotorVelocityReferencePubTopic};
+  std::string imu_sub_topic_{kDefaultImuTopic};
+  Eigen::Vector3d imu_accel;
+  Eigen::Vector3d imu_gyro;
+  bool imu_received = false;
+
+  transport::NodePtr      node_handle_;
   transport::PublisherPtr motor_velocity_reference_pub_;
 };
 }  // namespace gazebo

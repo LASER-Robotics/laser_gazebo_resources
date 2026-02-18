@@ -477,21 +477,21 @@ void ArduPilotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
       control.useForce = controlSDF->Get<bool>("useForce");
     }
 
-    if (controlSDF->HasElement("jointName")) {
-      control.jointName = controlSDF->Get<std::string>("jointName");
-    } else {
-      gzerr << "[" << this->dataPtr->modelName << "] "
-            << "Please specify a jointName,"
-            << " where the control channel is attached.\n";
-    }
+    /* if (controlSDF->HasElement("jointName")) { */
+    /*   control.jointName = controlSDF->Get<std::string>("jointName"); */
+    /* } else { */
+    /*   gzerr << "[" << this->dataPtr->modelName << "] " */
+    /*         << "Please specify a jointName," */
+    /*         << " where the control channel is attached.\n"; */
+    /* } */
 
     // Get the pointer to the joint.
-    control.joint = _model->GetJoint(control.jointName);
-    if (control.joint == nullptr) {
-      gzerr << "[" << this->dataPtr->modelName << "] "
-            << "Couldn't find specified joint [" << control.jointName << "]. This plugin will not run.\n";
-      return;
-    }
+    /* control.joint = _model->GetJoint(control.jointName); */
+    /* if (control.joint == nullptr) { */
+    /*   gzerr << "[" << this->dataPtr->modelName << "] " */
+    /*         << "Couldn't find specified joint [" << control.jointName << "]. This plugin will not run.\n"; */
+    /*   return; */
+    /* } */
 
     if (controlSDF->HasElement("multiplier")) {
       // overwrite turningDirection, deprecated.
@@ -601,52 +601,56 @@ void ArduPilotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
   }
 
   // Get sensors
-  std::string              imuName       = _sdf->Get("imuName", static_cast<std::string>("imu_sensor")).first;
-  std::vector<std::string> imuScopedName = this->dataPtr->model->SensorScopedName(imuName);
+  /* std::string              imuName       = _sdf->Get("imuName", static_cast<std::string>("imu_sensor")).first; */
+  /* std::vector<std::string> imuScopedName = this->dataPtr->model->SensorScopedName(imuName); */
 
-  if (imuScopedName.size() > 1) {
-    gzwarn << "[" << this->dataPtr->modelName << "] "
-           << "multiple names match [" << imuName << "] using first found"
-           << " name.\n";
-    for (unsigned k = 0; k < imuScopedName.size(); ++k) {
-      gzwarn << "  sensor " << k << " [" << imuScopedName[k] << "].\n";
-    }
-  }
+  /* if (imuScopedName.size() > 1) { */
+  /*   gzwarn << "[" << this->dataPtr->modelName << "] " */
+  /*          << "multiple names match [" << imuName << "] using first found" */
+  /*          << " name.\n"; */
+  /*   for (unsigned k = 0; k < imuScopedName.size(); ++k) { */
+  /*     gzwarn << "  sensor " << k << " [" << imuScopedName[k] << "].\n"; */
+  /*   } */
+  /* } */
 
-  if (imuScopedName.size() > 0) {
-    this->dataPtr->imuSensor = std::dynamic_pointer_cast<sensors::ImuSensor>(sensors::SensorManager::Instance()->GetSensor(imuScopedName[0]));
-  }
+  /* if (imuScopedName.size() > 0) { */
+  /*   this->dataPtr->imuSensor = std::dynamic_pointer_cast<sensors::ImuSensor>(sensors::SensorManager::Instance()->GetSensor(imuScopedName[0])); */
+  /* } */
 
-  if (!this->dataPtr->imuSensor) {
-    if (imuScopedName.size() > 1) {
-      gzwarn << "[" << this->dataPtr->modelName << "] "
-             << "first imu_sensor scoped name [" << imuScopedName[0] << "] not found, trying the rest of the sensor names.\n";
-      for (unsigned k = 1; k < imuScopedName.size(); ++k) {
-        this->dataPtr->imuSensor = std::dynamic_pointer_cast<sensors::ImuSensor>(sensors::SensorManager::Instance()->GetSensor(imuScopedName[k]));
-        if (this->dataPtr->imuSensor) {
-          gzwarn << "found [" << imuScopedName[k] << "]\n";
-          break;
-        }
-      }
-    }
+  /* if (!this->dataPtr->imuSensor) { */
+  /*   if (imuScopedName.size() > 1) { */
+  /*     gzwarn << "[" << this->dataPtr->modelName << "] " */
+  /*            << "first imu_sensor scoped name [" << imuScopedName[0] << "] not found, trying the rest of the sensor names.\n"; */
+  /*     for (unsigned k = 1; k < imuScopedName.size(); ++k) { */
+  /*       this->dataPtr->imuSensor = std::dynamic_pointer_cast<sensors::ImuSensor>(sensors::SensorManager::Instance()->GetSensor(imuScopedName[k])); */
+  /*       if (this->dataPtr->imuSensor) { */
+  /*         gzwarn << "found [" << imuScopedName[k] << "]\n"; */
+  /*         break; */
+  /*       } */
+  /*     } */
+  /*   } */
 
-    if (!this->dataPtr->imuSensor) {
-      gzwarn << "[" << this->dataPtr->modelName << "] "
-             << "imu_sensor scoped name [" << imuName << "] not found, trying unscoped name.\n"
-             << "\n";
-      // TODO: this fails for multi-nested models.
-      // TODO: and transforms fail for rotated nested model,
-      //       joints point the wrong way.
-      this->dataPtr->imuSensor = std::dynamic_pointer_cast<sensors::ImuSensor>(sensors::SensorManager::Instance()->GetSensor(imuName));
-    }
+  /*   if (!this->dataPtr->imuSensor) { */
+  /*     gzwarn << "[" << this->dataPtr->modelName << "] " */
+  /*            << "imu_sensor scoped name [" << imuName << "] not found, trying unscoped name.\n" */
+  /*            << "\n"; */
+  /*     // TODO: this fails for multi-nested models. */
+  /*     // TODO: and transforms fail for rotated nested model, */
+  /*     //       joints point the wrong way. */
+  /*     this->dataPtr->imuSensor = std::dynamic_pointer_cast<sensors::ImuSensor>(sensors::SensorManager::Instance()->GetSensor(imuName)); */
+  /*   } */
 
-    if (!this->dataPtr->imuSensor) {
-      gzerr << "[" << this->dataPtr->modelName << "] "
-            << "imu_sensor [" << imuName << "] not found, abort ArduPilot plugin.\n"
-            << "\n";
-      return;
-    }
-  }
+  /*   if (!this->dataPtr->imuSensor) { */
+  /*     gzerr << "[" << this->dataPtr->modelName << "] " */
+  /*           << "imu_sensor [" << imuName << "] not found, abort ArduPilot plugin.\n" */
+  /*           << "\n"; */
+  /*     return; */
+  /*   } */
+  /* } */
+
+  getSdfParam<std::string>(_sdf, "imuTopic", imu_sub_topic_, imu_sub_topic_);
+  imu_sub_ = node_handle_->Subscribe("~/" + this->dataPtr->model->GetName() + imu_sub_topic_, &ArdupilotPlugin::ImuCallback, this);
+
   /* NOT MERGED IN MASTER YET
       // Get GPS
     std::string gpsName = _sdf->Get("imuName", static_cast<std::string>("gps_sensor")).first;
@@ -794,7 +798,22 @@ void ArduPilotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
 
   getSdfParam<std::string>(_sdf, "motorSpeedCommandPubTopic", motor_velocity_reference_pub_topic_, motor_velocity_reference_pub_topic_);
 
-  motor_velocity_reference_pub_ = node_handle_->Advertise<mav_msgs::msgs::CommandMotorSpeed>("~/" + this->dataPtr->model->GetName() + motor_velocity_reference_pub_topic_, 1);
+  motor_velocity_reference_pub_ =
+      node_handle_->Advertise<mav_msgs::msgs::CommandMotorSpeed>("~/" + this->dataPtr->model->GetName() + motor_velocity_reference_pub_topic_, 1);
+}
+
+void ArdupilotPlugin::ImuCallback(ImuPtr &imu_message) {
+  const int64_t diff = imu_message->seq() - last_imu_message_seq_;
+  if (diff != 1 && imu_message->seq() != 0) {
+    gzerr << "Skipped " << (diff - 1) << " IMU samples (presumably CPU usage is too high)\n";
+  }
+
+  last_imu_message_seq_ = imu_message->seq();
+
+  imu_accel = Eigen::Vector3d(imu_message->linear_acceleration().x(), imu_message->linear_acceleration().y(), imu_message->linear_acceleration().z());
+  imu_gyro  = Eigen::Vector3d(imu_message->angular_velocity().x(), imu_message->angular_velocity().y(), imu_message->angular_velocity().z());
+
+  imu_received = true;
 }
 
 /////////////////////////////////////////////////
@@ -998,6 +1017,10 @@ void ArduPilotPlugin::ReceiveMotorCommand() {
 /////////////////////////////////////////////////
 void ArduPilotPlugin::SendState() const {
   // send_fdm
+  if (!imu_received) {
+    return;
+  }
+
   fdmPacket pkt;
 
   pkt.timestamp = this->dataPtr->model->GetWorld()->SimTime().Double();
@@ -1008,21 +1031,21 @@ void ArduPilotPlugin::SendState() const {
   //   z down
 
   // get linear acceleration in body frame
-  const ignition::math::Vector3d linearAccel = this->dataPtr->imuSensor->LinearAcceleration();
+  /* const ignition::math::Vector3d linearAccel = this->dataPtr->imuSensor->LinearAcceleration(); */
 
   // copy to pkt
-  pkt.imuLinearAccelerationXYZ[0] = linearAccel.X();
-  pkt.imuLinearAccelerationXYZ[1] = linearAccel.Y();
-  pkt.imuLinearAccelerationXYZ[2] = linearAccel.Z();
+  pkt.imuLinearAccelerationXYZ[0] = imu_accel(0);
+  pkt.imuLinearAccelerationXYZ[1] = imu_accel(1);
+  pkt.imuLinearAccelerationXYZ[2] = imu_accel(2);
   // gzerr << "lin accel [" << linearAccel << "]\n";
 
   // get angular velocity in body frame
-  const ignition::math::Vector3d angularVel = this->dataPtr->imuSensor->AngularVelocity();
+  /* const ignition::math::Vector3d angularVel = this->dataPtr->imuSensor->AngularVelocity(); */
 
   // copy to pkt
-  pkt.imuAngularVelocityRPY[0] = angularVel.X();
-  pkt.imuAngularVelocityRPY[1] = angularVel.Y();
-  pkt.imuAngularVelocityRPY[2] = angularVel.Z();
+  pkt.imuAngularVelocityRPY[0] = imu_gyro(0);
+  pkt.imuAngularVelocityRPY[1] = imu_gyro(1);
+  pkt.imuAngularVelocityRPY[2] = imu_gyro(2);
 
   // get inertial pose and velocity
   // position of the uav in world frame
