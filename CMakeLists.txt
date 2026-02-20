@@ -133,6 +133,20 @@ target_link_libraries(MotorPluginGazebo
     proto_msg
 )
 
+add_library(LidarPluginGazebo SHARED
+    src/gazebo_lidar_plugin.cpp
+)
+target_include_directories(LidarPluginGazebo PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(LidarPluginGazebo
+    ${Boost_LIBRARIES}
+    ${GAZEBO_LIBRARIES}
+    proto_msg
+)
+
 add_library(MavlinkPluginGazebo SHARED
     src/gazebo_mavlink_interface.cpp src/mavlink_interface.cpp
 )
@@ -177,6 +191,7 @@ install(TARGETS
   link_static_tf_publisher
   LivoxPluginGazebo
   MotorPluginGazebo
+  LidarPluginGazebo
   MavlinkPluginGazebo
   VelodynePluginGazebo
   ARCHIVE DESTINATION lib
