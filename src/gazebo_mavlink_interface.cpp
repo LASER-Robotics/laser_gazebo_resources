@@ -537,19 +537,19 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
 
   wave_params_ = nullptr;
 
-  if (_sdf->HasElement("base_to_wheel_offset")) {
-    base_to_wheel_offset_ = _sdf->GetElement("base_to_wheel_offset")->Get<float>();
-  }
-
   if (_sdf->HasElement("water_level")) {
     water_level_ = _sdf->GetElement("water_level")->Get<float>();
   }
 
+  if (_sdf->HasElement("wheel_offset")) {
+    wheel_offset_ = _sdf->GetElement("wheel_offset")->Get<float>();
+  }
+
   node_ = gazebo_ros::Node::Get(_sdf);
-  pub_left_front_ = node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_front_wheel_cmd", 1);
-  pub_left_rear_ = node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_rear_wheel_cmd", 1);
-  pub_right_front_ = node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_front_wheel_cmd", 1);
-  pub_right_rear_ = node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_rear_wheel_cmd", 1);
+  pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_front_wheel_cmd", 1));
+  pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_rear_wheel_cmd", 1));
+  pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_front_wheel_cmd", 1));
+  pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_rear_wheel_cmd", 1));
 }
 
 // This gets called by the world update start event.
@@ -611,37 +611,7 @@ void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo& /*_info*/) {
   }
 
   handle_actuator_controls();
-	
-	ignition::math::Pose3d pose;
-  ignition::math::Vector3d X;
-
-	double simTime = current_time.Double();
-	double depth = 0.0;
-
-	pose = model_->WorldPose();
-
-	X.X() = pose.Pos().X();
-	X.Y() = pose.Pos().Y();
-
-	if (wave_params_ && has_water_)
-	{
-		depth = asv::WavefieldSampler::ComputeDepthDirectly(*wave_params_, X, simTime) + water_level_;
-	}
-
-  // std::cout << "[gazebo_mavlink_plugin]: model: " << model_->GetName() << std::endl;
-  // std::cout << "[gazebo_mavlink_plugin]: pose x: " << X.X() << std::endl;
-  // std::cout << "[gazebo_mavlink_plugin]: pose y: " << X.Y() << std::endl;
-  // std::cout << "[gazebo_mavlink_plugin]: pose z: " << pose.Pos().Z() << std::endl;
-  // std::cout << "[gazebo_mavlink_plugin]: depth: " << depth << std::endl;
-	
-	if(pose.Pos().Z() - base_to_wheel_offset_ >= depth)
-	{
-		// std::cout << "[gazebo_mavlink_plugin]: not on water" << std::endl << std::endl;
-	  on_water_ = false;
-  	handle_control(dt);
-	}
-	else 
-		on_water_ = true;
+ 	handle_control(dt, current_time);
 
   if (received_first_actuator_) {
     mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
@@ -1177,7 +1147,7 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
 #if GAZEBO_MAJOR_VERSION >= 9
   last_actuator_time_ = world_->SimTime();
 #else
-  last_actuator_time_                     = world_->GetSimTime();
+  last_actuator_time_ = world_->GetSimTime();
 #endif
 
   for (unsigned i = 0; i < n_out_max; i++) {
@@ -1188,26 +1158,6 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
 
   Eigen::VectorXd actuator_controls = mavlink_interface_->GetActuatorControls();
 	
-	if(actuator_controls.size() > 0 && on_water_ && has_water_)
-	{
-		// std::cout << "actuator controls:" << std::endl;
-		thrust_msg_.data = actuator_controls[0];
-		// std::cout << "[0]: " << thrust_msg_.data << std::endl;
-		pub_left_front_->publish(thrust_msg_);
-
-		thrust_msg_.data = actuator_controls[1];
-		// std::cout << "[1]: " << thrust_msg_.data << std::endl;
-		pub_left_rear_->publish(thrust_msg_);
-
-		thrust_msg_.data = actuator_controls[2];
-		// std::cout << "[2]: " << thrust_msg_.data << std::endl;
-		pub_right_front_->publish(thrust_msg_);
-
-		thrust_msg_.data = actuator_controls[3];
-		// std::cout << "[3]: " << thrust_msg_.data << std::endl << std::endl;
-		pub_right_rear_->publish(thrust_msg_);
-	}
-
   if (actuator_controls.size() < n_out_max)
     return;  // TODO: Handle this properly
   for (int i = 0; i < input_reference_.size(); i++) {
@@ -1223,22 +1173,69 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
   received_first_actuator_ = mavlink_interface_->GetReceivedFirstActuator();
 }
 
-void GazeboMavlinkInterface::handle_control(double _dt) {
+void GazeboMavlinkInterface::handle_control(double _dt, common::Time cur_time) {
+	ignition::math::Pose3d pose;
+	ignition::math::Vector3d X;
+
+	double simTime = cur_time.Double();
+	double depth = 0.0;
+
   // set joint positions
   for (int i = 0; i < input_reference_.size(); i++) {
+		if (joints_[i] == nullptr){
+			return;
+		}
+
+		wheel_link_ = joints_[i]->GetChild();
+		pose = wheel_link_->WorldPose();
+
+		X.X() = pose.Pos().X();
+		X.Y() = pose.Pos().Y();
+
+		if (wave_params_ && has_water_)
+		{
+			depth = asv::WavefieldSampler::ComputeDepthDirectly(*wave_params_, X, simTime) + water_level_;
+		}
+
+		// std::cout << "[gazebo_mavlink_plugin] link: " << wheel_link_->GetName() << std::endl;
+		// std::cout << "[gazebo_mavlink_plugin] pose x: " << X.X() << std::endl;
+		// std::cout << "[gazebo_mavlink_plugin] pose y: " << X.Y() << std::endl;
+		// std::cout << "[gazebo_mavlink_plugin] pose z: " << pose.Pos().Z() - wheel_offset_ << std::endl;
+		// std::cout << "[gazebo_mavlink_plugin] depth: " << depth << std::endl;
+
+		if (pose.Pos().Z() - wheel_offset_ <= depth) {
+			// std::cout << "[gazebo_mavlink_plugin] status: on water" << std::endl;
+			on_water_ = true;
+		}
+		else {
+			// std::cout << "[gazebo_mavlink_plugin] status: not on water" << std::endl;
+			on_water_ = false;
+		}
+
     if (joints_[i] || joint_control_type_[i] == "position_gztopic") {
       double target = input_reference_[i];
       if (joint_control_type_[i] == "velocity") {
         double current = joints_[i]->GetVelocity(0);
         double err     = current - target;
         double force   = pids_[i].Update(err, _dt);
-        joints_[i]->SetForce(0, force);
+
+				thrust_msg_.data = force;
+
+				if (on_water_ && has_water_){
+						pub_thrusters_[i]->publish(thrust_msg_);
+				}
+			  else { 
+        	joints_[i]->SetForce(0, force);
+				}
+
+				// std::cout << "[gazebo_mavlink_plugin] force[" << i << "]: " << force << std::endl << std::endl;
+
       } else if (joint_control_type_[i] == "position") {
 
 #if GAZEBO_MAJOR_VERSION >= 9
         double current = joints_[i]->Position(0);
 #else
-        double                 current = joints_[i]->GetAngle(0).Radian();
+        double current = joints_[i]->GetAngle(0).Radian();
 #endif
 
         double err = current - target;

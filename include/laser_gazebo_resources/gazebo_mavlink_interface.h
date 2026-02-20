@@ -154,16 +154,17 @@ protected:
 
 private:
   gazebo_ros::Node::SharedPtr node_;
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_left_front_;
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_left_rear_;
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_right_front_;
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_right_rear_;
+	std::vector<rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr> pub_thrusters_;
+  // rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_left_rear_;
+  // rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_right_front_;
+  // rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_right_rear_;
 	std_msgs::msg::Float32 thrust_msg_;
+	physics::LinkPtr wheel_link_;
 
   std::shared_ptr<const asv::WaveParameters> wave_params_;
   std::string wave_model_;
   float water_level_{0.0};
-  float base_to_wheel_offset_{0.5};
+  float wheel_offset_{0.1};
 	bool on_water_{false};
 	bool has_water_{false};
 
@@ -215,7 +216,7 @@ private:
   void SendSensorMessages();
   void SendGroundTruth();
   void handle_actuator_controls();
-  void handle_control(double _dt);
+  void handle_control(double _dt, common::Time cur_time);
   bool IsRunning();
   void onSigInt();
 
