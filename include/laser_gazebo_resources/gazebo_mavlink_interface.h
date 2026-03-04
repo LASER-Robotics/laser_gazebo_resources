@@ -77,6 +77,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <gazebo_ros/node.hpp>
 #include <std_msgs/msg/float32.hpp>
+#include <laser_usv_msgs/msg/wheel_status_array.hpp>
 
 #include "laser_rahcm_simulation/Wavefield.hh"
 #include "laser_rahcm_simulation/WavefieldEntity.hh"
@@ -155,18 +156,12 @@ protected:
 private:
   gazebo_ros::Node::SharedPtr node_;
 	std::vector<rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr> pub_thrusters_;
-  // rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_left_rear_;
-  // rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_right_front_;
-  // rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub_right_rear_;
 	std_msgs::msg::Float32 thrust_msg_;
-	physics::LinkPtr wheel_link_;
 
-  std::shared_ptr<const asv::WaveParameters> wave_params_;
-  std::string wave_model_;
-  float water_level_{0.0};
-  float wheel_offset_{0.1};
-	bool on_water_{false};
-	bool has_water_{false};
+	rclcpp::Subscription<laser_usv_msgs::msg::WheelStatusArray>::SharedPtr sub_wheel_status;
+	void SubWheelStatus(const laser_usv_msgs::msg::WheelStatusArray & _msg);
+	laser_usv_msgs::msg::WheelStatusArray wheel_status_msg_;
+	std::vector<bool> on_water;
 
   bool received_first_actuator_{false};
   Eigen::VectorXd input_reference_;
@@ -216,7 +211,7 @@ private:
   void SendSensorMessages();
   void SendGroundTruth();
   void handle_actuator_controls();
-  void handle_control(double _dt, common::Time cur_time);
+  void handle_control(double _dt);
   bool IsRunning();
   void onSigInt();
 

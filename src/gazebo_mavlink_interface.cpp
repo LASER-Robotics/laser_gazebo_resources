@@ -217,11 +217,13 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
     pids_[i].Init(0, 0, 0, 0, 0, 0, 0);
     input_reference_[i] = 0;
   }
-
+	
+	int channels_count = 0;
   if (_sdf->HasElement("control_channels")) {
     sdf::ElementPtr control_channels = _sdf->GetElement("control_channels");
     sdf::ElementPtr channel          = control_channels->GetElement("channel");
     while (channel) {
+			channels_count++;
       if (channel->HasElement("input_index")) {
         int index = channel->Get<int>("input_index");
         if (index < n_out_max) {
@@ -296,6 +298,8 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
       channel = channel->GetNextElement("channel");
     }
   }
+
+	gzmsg << "Found " << channels_count << " channels." << "\n";
 
   if (_sdf->HasElement("hil_mode")) {
     hil_mode_ = _sdf->GetElement("hil_mode")->Get<bool>();
@@ -517,52 +521,26 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
 
   mavlink_interface_->Load();
 
-  if (_sdf->HasElement("wave_model")){
-    wave_model_ = _sdf->Get<std::string>("wave_model");
-    physics::ModelPtr wave = world_->ModelByName(wave_model_);
-
-    if (wave == nullptr){ 
-    	gzwarn << "[gazebo_mavlink_interface] No wave model <" << wave_model_ <<  "> found in the world.\n";
-      has_water_ = false; 
-    }
-    else{
-    	gzwarn << "[gazebo_mavlink_interface] Wave model <" << wave_model_ <<  "> found in the world.\n";
-      has_water_ = true; 
-    }
-  }
-  else{
-    gzwarn << "[gazebo_mavlink_interface] Parameter <wave_model> not found.\n";
-    has_water_ = false; 
-  }
-
-  wave_params_ = nullptr;
-
-  if (_sdf->HasElement("water_level")) {
-    water_level_ = _sdf->GetElement("water_level")->Get<float>();
-  }
-
-  if (_sdf->HasElement("wheel_offset")) {
-    wheel_offset_ = _sdf->GetElement("wheel_offset")->Get<float>();
-  }
+	on_water.resize(channels_count);
 
   node_ = gazebo_ros::Node::Get(_sdf);
+  // TODO: Get topics from sdf
+  sub_wheel_status = node_->create_subscription<laser_usv_msgs::msg::WheelStatusArray>("/rahcm/wheel_status", 1, std::bind(&GazeboMavlinkInterface::SubWheelStatus, this, std::placeholders::_1));
   pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_front_wheel_cmd", 1));
   pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_rear_wheel_cmd", 1));
   pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_front_wheel_cmd", 1));
   pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_rear_wheel_cmd", 1));
 }
 
+void GazeboMavlinkInterface::SubWheelStatus(const laser_usv_msgs::msg::WheelStatusArray & _msg){
+	for (size_t i = 0; i < _msg.wheel.size(); i++)
+		on_water[i] = _msg.wheel[i].on_water;
+}
+
 // This gets called by the world update start event.
 void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo& /*_info*/) {
 
   std::unique_lock<std::mutex> lock(imu_received_mutex_);
-
-  // If we haven't yet, retrieve the wave parameters from ocean model plugin.
-  if ((wave_params_ == nullptr) && (has_water_))
-  { 
-    wave_params_ = asv::WavefieldModelPlugin::GetWaveParams(
-      world_, wave_model_);
-  }
 
   if (imu_received_once_) {
     while (!imu_received_ && IsRunning()) {
@@ -611,7 +589,7 @@ void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo& /*_info*/) {
   }
 
   handle_actuator_controls();
- 	handle_control(dt, current_time);
+ 	handle_control(dt);
 
   if (received_first_actuator_) {
     mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
@@ -1173,43 +1151,11 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
   received_first_actuator_ = mavlink_interface_->GetReceivedFirstActuator();
 }
 
-void GazeboMavlinkInterface::handle_control(double _dt, common::Time cur_time) {
-	ignition::math::Pose3d pose;
-	ignition::math::Vector3d X;
-
-	double simTime = cur_time.Double();
-	double depth = 0.0;
-
+void GazeboMavlinkInterface::handle_control(double _dt) {
   // set joint positions
   for (int i = 0; i < input_reference_.size(); i++) {
 		if (joints_[i] == nullptr){
 			return;
-		}
-
-		wheel_link_ = joints_[i]->GetChild();
-		pose = wheel_link_->WorldPose();
-
-		X.X() = pose.Pos().X();
-		X.Y() = pose.Pos().Y();
-
-		if (wave_params_ && has_water_)
-		{
-			depth = asv::WavefieldSampler::ComputeDepthDirectly(*wave_params_, X, simTime) + water_level_;
-		}
-
-		// std::cout << "[gazebo_mavlink_plugin] link: " << wheel_link_->GetName() << std::endl;
-		// std::cout << "[gazebo_mavlink_plugin] pose x: " << X.X() << std::endl;
-		// std::cout << "[gazebo_mavlink_plugin] pose y: " << X.Y() << std::endl;
-		// std::cout << "[gazebo_mavlink_plugin] pose z: " << pose.Pos().Z() - wheel_offset_ << std::endl;
-		// std::cout << "[gazebo_mavlink_plugin] depth: " << depth << std::endl;
-
-		if (pose.Pos().Z() - wheel_offset_ <= depth) {
-			// std::cout << "[gazebo_mavlink_plugin] status: on water" << std::endl;
-			on_water_ = true;
-		}
-		else {
-			// std::cout << "[gazebo_mavlink_plugin] status: not on water" << std::endl;
-			on_water_ = false;
 		}
 
     if (joints_[i] || joint_control_type_[i] == "position_gztopic") {
@@ -1221,14 +1167,12 @@ void GazeboMavlinkInterface::handle_control(double _dt, common::Time cur_time) {
 
 				thrust_msg_.data = force;
 
-				if (on_water_ && has_water_){
-						pub_thrusters_[i]->publish(thrust_msg_);
+				if (on_water[i]) {
+					pub_thrusters_[i]->publish(thrust_msg_);
 				}
-			  else { 
-        	joints_[i]->SetForce(0, force);
+			  else {	
+					joints_[i]->SetForce(0, force);
 				}
-
-				// std::cout << "[gazebo_mavlink_plugin] force[" << i << "]: " << force << std::endl << std::endl;
 
       } else if (joint_control_type_[i] == "position") {
 
