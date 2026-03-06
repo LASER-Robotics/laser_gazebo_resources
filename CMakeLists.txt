@@ -133,32 +133,17 @@ add_gazebo_plugin_target(RealsensePluginGazebo
   LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
 )
 
+add_gazebo_plugin_target(VelodynePluginGazebo
+  SRCS src/gazebo_ros_velodyne_laser.cpp
+  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager
+  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
+)
+
 add_executable(csv_main src/csv_main.cpp)
 ament_target_dependencies(csv_main rclcpp)
 target_include_directories(csv_main PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-)
-
-add_library(VelodynePluginGazebo SHARED 
-    src/gazebo_ros_velodyne_laser.cpp
-)
-target_include_directories(VelodynePluginGazebo PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-ament_target_dependencies(VelodynePluginGazebo
-  rclcpp
-  gazebo_dev
-  gazebo_ros
-  sensor_msgs
-  tf2
-  tf2_ros
-  geometry_msgs
-)
-target_link_libraries(VelodynePluginGazebo
-    ${GAZEBO_LIBRARIES}
 )
 
 install(TARGETS
