@@ -140,6 +140,27 @@ target_include_directories(csv_main PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
+add_library(VelodynePluginGazebo SHARED 
+    src/gazebo_ros_velodyne_laser.cpp
+)
+target_include_directories(VelodynePluginGazebo PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(VelodynePluginGazebo
+  rclcpp
+  gazebo_dev
+  gazebo_ros
+  sensor_msgs
+  tf2
+  tf2_ros
+  geometry_msgs
+)
+target_link_libraries(VelodynePluginGazebo
+    ${GAZEBO_LIBRARIES}
+)
+
 install(TARGETS
   proto_msg
   link_static_tf_publisher
@@ -147,6 +168,7 @@ install(TARGETS
   MotorPluginGazebo
   LidarPluginGazebo
   MavlinkPluginGazebo
+  VelodynePluginGazebo
   RealsensePluginGazebo
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
