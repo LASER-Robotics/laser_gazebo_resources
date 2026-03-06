@@ -21,6 +21,10 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(laser_msgs REQUIRED)
 find_package(MAVLink REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(camera_info_manager REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system thread)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CustomMsg.msg"
@@ -43,8 +47,6 @@ if(NOT PROTOBUF_IMPORT_DIRS)
   set(PROTOBUF_IMPORT_DIRS "/usr/include/gazebo-11/gazebo/msgs/proto")
   set(GAZEBO_MSG_INCLUDE_DIRS "/usr/include/gazebo-11/gazebo/msgs")
 endif()
-
-message(STATUS "Gazebo Proto Path: ${PROTOBUF_IMPORT_DIRS}")
 
 pkg_check_modules(PROTOBUF protobuf)
 
@@ -84,32 +86,51 @@ set(proto_msg_files
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_msg_files})
 add_library(proto_msg SHARED ${PROTO_SRCS})
 
-add_library(link_static_tf_publisher SHARED
-    plugins/link_static_tf_publisher.cpp
-)
-ament_target_dependencies(link_static_tf_publisher rclcpp tf2_ros geometry_msgs)
-target_include_directories(link_static_tf_publisher PUBLIC
-  ${GAZEBO_INCLUDE_DIRS}
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(link_static_tf_publisher ${GAZEBO_LIBRARIES})
-
-add_library(LivoxPluginGazebo SHARED
-    src/livox_points_plugin.cpp
-    src/livox_ode_multiray_shape.cpp
-)
-ament_target_dependencies(LivoxPluginGazebo
-    rclcpp gazebo_ros sensor_msgs pcl_conversions tf2 tf2_ros tf2_msgs ament_index_cpp
-)
-target_include_directories(LivoxPluginGazebo PUBLIC
+macro(add_gazebo_plugin_target target_name)
+  cmake_parse_arguments(ARG "" "" "SRCS;DEPENDS;LIBS" ${ARGN})
+  add_library(${target_name} SHARED ${ARG_SRCS})
+  target_include_directories(${target_name} PUBLIC
     ${GAZEBO_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
+  )
+  if(ARG_DEPENDS)
+    ament_target_dependencies(${target_name} ${ARG_DEPENDS})
+  endif()
+  target_link_libraries(${target_name} ${GAZEBO_LIBRARIES} ${ARG_LIBS})
+endmacro()
+
+add_gazebo_plugin_target(link_static_tf_publisher
+  SRCS plugins/link_static_tf_publisher.cpp
+  DEPENDS rclcpp tf2_ros geometry_msgs
 )
-target_link_libraries(LivoxPluginGazebo
-    ${cpp_typesupport_target}
-    ${GAZEBO_LIBRARIES}
+
+add_gazebo_plugin_target(LivoxPluginGazebo
+  SRCS src/livox_points_plugin.cpp src/livox_ode_multiray_shape.cpp
+  DEPENDS rclcpp gazebo_ros sensor_msgs pcl_conversions tf2 tf2_ros tf2_msgs ament_index_cpp
+  LIBS ${cpp_typesupport_target}
+)
+
+add_gazebo_plugin_target(MotorPluginGazebo
+  SRCS src/gazebo_motor_model.cpp
+  LIBS ${Boost_LIBRARIES} proto_msg
+)
+
+add_gazebo_plugin_target(LidarPluginGazebo
+  SRCS src/gazebo_lidar_plugin.cpp
+  LIBS ${Boost_LIBRARIES} proto_msg
+)
+
+add_gazebo_plugin_target(MavlinkPluginGazebo
+  SRCS src/gazebo_mavlink_interface.cpp src/mavlink_interface.cpp
+  DEPENDS laser_msgs rclcpp
+  LIBS ${Boost_LIBRARIES} proto_msg
+)
+
+add_gazebo_plugin_target(RealsensePluginGazebo
+  SRCS src/gazebo_ros_realsense.cpp src/perlin_noise.cpp
+  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager
+  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
 )
 
 add_executable(csv_main src/csv_main.cpp)
@@ -119,52 +140,6 @@ target_include_directories(csv_main PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-add_library(MotorPluginGazebo SHARED
-    src/gazebo_motor_model.cpp
-)
-target_include_directories(MotorPluginGazebo PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(MotorPluginGazebo
-    ${Boost_LIBRARIES}
-    ${GAZEBO_LIBRARIES}
-    proto_msg
-)
-
-add_library(LidarPluginGazebo SHARED
-    src/gazebo_lidar_plugin.cpp
-)
-target_include_directories(LidarPluginGazebo PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(LidarPluginGazebo
-    ${Boost_LIBRARIES}
-    ${GAZEBO_LIBRARIES}
-    proto_msg
-)
-
-add_library(MavlinkPluginGazebo SHARED
-    src/gazebo_mavlink_interface.cpp src/mavlink_interface.cpp
-)
-target_include_directories(MavlinkPluginGazebo PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-ament_target_dependencies(MavlinkPluginGazebo
-  laser_msgs
-  rclcpp
-)
-target_link_libraries(MavlinkPluginGazebo
-    ${Boost_LIBRARIES}
-    ${GAZEBO_LIBRARIES}
-    proto_msg
-)
-
 install(TARGETS
   proto_msg
   link_static_tf_publisher
@@ -172,6 +147,7 @@ install(TARGETS
   MotorPluginGazebo
   LidarPluginGazebo
   MavlinkPluginGazebo
+  RealsensePluginGazebo
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -194,7 +170,7 @@ ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/laser_gazebo_reso
 
 ament_export_dependencies(
   rosidl_default_runtime rclcpp pcl_conversions tf2 tf2_ros tf2_msgs
-  geometry_msgs std_msgs sensor_msgs laser_msgs gazebo_ros rclcpp
+  geometry_msgs std_msgs sensor_msgs laser_msgs gazebo_ros
 )
 
 ament_package()
