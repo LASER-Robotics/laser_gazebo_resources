@@ -472,8 +472,6 @@ public:
 
     info_msg.distortion_model = sensor_msgs::distortion_models::RATIONAL_POLYNOMIAL;
 
-    // No ROS 2, k é std::array<double, 9>.
-    // O método fill(0) limpa o array se necessário, mas não é preciso dar assign.
     info_msg.k.fill(0.0);
     info_msg.k[0] = hfoc;
     info_msg.k[4] = vfoc;
@@ -481,7 +479,6 @@ public:
     info_msg.k[5] = (info_msg.height + 1.0) / 2.0;
     info_msg.k[8] = 1.0;
 
-    // No ROS 2, p é std::array<double, 12>.
     info_msg.p.fill(0.0);
     info_msg.p[0]  = info_msg.k[0];
     info_msg.p[5]  = info_msg.k[4];
@@ -489,8 +486,6 @@ public:
     info_msg.p[6]  = info_msg.k[5];
     info_msg.p[10] = info_msg.k[8];
 
-    // O campo 'd' (distorção) costuma ser um std::vector no ROS 2,
-    // então aqui o assign ainda funcionaria, mas geralmente inicia-se vazio.
     info_msg.d.assign(5, 0.0);
 
     return info_msg;
