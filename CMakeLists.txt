@@ -139,6 +139,12 @@ add_gazebo_plugin_target(VelodynePluginGazebo
   LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
 )
 
+add_gazebo_plugin_target(ImuPluginGazebo
+  SRCS src/gazebo_ros_imu_sensor.cpp
+  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager
+  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
+)
+
 add_executable(csv_main src/csv_main.cpp)
 ament_target_dependencies(csv_main rclcpp)
 target_include_directories(csv_main PUBLIC
@@ -154,6 +160,7 @@ install(TARGETS
   LidarPluginGazebo
   MavlinkPluginGazebo
   VelodynePluginGazebo
+  ImuPluginGazebo
   RealsensePluginGazebo
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
