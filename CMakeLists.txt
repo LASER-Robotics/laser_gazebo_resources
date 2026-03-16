@@ -127,7 +127,7 @@ add_gazebo_plugin_target(Px4PluginGazebo
   LIBS ${Boost_LIBRARIES} proto_msg
 )
 
-add_gazebo_plugin_target(ApPluginGazebo
+add_gazebo_plugin_target(ArdupilotPluginGazebo
   SRCS src/ardupilot_plugin.cpp
   DEPENDS laser_msgs rclcpp
   LIBS ${Boost_LIBRARIES} proto_msg

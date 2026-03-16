@@ -649,7 +649,7 @@ void ArduPilotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
   /* } */
 
   getSdfParam<std::string>(_sdf, "imuTopic", imu_sub_topic_, imu_sub_topic_);
-  imu_sub_ = node_handle_->Subscribe("~/" + this->dataPtr->model->GetName() + imu_sub_topic_, &ArdupilotPlugin::ImuCallback, this);
+  imu_sub_ = node_handle_->Subscribe("~/" + this->dataPtr->model->GetName() + imu_sub_topic_, &ArduPilotPlugin::ImuCallback, this);
 
   /* NOT MERGED IN MASTER YET
       // Get GPS
@@ -802,7 +802,7 @@ void ArduPilotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
       node_handle_->Advertise<mav_msgs::msgs::CommandMotorSpeed>("~/" + this->dataPtr->model->GetName() + motor_velocity_reference_pub_topic_, 1);
 }
 
-void ArdupilotPlugin::ImuCallback(ImuPtr &imu_message) {
+void ArduPilotPlugin::ImuCallback(ImuPtr &imu_message) {
   const int64_t diff = imu_message->seq() - last_imu_message_seq_;
   if (diff != 1 && imu_message->seq() != 0) {
     gzerr << "Skipped " << (diff - 1) << " IMU samples (presumably CPU usage is too high)\n";
@@ -993,14 +993,14 @@ void ArduPilotPlugin::ReceiveMotorCommand() {
           // bound incoming cmd between 0 and 1
           const double cmd               = ignition::math::clamp(pkt.motorSpeed[this->dataPtr->controls[i].channel], -1.0f, 1.0f);
           this->dataPtr->controls[i].cmd = this->dataPtr->controls[i].multiplier * (this->dataPtr->controls[i].offset + cmd);
-          // gzdbg << "apply input chan[" << this->dataPtr->controls[i].channel
-          //       << "] to control chan[" << i
-          //       << "] with joint name ["
-          //       << this->dataPtr->controls[i].jointName
-          //       << "] raw cmd ["
-          //       << pkt.motorSpeed[this->dataPtr->controls[i].channel]
-          //       << "] adjusted cmd [" << this->dataPtr->controls[i].cmd
-          //       << "].\n";
+           /* gzdbg << "apply input chan[" << this->dataPtr->controls[i].channel */
+           /*       << "] to control chan[" << i */
+           /*       << "] with joint name [" */
+           /*       << this->dataPtr->controls[i].jointName */
+           /*       << "] raw cmd [" */
+           /*       << pkt.motorSpeed[this->dataPtr->controls[i].channel] */
+           /*       << "] adjusted cmd [" << this->dataPtr->controls[i].cmd */
+           /*       << "].\n"; */
         } else {
           gzerr << "[" << this->dataPtr->modelName << "] "
                 << "control[" << i << "] channel [" << this->dataPtr->controls[i].channel << "] is greater than incoming commands size[" << recvChannels
@@ -1035,8 +1035,8 @@ void ArduPilotPlugin::SendState() const {
 
   // copy to pkt
   pkt.imuLinearAccelerationXYZ[0] = imu_accel(0);
-  pkt.imuLinearAccelerationXYZ[1] = imu_accel(1);
-  pkt.imuLinearAccelerationXYZ[2] = imu_accel(2);
+  pkt.imuLinearAccelerationXYZ[1] = -imu_accel(1);
+  pkt.imuLinearAccelerationXYZ[2] = -imu_accel(2);
   // gzerr << "lin accel [" << linearAccel << "]\n";
 
   // get angular velocity in body frame
@@ -1044,8 +1044,8 @@ void ArduPilotPlugin::SendState() const {
 
   // copy to pkt
   pkt.imuAngularVelocityRPY[0] = imu_gyro(0);
-  pkt.imuAngularVelocityRPY[1] = imu_gyro(1);
-  pkt.imuAngularVelocityRPY[2] = imu_gyro(2);
+  pkt.imuAngularVelocityRPY[1] = -imu_gyro(1);
+  pkt.imuAngularVelocityRPY[2] = -imu_gyro(2);
 
   // get inertial pose and velocity
   // position of the uav in world frame

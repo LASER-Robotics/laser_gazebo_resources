@@ -117,6 +117,9 @@ private:
 
 private:
   std::string     motor_velocity_reference_pub_topic_{kDefaultMotorVelocityReferencePubTopic};
+
+  transport::SubscriberPtr imu_sub_{nullptr};
+  int64_t last_imu_message_seq_{0};
   std::string imu_sub_topic_{kDefaultImuTopic};
   Eigen::Vector3d imu_accel;
   Eigen::Vector3d imu_gyro;
