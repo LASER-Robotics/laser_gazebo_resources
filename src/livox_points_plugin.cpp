@@ -458,9 +458,9 @@ namespace gazebo
     sensor_to_lidar_static_transform.header.stamp = stamp;
     sensor_to_lidar_static_transform.header.frame_id = robot_namespace_ + "/" + sensor_frame_name_;
     sensor_to_lidar_static_transform.child_frame_id = robot_namespace_ + "/" + lidar_frame_name_;
-    sensor_to_lidar_static_transform.transform.translation.x = sensor_x_;
-    sensor_to_lidar_static_transform.transform.translation.y = sensor_y_;
-    sensor_to_lidar_static_transform.transform.translation.z = sensor_z_;
+    sensor_to_lidar_static_transform.transform.translation.x = lidar_x_;
+    sensor_to_lidar_static_transform.transform.translation.y = lidar_y_;
+    sensor_to_lidar_static_transform.transform.translation.z = lidar_z_;
 
     quat.setRPY(lidar_roll_, lidar_pitch_, lidar_yaw_);
     sensor_to_lidar_static_transform.transform.rotation.x = quat.x();
@@ -475,9 +475,9 @@ namespace gazebo
     sensor_to_imu_static_transform.header.stamp = stamp;
     sensor_to_imu_static_transform.header.frame_id = robot_namespace_ + "/" + sensor_frame_name_;
     sensor_to_imu_static_transform.child_frame_id = robot_namespace_ + "/" + imu_frame_name_;
-    sensor_to_imu_static_transform.transform.translation.x = sensor_x_;
-    sensor_to_imu_static_transform.transform.translation.y = sensor_y_;
-    sensor_to_imu_static_transform.transform.translation.z = sensor_z_;
+    sensor_to_imu_static_transform.transform.translation.x = imu_x_;
+    sensor_to_imu_static_transform.transform.translation.y = imu_y_;
+    sensor_to_imu_static_transform.transform.translation.z = imu_z_;
 
     quat.setRPY(imu_roll_, imu_pitch_, imu_yaw_);
     sensor_to_imu_static_transform.transform.rotation.x = quat.x();
