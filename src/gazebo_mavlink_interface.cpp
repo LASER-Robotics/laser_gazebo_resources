@@ -1153,6 +1153,8 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
 
 void GazeboMavlinkInterface::handle_control(double _dt) {
   // set joint positions
+  bool armed = mavlink_interface_->GetArmedState();
+
   for (int i = 0; i < input_reference_.size(); i++) {
 		if (joints_[i] == nullptr){
 			return;
@@ -1167,7 +1169,7 @@ void GazeboMavlinkInterface::handle_control(double _dt) {
 
 				thrust_msg_.data = force;
 
-				if (on_water[i]) {
+				if (on_water[i] && armed) {
 					pub_thrusters_[i]->publish(thrust_msg_);
 				}
 			  else {	
