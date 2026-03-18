@@ -826,24 +826,19 @@ void ArduPilotPlugin::OnUpdate() {
 
   // Update the control surfaces and publish the new state.
   if (curTime > this->dataPtr->lastControllerUpdateTime) {
-    if (!this->dataPtr->arduPilotOnline) {
-      this->ReceiveMotorCommand();
-    }
-
+    this->ReceiveMotorCommand();
     if (this->dataPtr->arduPilotOnline) {
-      this->SendState();
-
-      if ((curTime - lastMotorTime).Double() > 0.004) {
-        this->ReceiveMotorCommand();
-        mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
-        for (size_t i = 0; i < this->dataPtr->controls.size(); ++i) {
-          turning_velocities_msg.add_motor_speed(this->dataPtr->controls[i].cmd);
-        }
-        motor_velocity_reference_pub_->Publish(turning_velocities_msg);
-        lastMotorTime = curTime;
+      /* if ((curTime - lastMotorTime).Double() > 0.004) { */
+      mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
+      for (size_t i = 0; i < this->dataPtr->controls.size(); ++i) {
+        turning_velocities_msg.add_motor_speed(this->dataPtr->controls[i].cmd);
       }
+      motor_velocity_reference_pub_->Publish(turning_velocities_msg);
+      /* lastMotorTime = curTime; */
+      /* } */
       /* this->ApplyMotorForces((curTime - */
       /*   this->dataPtr->lastControllerUpdateTime).Double()); */
+      this->SendState();
     }
   }
 
@@ -995,6 +990,7 @@ void ArduPilotPlugin::ReceiveMotorCommand() {
       try {
         float discriminant             = pow(1.0f - factor, 2) + (4.0f * factor * rawCmd);
         this->dataPtr->controls[i].cmd = (sqrt(std::max(0.0f, discriminant)) - (1.0f - factor)) / (2.0f * factor);
+        /* this->dataPtr->controls[i].cmd *= 0.2; */
       }
       catch (...) {
         this->dataPtr->controls[i].cmd = 0.0f;
