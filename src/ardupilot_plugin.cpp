@@ -800,6 +800,8 @@ void ArduPilotPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
 
   motor_velocity_reference_pub_ =
       node_handle_->Advertise<mav_msgs::msgs::CommandMotorSpeed>("~/" + this->dataPtr->model->GetName() + motor_velocity_reference_pub_topic_, 1);
+
+  lastMotorTime = 0.0;
 }
 
 void ArduPilotPlugin::ImuCallback(ImuPtr &imu_message) {
@@ -820,21 +822,28 @@ void ArduPilotPlugin::ImuCallback(ImuPtr &imu_message) {
 void ArduPilotPlugin::OnUpdate() {
   std::lock_guard<std::mutex> lock(this->dataPtr->mutex);
 
-  const gazebo::common::Time curTime = this->dataPtr->model->GetWorld()->SimTime();
+  gazebo::common::Time curTime = this->dataPtr->model->GetWorld()->SimTime();
 
   // Update the control surfaces and publish the new state.
   if (curTime > this->dataPtr->lastControllerUpdateTime) {
-    this->ReceiveMotorCommand();
+    if (!this->dataPtr->arduPilotOnline) {
+      this->ReceiveMotorCommand();
+    }
+
     if (this->dataPtr->arduPilotOnline) {
-      mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
-      for (size_t i = 0; i < this->dataPtr->controls.size(); ++i) {
-        turning_velocities_msg.add_motor_speed(this->dataPtr->controls[i].cmd);
+      this->SendState();
+
+      if ((curTime - lastMotorTime).Double() > 0.004) {
+        this->ReceiveMotorCommand();
+        mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
+        for (size_t i = 0; i < this->dataPtr->controls.size(); ++i) {
+          turning_velocities_msg.add_motor_speed(this->dataPtr->controls[i].cmd);
+        }
+        motor_velocity_reference_pub_->Publish(turning_velocities_msg);
+        lastMotorTime = curTime;
       }
-      motor_velocity_reference_pub_->Publish(turning_velocities_msg);
       /* this->ApplyMotorForces((curTime - */
       /*   this->dataPtr->lastControllerUpdateTime).Double()); */
-
-      this->SendState();
     }
   }
 
@@ -910,109 +919,197 @@ void ArduPilotPlugin::ApplyMotorForces(const double _dt) {
   }
 }
 
-/////////////////////////////////////////////////
 void ArduPilotPlugin::ReceiveMotorCommand() {
-  // Added detection for whether ArduPilot is online or not.
-  // If ArduPilot is detected (receive of fdm packet from someone),
-  // then socket receive wait time is increased from 1ms to 1 sec
-  // to accomodate network jitter.
-  // If ArduPilot is not detected, receive call blocks for 1ms
-  // on each call.
-  // Once ArduPilot presence is detected, it takes this many
-  // missed receives before declaring the FCS offline.
-
   ServoPacket pkt;
-  uint32_t    waitMs;
-  if (this->dataPtr->arduPilotOnline) {
-    // increase timeout for receive once we detect a packet from
-    // ArduPilot FCS.
-    waitMs = 1000;
-  } else {
-    // Otherwise skip quickly and do not set control force.
-    waitMs = 1;
-  }
+  ServoPacket last_pkt;
+  uint32_t    waitMs = this->dataPtr->arduPilotOnline ? 1000 : 10;  // Aumentado o mínimo para 10ms
+
+  // 1. Tentativa inicial de leitura
   ssize_t recvSize = this->dataPtr->socket_in.Recv(&pkt, sizeof(ServoPacket), waitMs);
 
-  // Drain the socket in the case we're backed up
-  int         counter = 0;
-  ServoPacket last_pkt;
+  // 2. Drenar o socket para pegar o pacote mais recente (Low Latency)
+  // Isso garante que não usaremos comandos "velhos" que ficaram na fila
+  int drainCounter = 0;
   while (true) {
-    // last_pkt = pkt;
-    const ssize_t recvSize_last = this->dataPtr->socket_in.Recv(&last_pkt, sizeof(ServoPacket), 0ul);
-    if (recvSize_last == -1) {
-      break;
-    }
-    counter++;
+    ssize_t extraRecv = this->dataPtr->socket_in.Recv(&last_pkt, sizeof(ServoPacket), 0ul);
+    if (extraRecv <= 0)
+      break;  // Sai se não houver mais pacotes ou erro
+
     pkt      = last_pkt;
-    recvSize = recvSize_last;
-  }
-  if (counter > 0) {
-    gzdbg << "[" << this->dataPtr->modelName << "] "
-          << "Drained n packets: " << counter << std::endl;
+    recvSize = extraRecv;
+    drainCounter++;
   }
 
-  if (recvSize == -1) {
-    // didn't receive a packet
-    // gzdbg << "no packet\n";
-    gazebo::common::Time::NSleep(100);
+  if (drainCounter > 0) {
+    gzdbg << "[" << this->dataPtr->modelName << "] Drenados " << drainCounter << " pacotes acumulados." << std::endl;
+  }
+
+  // 3. Verificação de Conexão
+  if (recvSize <= 0) {
+    // Falha no recebimento
     if (this->dataPtr->arduPilotOnline) {
-      gzwarn << "[" << this->dataPtr->modelName << "] "
-             << "Broken ArduPilot connection, count [" << this->dataPtr->connectionTimeoutCount << "/" << this->dataPtr->connectionTimeoutMaxCount << "]\n";
-      if (++this->dataPtr->connectionTimeoutCount > this->dataPtr->connectionTimeoutMaxCount) {
-        this->dataPtr->connectionTimeoutCount = 0;
+      this->dataPtr->connectionTimeoutCount++;
+
+      if (this->dataPtr->connectionTimeoutCount % 10 == 0) {  // Log a cada 10 falhas para não inundar o console
+        gzwarn << "[" << this->dataPtr->modelName << "] Falha de conexão ArduPilot: [" << this->dataPtr->connectionTimeoutCount << "/"
+               << this->dataPtr->connectionTimeoutMaxCount << "]\n";
+      }
+
+      if (this->dataPtr->connectionTimeoutCount > this->dataPtr->connectionTimeoutMaxCount) {
         this->dataPtr->arduPilotOnline        = false;
-        gzwarn << "[" << this->dataPtr->modelName << "] "
-               << "Broken ArduPilot connection, resetting motor control.\n";
+        this->dataPtr->connectionTimeoutCount = 0;
+        gzwarn << "[" << this->dataPtr->modelName << "] ArduPilot Offline. Resetando motores.\n";
         this->ResetPIDs();
       }
     }
-  } else {
-    const ssize_t expectedPktSize = sizeof(pkt.motorSpeed[0]) * this->dataPtr->controls.size();
-    if (recvSize < expectedPktSize) {
-      gzerr << "[" << this->dataPtr->modelName << "] "
-            << "got less than model needs. Got: " << recvSize << "commands, expected size: " << expectedPktSize << "\n";
-    }
-    const ssize_t recvChannels = recvSize / sizeof(pkt.motorSpeed[0]);
-    // for(unsigned int i = 0; i < recvChannels; ++i)
-    // {
-    //   gzdbg << "servo_command [" << i << "]: " << pkt.motorSpeed[i] << "\n";
-    // }
+    return;  // Sai da função cedo se não houver dados
+  }
 
-    if (!this->dataPtr->arduPilotOnline) {
-      gzdbg << "[" << this->dataPtr->modelName << "] "
-            << "ArduPilot controller online detected.\n";
-      // made connection, set some flags
-      this->dataPtr->connectionTimeoutCount = 0;
-      this->dataPtr->arduPilotOnline        = true;
-    }
+  // 4. Se chegou aqui, temos dados válidos. Validar tamanho.
+  const ssize_t expectedPktSize = sizeof(pkt.motorSpeed[0]) * this->dataPtr->controls.size();
+  if (recvSize < expectedPktSize) {
+    gzerr << "[" << this->dataPtr->modelName << "] Pacote menor que o esperado. Recebido: " << recvSize << "\n";
+    return;
+  }
 
-    // compute command based on requested motorSpeed
-    for (unsigned i = 0; i < this->dataPtr->controls.size(); ++i) {
-      if (i < MAX_MOTORS) {
-        if (this->dataPtr->controls[i].channel < recvChannels) {
-          // bound incoming cmd between 0 and 1
-          const double cmd               = ignition::math::clamp(pkt.motorSpeed[this->dataPtr->controls[i].channel], -1.0f, 1.0f);
-          this->dataPtr->controls[i].cmd = this->dataPtr->controls[i].multiplier * (this->dataPtr->controls[i].offset + cmd);
-           /* gzdbg << "apply input chan[" << this->dataPtr->controls[i].channel */
-           /*       << "] to control chan[" << i */
-           /*       << "] with joint name [" */
-           /*       << this->dataPtr->controls[i].jointName */
-           /*       << "] raw cmd [" */
-           /*       << pkt.motorSpeed[this->dataPtr->controls[i].channel] */
-           /*       << "] adjusted cmd [" << this->dataPtr->controls[i].cmd */
-           /*       << "].\n"; */
-        } else {
-          gzerr << "[" << this->dataPtr->modelName << "] "
-                << "control[" << i << "] channel [" << this->dataPtr->controls[i].channel << "] is greater than incoming commands size[" << recvChannels
-                << "], control not applied.\n";
-        }
-      } else {
-        gzerr << "[" << this->dataPtr->modelName << "] "
-              << "too many motors, skipping [" << i << " > " << MAX_MOTORS << "].\n";
+  // Detectar reconexão ou primeira conexão
+  if (!this->dataPtr->arduPilotOnline) {
+    gzdbg << "[" << this->dataPtr->modelName << "] Conexão ArduPilot estabelecida!\n";
+    this->dataPtr->arduPilotOnline        = true;
+    this->dataPtr->connectionTimeoutCount = 0;
+  }
+
+  // 5. Aplicar Comandos aos Motores
+  const ssize_t recvChannels = recvSize / sizeof(pkt.motorSpeed[0]);
+  const float   factor       = 0.65f;  // Constante de linearização
+
+  for (unsigned i = 0; i < this->dataPtr->controls.size(); ++i) {
+    if (i >= MAX_MOTORS)
+      break;
+
+    uint32_t channel = this->dataPtr->controls[i].channel;
+    if (channel < recvChannels) {
+      float rawCmd = ignition::math::clamp(pkt.motorSpeed[channel], 0.0f, 1.0f);
+
+      // Cálculo de empuxo linearizado (Seguro contra valores negativos dentro da raiz)
+      try {
+        float discriminant             = pow(1.0f - factor, 2) + (4.0f * factor * rawCmd);
+        this->dataPtr->controls[i].cmd = (sqrt(std::max(0.0f, discriminant)) - (1.0f - factor)) / (2.0f * factor);
+      }
+      catch (...) {
+        this->dataPtr->controls[i].cmd = 0.0f;
       }
     }
   }
 }
+
+/////////////////////////////////////////////////
+/* void ArduPilotPlugin::ReceiveMotorCommand() { */
+/*   // Added detection for whether ArduPilot is online or not. */
+/*   // If ArduPilot is detected (receive of fdm packet from someone), */
+/*   // then socket receive wait time is increased from 1ms to 1 sec */
+/*   // to accomodate network jitter. */
+/*   // If ArduPilot is not detected, receive call blocks for 1ms */
+/*   // on each call. */
+/*   // Once ArduPilot presence is detected, it takes this many */
+/*   // missed receives before declaring the FCS offline. */
+
+/*   ServoPacket pkt; */
+/*   uint32_t    waitMs; */
+/*   if (this->dataPtr->arduPilotOnline) { */
+/*     // increase timeout for receive once we detect a packet from */
+/*     // ArduPilot FCS. */
+/*     waitMs = 1000; */
+/*   } else { */
+/*     // Otherwise skip quickly and do not set control force. */
+/*     waitMs = 1; */
+/*   } */
+/*   ssize_t recvSize = this->dataPtr->socket_in.Recv(&pkt, sizeof(ServoPacket), waitMs); */
+
+/*   // Drain the socket in the case we're backed up */
+/*   int         counter = 0; */
+/*   ServoPacket last_pkt; */
+/*   while (true) { */
+/*     // last_pkt = pkt; */
+/*     const ssize_t recvSize_last = this->dataPtr->socket_in.Recv(&last_pkt, sizeof(ServoPacket), 0ul); */
+/*     if (recvSize_last == -1) { */
+/*       break; */
+/*     } */
+/*     counter++; */
+/*     pkt      = last_pkt; */
+/*     recvSize = recvSize_last; */
+/*   } */
+/*   if (counter > 0) { */
+/*     gzdbg << "[" << this->dataPtr->modelName << "] " */
+/*           << "Drained n packets: " << counter << std::endl; */
+/*   } */
+
+/*   if (recvSize == -1) { */
+/*     // didn't receive a packet */
+/*     // gzdbg << "no packet\n"; */
+/*     gazebo::common::Time::NSleep(100); */
+/*     if (this->dataPtr->arduPilotOnline) { */
+/*       gzwarn << "[" << this->dataPtr->modelName << "] " */
+/*              << "Broken ArduPilot connection, count [" << this->dataPtr->connectionTimeoutCount << "/" << this->dataPtr->connectionTimeoutMaxCount << "]\n";
+ */
+/*       if (++this->dataPtr->connectionTimeoutCount > this->dataPtr->connectionTimeoutMaxCount) { */
+/*         this->dataPtr->connectionTimeoutCount = 0; */
+/*         this->dataPtr->arduPilotOnline        = false; */
+/*         gzwarn << "[" << this->dataPtr->modelName << "] " */
+/*                << "Broken ArduPilot connection, resetting motor control.\n"; */
+/*         this->ResetPIDs(); */
+/*       } */
+/*     } */
+/*   } else { */
+/*     const ssize_t expectedPktSize = sizeof(pkt.motorSpeed[0]) * this->dataPtr->controls.size(); */
+/*     if (recvSize < expectedPktSize) { */
+/*       gzerr << "[" << this->dataPtr->modelName << "] " */
+/*             << "got less than model needs. Got: " << recvSize << "commands, expected size: " << expectedPktSize << "\n"; */
+/*     } */
+/*     const ssize_t recvChannels = recvSize / sizeof(pkt.motorSpeed[0]); */
+/*     // for(unsigned int i = 0; i < recvChannels; ++i) */
+/*     // { */
+/*     //   gzdbg << "servo_command [" << i << "]: " << pkt.motorSpeed[i] << "\n"; */
+/*     // } */
+
+/*     if (!this->dataPtr->arduPilotOnline) { */
+/*       gzdbg << "[" << this->dataPtr->modelName << "] " */
+/*             << "ArduPilot controller online detected.\n"; */
+/*       // made connection, set some flags */
+/*       this->dataPtr->connectionTimeoutCount = 0; */
+/*       this->dataPtr->arduPilotOnline        = true; */
+/*     } */
+
+/*     // compute command based on requested motorSpeed */
+/*     for (unsigned i = 0; i < this->dataPtr->controls.size(); ++i) { */
+/*       if (i < MAX_MOTORS) { */
+/*         if (this->dataPtr->controls[i].channel < recvChannels) { */
+/*           // bound incoming cmd between 0 and 1 */
+/*           this->dataPtr->controls[i].cmd = ignition::math::clamp(pkt.motorSpeed[this->dataPtr->controls[i].channel], -1.0f, 1.0f); */
+/*           /1* this->dataPtr->controls[i].cmd = this->dataPtr->controls[i].multiplier * (this->dataPtr->controls[i].offset + cmd); *1/ */
+/*           try { */
+/*             this->dataPtr->controls[i].cmd = (sqrt(pow(1 - 0.65, 2) + (4 * 0.65 * this->dataPtr->controls[i].cmd)) - (1 - 0.65)) / (2 * 0.65); */
+/*           } */
+/*           catch (const std::exception &e) { */
+/*             std::cerr << "EXCEÇÃO NO SERVO " << i << ": " << e.what() << std::endl; */
+/*             this->dataPtr->controls[i].cmd = 0.0f;  // Valor de segurança */
+/*           } */
+/*           /1* gzdbg << "apply input chan[" << this->dataPtr->controls[i].channel << "] to control chan[" << i << "] with joint name [" *1/ */
+/*           /1*       << this->dataPtr->controls[i].jointName << "] raw cmd [" << pkt.motorSpeed[this->dataPtr->controls[i].channel] << "] adjusted cmd [" *1/
+ */
+/*           /1* << this->dataPtr->controls[i].cmd << "].\n"; *1/ */
+/*         } else { */
+/*           gzerr << "[" << this->dataPtr->modelName << "] " */
+/*                 << "control[" << i << "] channel [" << this->dataPtr->controls[i].channel << "] is greater than incoming commands size[" << recvChannels */
+/*                 << "], control not applied.\n"; */
+/*         } */
+/*       } else { */
+/*         gzerr << "[" << this->dataPtr->modelName << "] " */
+/*               << "too many motors, skipping [" << i << " > " << MAX_MOTORS << "].\n"; */
+/*       } */
+/*     } */
+/*   } */
+/* } */
 
 /////////////////////////////////////////////////
 void ArduPilotPlugin::SendState() const {
