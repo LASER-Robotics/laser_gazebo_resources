@@ -825,22 +825,22 @@ void ArduPilotPlugin::OnUpdate() {
   gazebo::common::Time curTime = this->dataPtr->model->GetWorld()->SimTime();
 
   // Update the control surfaces and publish the new state.
-  if (curTime > this->dataPtr->lastControllerUpdateTime) {
-    this->ReceiveMotorCommand();
-    if (this->dataPtr->arduPilotOnline) {
-      /* if ((curTime - lastMotorTime).Double() > 0.004) { */
-      mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
-      for (size_t i = 0; i < this->dataPtr->controls.size(); ++i) {
-        turning_velocities_msg.add_motor_speed(this->dataPtr->controls[i].cmd);
-      }
-      motor_velocity_reference_pub_->Publish(turning_velocities_msg);
-      /* lastMotorTime = curTime; */
-      /* } */
-      /* this->ApplyMotorForces((curTime - */
-      /*   this->dataPtr->lastControllerUpdateTime).Double()); */
-      this->SendState();
+  /* if (curTime > this->dataPtr->lastControllerUpdateTime) { */
+  this->ReceiveMotorCommand();
+  if (this->dataPtr->arduPilotOnline) {
+    /* if ((curTime - lastMotorTime).Double() > 0.004) { */
+    mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
+    for (size_t i = 0; i < this->dataPtr->controls.size(); ++i) {
+      turning_velocities_msg.add_motor_speed(this->dataPtr->controls[i].cmd);
     }
+    motor_velocity_reference_pub_->Publish(turning_velocities_msg);
+    /* lastMotorTime = curTime; */
+    /* } */
+    /* this->ApplyMotorForces((curTime - */
+    /*   this->dataPtr->lastControllerUpdateTime).Double()); */
+    this->SendState();
   }
+  /* } */
 
   this->dataPtr->lastControllerUpdateTime = curTime;
 }
@@ -986,14 +986,31 @@ void ArduPilotPlugin::ReceiveMotorCommand() {
     if (channel < recvChannels) {
       float rawCmd = ignition::math::clamp(pkt.motorSpeed[channel], 0.0f, 1.0f);
 
-      // Cálculo de empuxo linearizado (Seguro contra valores negativos dentro da raiz)
       try {
-        float discriminant             = pow(1.0f - factor, 2) + (4.0f * factor * rawCmd);
-        this->dataPtr->controls[i].cmd = (sqrt(std::max(0.0f, discriminant)) - (1.0f - factor)) / (2.0f * factor);
-        /* this->dataPtr->controls[i].cmd *= 0.2; */
+        float discriminant = pow(1.0f - factor, 2) + (4.0f * factor * rawCmd);
+        /* this->dataPtr->controls[i].cmd = (sqrt(std::max(0.0f, discriminant)) - (1.0f - factor)) / (2.0f * factor); */
+        auto t_ap        = (sqrt(std::max(0.0f, discriminant)) - (1.0f - factor)) / (2.0f * factor);
+        t_ap             = (t_ap * 2.0f) - 1.0f;
+        auto t_px4       = 0.0f;
+        auto hover_point = 0.4f;
+
+        if (t_ap < 0.0f) {
+          // Mapeia de volta de [-1, 0] para [0, hover_point]
+          t_px4 = (t_ap + 1.0f) * hover_point;
+        } else {
+          // Mapeia de volta de [0, 1] para [hover_point, 1]
+          t_px4 = t_ap * (1.0f - hover_point) + hover_point;
+        }
+
+        /* this->dataPtr->controls[i].cmd = std::clamp(t_px4, 0.0f, 1.0f); */
+        this->dataPtr->controls[i].cmd = rawCmd;
+
+        // Garante que o resultado fique estritamente dentro da sua escala original
+        this->dataPtr->controls[i].cmd = rawCmd;
+        gzdbg << rawCmd << std::endl;
       }
       catch (...) {
-        this->dataPtr->controls[i].cmd = 0.0f;
+        this->dataPtr->controls[i].cmd = rawCmd;
       }
     }
   }
@@ -1127,18 +1144,34 @@ void ArduPilotPlugin::SendState() const {
   /* const ignition::math::Vector3d linearAccel = this->dataPtr->imuSensor->LinearAcceleration(); */
 
   // copy to pkt
-  pkt.imuLinearAccelerationXYZ[0] = imu_accel(0);
-  pkt.imuLinearAccelerationXYZ[1] = -imu_accel(1);
-  pkt.imuLinearAccelerationXYZ[2] = -imu_accel(2);
+  /* pkt.imuLinearAccelerationXYZ[0] = imu_accel(0); */
+  /* pkt.imuLinearAccelerationXYZ[1] = -imu_accel(1); */
+  /* pkt.imuLinearAccelerationXYZ[2] = -imu_accel(2); */
   // gzerr << "lin accel [" << linearAccel << "]\n";
 
   // get angular velocity in body frame
   /* const ignition::math::Vector3d angularVel = this->dataPtr->imuSensor->AngularVelocity(); */
 
   // copy to pkt
-  pkt.imuAngularVelocityRPY[0] = imu_gyro(0);
-  pkt.imuAngularVelocityRPY[1] = -imu_gyro(1);
-  pkt.imuAngularVelocityRPY[2] = -imu_gyro(2);
+  /* pkt.imuAngularVelocityRPY[0] = imu_gyro(0); */
+  /* pkt.imuAngularVelocityRPY[1] = -imu_gyro(1); */
+  /* pkt.imuAngularVelocityRPY[2] = -imu_gyro(2); */
+
+  // Defina isso uma vez (pode ser um const estático na sua classe)
+  static const Eigen::DiagonalMatrix<double, 3> ENU_TO_NED(1.0, -1.0, -1.0);
+
+  // Multiplique os vetores lidos do Gazebo pela matriz de transformação
+  Eigen::Vector3d accel_ned = ENU_TO_NED * imu_accel;
+  Eigen::Vector3d gyro_ned  = ENU_TO_NED * imu_gyro;
+
+  // Copia para o pacote (pkt) de forma limpa
+  pkt.imuLinearAccelerationXYZ[0] = accel_ned.x();
+  pkt.imuLinearAccelerationXYZ[1] = accel_ned.y();
+  pkt.imuLinearAccelerationXYZ[2] = accel_ned.z();
+
+  pkt.imuAngularVelocityRPY[0] = gyro_ned.x();
+  pkt.imuAngularVelocityRPY[1] = gyro_ned.y();
+  pkt.imuAngularVelocityRPY[2] = gyro_ned.z();
 
   // get inertial pose and velocity
   // position of the uav in world frame
