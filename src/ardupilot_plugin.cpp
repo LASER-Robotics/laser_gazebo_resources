@@ -994,20 +994,21 @@ void ArduPilotPlugin::ReceiveMotorCommand() {
         auto t_px4       = 0.0f;
         auto hover_point = 0.4f;
 
-        if (t_ap < 0.0f) {
-          // Mapeia de volta de [-1, 0] para [0, hover_point]
-          t_px4 = (t_ap + 1.0f) * hover_point;
-        } else {
-          // Mapeia de volta de [0, 1] para [hover_point, 1]
-          t_px4 = t_ap * (1.0f - hover_point) + hover_point;
-        }
+        /* if (t_ap < 0.0f) { */
+        /*   // Mapeia de volta de [-1, 0] para [0, hover_point] */
+        /*   t_px4 = (t_ap + 1.0f) * hover_point; */
+        /* } else { */
+        /*   // Mapeia de volta de [0, 1] para [hover_point, 1] */
+        /*   t_px4 = t_ap * (1.0f - hover_point) + hover_point; */
+        /* } */
 
         /* this->dataPtr->controls[i].cmd = std::clamp(t_px4, 0.0f, 1.0f); */
-        this->dataPtr->controls[i].cmd = rawCmd;
+        /* this->dataPtr->controls[i].cmd = rawCmd; */
 
         // Garante que o resultado fique estritamente dentro da sua escala original
-        this->dataPtr->controls[i].cmd = rawCmd;
-        gzdbg << rawCmd << std::endl;
+        /* auto a = 0.15 + (0.95 - 0.15); */
+        this->dataPtr->controls[i].cmd = (rawCmd - 0.15) / (0.95 - 0.15);
+        gzdbg << this->dataPtr->controls[i].cmd << std::endl;
       }
       catch (...) {
         this->dataPtr->controls[i].cmd = rawCmd;
