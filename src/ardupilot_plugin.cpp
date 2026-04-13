@@ -984,34 +984,22 @@ void ArduPilotPlugin::ReceiveMotorCommand() {
 
     uint32_t channel = this->dataPtr->controls[i].channel;
     if (channel < recvChannels) {
-      float rawCmd = ignition::math::clamp(pkt.motorSpeed[channel], 0.0f, 1.0f);
+      float aux = ignition::math::clamp(pkt.motorSpeed[channel], 0.0f, 1.0f);
 
       try {
-        float discriminant = pow(1.0f - factor, 2) + (4.0f * factor * rawCmd);
+        aux = (aux - 0.15) / (0.95 - 0.15);
+        if (aux > 1.0) {
+          aux = 1.0;
+        }
+
+        this->dataPtr->controls[i].cmd = ((1.0 - factor) * aux) + (factor * (aux * aux));
+        /* this->dataPtr->controls[i].cmd -= 0.03; */
+        /* float discriminant             = pow(1.0f - factor, 2) + (4.0f * factor * this->dataPtr->controls[i].cmd); */
         /* this->dataPtr->controls[i].cmd = (sqrt(std::max(0.0f, discriminant)) - (1.0f - factor)) / (2.0f * factor); */
-        auto t_ap        = (sqrt(std::max(0.0f, discriminant)) - (1.0f - factor)) / (2.0f * factor);
-        t_ap             = (t_ap * 2.0f) - 1.0f;
-        auto t_px4       = 0.0f;
-        auto hover_point = 0.4f;
-
-        /* if (t_ap < 0.0f) { */
-        /*   // Mapeia de volta de [-1, 0] para [0, hover_point] */
-        /*   t_px4 = (t_ap + 1.0f) * hover_point; */
-        /* } else { */
-        /*   // Mapeia de volta de [0, 1] para [hover_point, 1] */
-        /*   t_px4 = t_ap * (1.0f - hover_point) + hover_point; */
-        /* } */
-
-        /* this->dataPtr->controls[i].cmd = std::clamp(t_px4, 0.0f, 1.0f); */
-        /* this->dataPtr->controls[i].cmd = rawCmd; */
-
-        // Garante que o resultado fique estritamente dentro da sua escala original
-        /* auto a = 0.15 + (0.95 - 0.15); */
-        this->dataPtr->controls[i].cmd = (rawCmd - 0.15) / (0.95 - 0.15);
         gzdbg << this->dataPtr->controls[i].cmd << std::endl;
       }
       catch (...) {
-        this->dataPtr->controls[i].cmd = rawCmd;
+        /* this->dataPtr->controls[i].cmd = rawCmd; */
       }
     }
   }
