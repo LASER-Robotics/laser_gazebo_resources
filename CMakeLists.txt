@@ -25,6 +25,7 @@ find_package(OpenCV REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(camera_info_manager REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(TBB REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CustomMsg.msg"
