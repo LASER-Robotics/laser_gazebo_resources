@@ -974,9 +974,10 @@ void ArduPilotPlugin::ReceiveMotorCommand() {
     this->dataPtr->connectionTimeoutCount = 0;
   }
 
-  // 5. Aplicar Comandos aos Motores
   const ssize_t recvChannels = recvSize / sizeof(pkt.motorSpeed[0]);
-  const float   factor       = 0.65f;  // Constante de linearização
+  float spin_min = 0.15;
+  float spin_max = 0.95;
+  float expo = 0.65;
 
   for (unsigned i = 0; i < this->dataPtr->controls.size(); ++i) {
     if (i >= MAX_MOTORS)
@@ -984,23 +985,21 @@ void ArduPilotPlugin::ReceiveMotorCommand() {
 
     uint32_t channel = this->dataPtr->controls[i].channel;
     if (channel < recvChannels) {
-      float aux = ignition::math::clamp(pkt.motorSpeed[channel], 0.0f, 1.0f);
-
-      try {
-        aux = (aux - 0.15) / (0.95 - 0.15);
-        if (aux > 1.0) {
-          aux = 1.0;
-        }
-
-        this->dataPtr->controls[i].cmd = ((1.0 - factor) * aux) + (factor * (aux * aux));
-        /* this->dataPtr->controls[i].cmd -= 0.03; */
-        /* float discriminant             = pow(1.0f - factor, 2) + (4.0f * factor * this->dataPtr->controls[i].cmd); */
-        /* this->dataPtr->controls[i].cmd = (sqrt(std::max(0.0f, discriminant)) - (1.0f - factor)) / (2.0f * factor); */
-        gzdbg << this->dataPtr->controls[i].cmd << std::endl;
+      const double spin = ignition::math::clamp(pkt.motorSpeed[this->dataPtr->controls[i].channel], -1.0f, 1.0f);
+      // Se o motor estiver rodando abaixo ou igual ao SPIN_MIN, o empuxo físico é considerado zero.
+      if (spin <= spin_min) {
+      this->dataPtr->controls[i].cmd = 0.0;
       }
-      catch (...) {
-        /* this->dataPtr->controls[i].cmd = rawCmd; */
-      }
+
+      // 2. Remove a escala do Spin Min/Max para encontrar o "Throttle" interno
+      double throttle = (spin - spin_min) / (spin_max - spin_min);
+      throttle        = std::clamp(throttle, 0.0, 1.0);
+
+      // 3. Aplica a equação quadrática da curva (Expo) para descobrir o Empuxo
+      double thrust = (1.0 - expo) * throttle + expo * (throttle * throttle);
+
+      this->dataPtr->controls[i].cmd = thrust;
+      /* gzmsg << thrust << std::endl; */
     }
   }
 }
@@ -1216,10 +1215,18 @@ void ArduPilotPlugin::SendState() const {
   // or...
   // Get model velocity in NED frame
   const ignition::math::Vector3d velGazeboWorldFrame = this->dataPtr->model->GetLink()->WorldLinearVel();
+
+  pkt.positionXYZ[0] = NEDToModelXForwardZUp.Pos().X();
+
   const ignition::math::Vector3d velNEDFrame         = this->gazeboXYZToNED.Rot().RotateVectorReverse(velGazeboWorldFrame);
   pkt.velocityXYZ[0]                                 = velNEDFrame.X();
   pkt.velocityXYZ[1]                                 = velNEDFrame.Y();
   pkt.velocityXYZ[2]                                 = velNEDFrame.Z();
+
+
+  pkt.positionXYZ[0] += pkt.velocityXYZ[0] * 0.01;
+  pkt.positionXYZ[1] += pkt.velocityXYZ[1] * 0.01;
+  pkt.positionXYZ[2] += pkt.velocityXYZ[2] * 0.01;
   /* NOT MERGED IN MASTER YET
     if (!this->dataPtr->gpsSensor)
       {
