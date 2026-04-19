@@ -22,6 +22,8 @@
 #include "laser_gazebo_resources/gazebo_motor_model.h"
 #include <ignition/math.hh>
 
+using namespace boost::placeholders;
+
 namespace gazebo
 {
 

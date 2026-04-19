@@ -3,6 +3,7 @@ project(laser_gazebo_resources)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS TRUE CACHE INTERNAL "")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -137,7 +138,7 @@ target_link_libraries(MotorPluginGazebo
 add_library(MavlinkPluginGazebo SHARED
     src/gazebo_mavlink_interface.cpp src/mavlink_interface.cpp
 )
-target_include_directories(MavlinkPluginGazebo PUBLIC
+target_include_directories(MavlinkPluginGazebo SYSTEM PUBLIC
     ${GAZEBO_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>

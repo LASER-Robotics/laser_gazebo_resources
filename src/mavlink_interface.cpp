@@ -1,5 +1,7 @@
 #include "laser_gazebo_resources/mavlink_interface.h"
 
+using namespace boost::placeholders;
+
 MavlinkInterface::MavlinkInterface() :
     serial_dev_(io_service_){
 

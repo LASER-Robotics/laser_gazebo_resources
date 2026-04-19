@@ -20,6 +20,9 @@
  */
 
 #include <laser_gazebo_resources/gazebo_mavlink_interface.h>
+
+using namespace boost::placeholders;
+
 namespace gazebo
 {
 GZ_REGISTER_MODEL_PLUGIN(GazeboMavlinkInterface);
