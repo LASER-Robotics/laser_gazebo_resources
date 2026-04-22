@@ -23,6 +23,7 @@ find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(MAVLink REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(TBB REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CustomMsg.msg"
@@ -85,10 +86,20 @@ set(proto_msg_files
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_msg_files})
 add_library(proto_msg SHARED ${PROTO_SRCS})
+target_include_directories(proto_msg PUBLIC
+  ${PROTOBUF_INCLUDE_DIRS}
+  ${GAZEBO_MSG_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
+)
+target_link_libraries(proto_msg
+  ${PROTOBUF_LIBRARIES}
+  ${GAZEBO_LIBRARIES}
+)
 
 add_library(link_static_tf_publisher SHARED
     plugins/link_static_tf_publisher.cpp
 )
+
 ament_target_dependencies(link_static_tf_publisher rclcpp tf2_ros geometry_msgs)
 target_include_directories(link_static_tf_publisher PUBLIC
   ${GAZEBO_INCLUDE_DIRS}
@@ -132,6 +143,7 @@ target_include_directories(MotorPluginGazebo PUBLIC
 target_link_libraries(MotorPluginGazebo
     ${Boost_LIBRARIES}
     ${GAZEBO_LIBRARIES}
+    TBB::tbb
     proto_msg
 )
 
@@ -146,12 +158,14 @@ target_include_directories(MavlinkPluginGazebo SYSTEM PUBLIC
 ament_target_dependencies(MavlinkPluginGazebo
   rclcpp
 	std_msgs
+  gazebo_ros
 	laser_rahcm_simulation
 	laser_usv_msgs
 )
 target_link_libraries(MavlinkPluginGazebo
     ${Boost_LIBRARIES}
     ${GAZEBO_LIBRARIES}
+    TBB::tbb
     proto_msg
 )
 
