@@ -87,6 +87,11 @@ set(proto_msg_files
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${proto_msg_files})
 add_library(proto_msg SHARED ${PROTO_SRCS})
 
+target_link_libraries(proto_msg 
+  ${Protobuf_LIBRARIES}
+  ${GAZEBO_LIBRARIES}
+)
+
 macro(add_gazebo_plugin_target target_name)
   cmake_parse_arguments(ARG "" "" "SRCS;DEPENDS;LIBS" ${ARGN})
   add_library(${target_name} SHARED ${ARG_SRCS})
@@ -114,36 +119,38 @@ add_gazebo_plugin_target(LivoxPluginGazebo
 
 add_gazebo_plugin_target(MotorPluginGazebo
   SRCS src/gazebo_motor_model.cpp
+  DEPENDS gazebo_ros
   LIBS ${Boost_LIBRARIES} proto_msg
 )
 
 add_gazebo_plugin_target(LidarPluginGazebo
   SRCS src/gazebo_lidar_plugin.cpp
+  DEPENDS gazebo_ros
   LIBS ${Boost_LIBRARIES} proto_msg
 )
 
 add_gazebo_plugin_target(MavlinkPluginGazebo
   SRCS src/gazebo_mavlink_interface.cpp src/mavlink_interface.cpp
-  DEPENDS laser_msgs rclcpp
+  DEPENDS laser_msgs rclcpp gazebo_ros
   LIBS ${Boost_LIBRARIES} proto_msg
 )
 
 add_gazebo_plugin_target(RealsensePluginGazebo
   SRCS src/gazebo_ros_realsense.cpp src/perlin_noise.cpp
-  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager
-  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
+  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager gazebo_ros
+  LIBS ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} TBB::tbb
 )
 
 add_gazebo_plugin_target(VelodynePluginGazebo
   SRCS src/gazebo_ros_velodyne_laser.cpp
-  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager
-  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
+  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager gazebo_ros
+  LIBS ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} TBB::tbb
 )
 
 add_gazebo_plugin_target(ImuPluginGazebo
   SRCS src/gazebo_ros_imu_sensor.cpp
-  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager
-  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
+  DEPENDS rclcpp tf2_ros sensor_msgs geometry_msgs image_transport camera_info_manager gazebo_ros
+  LIBS ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} TBB::tbb
 )
 
 add_executable(csv_main src/csv_main.cpp)
