@@ -16,11 +16,21 @@ private:
   physics::ModelPtr model;
   std::shared_ptr<rclcpp::Node> ros_node;
   std::unique_ptr<tf2_ros::StaticTransformBroadcaster> tf_broadcaster;
+ 
+  std::string sanitizeFrameId(const std::string& frame_id)
+  {
+    std::string clean = frame_id;
+    while (!clean.empty() && clean.front() == '/')
+    {
+      clean.erase(0, 1);
+    }
+    return clean;
+  }
 
 public:
   LinkStaticTFPublisher() {}
 
-  virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+  virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) override
   {
     // Safety check
     if (!_model)
@@ -33,7 +43,7 @@ public:
 
     std::string parentLinkName;
     std::string childLinkName;
-    std::string robotNamespace = "/";
+    std::string robotNamespace = "";
 
     if (_sdf->HasElement("robotNamespace"))
     {
@@ -76,17 +86,29 @@ public:
     {
       rclcpp::init(0, nullptr);
     }
-
-    ros_node = std::make_shared<rclcpp::Node>("link_static_tf_publisher");
+ 
+    std::string node_name = "static_tf_" + parentLinkName + "_to_" + childLinkName;
+    ros_node = std::make_shared<rclcpp::Node>(node_name);
     tf_broadcaster = std::make_unique<tf2_ros::StaticTransformBroadcaster>(ros_node);
 
     // Get the transform between the parent and child links
     ignition::math::Pose3d relativePose = childLink->WorldPose() - parentLink->WorldPose();
+ 
+    std::string parentFrameId = parentLinkName;
+    std::string childFrameId = childLinkName;
+
+    if (!robotNamespace.empty())
+    {
+      parentFrameId = robotNamespace + "/" + parentFrameId;
+      childFrameId = robotNamespace + "/" + childFrameId;
+    }
 
     geometry_msgs::msg::TransformStamped transformStamped;
     transformStamped.header.stamp = ros_node->get_clock()->now();
-    transformStamped.header.frame_id = robotNamespace + "/" + parentLinkName.erase(parentLinkName.find("_link"), std::string("_link").length());
-    transformStamped.child_frame_id = robotNamespace + "/" + childLinkName.erase(childLinkName.find("_link"), std::string("_link").length());
+    
+    transformStamped.header.frame_id = sanitizeFrameId(parentFrameId);
+    transformStamped.child_frame_id = sanitizeFrameId(childFrameId);
+    
     transformStamped.transform.translation.x = relativePose.Pos().X();
     transformStamped.transform.translation.y = relativePose.Pos().Y();
     transformStamped.transform.translation.z = relativePose.Pos().Z();
