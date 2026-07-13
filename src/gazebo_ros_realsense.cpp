@@ -23,6 +23,8 @@
 #include <sensor_msgs/image_encodings.hpp>
 #include <sensor_msgs/fill_image.hpp>
 #include <sensor_msgs/distortion_models.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/point_cloud2_iterator.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/static_transform_broadcaster.h>
@@ -39,7 +41,7 @@
 #define COLOR_CAMERA_TOPIC "color"
 #define IRED1_CAMERA_TOPIC "infra1"
 #define IRED2_CAMERA_TOPIC "infra2"
-#define DEPTH_PUB_FREQ_HZ 30
+#define DEPTH_PUB_FREQ_HZ 60
 #define COLOR_PUB_FREQ_HZ 30
 #define IRED1_PUB_FREQ_HZ 60
 #define IRED2_PUB_FREQ_HZ 60
@@ -353,6 +355,11 @@ public:
     this->ir2_pub_   = this->itnode_->advertiseCamera(camera_name_ + "/infra2/image_raw", 2);
     this->depth_pub_ = this->itnode_->advertiseCamera(camera_name_ + "/aligned_depth_to_color/image_raw", 2);
 
+    // ---- ADICIONADO: PUBLICADOR DA NUVEM DE PONTOS ----
+    // Configurado como SensorDataQoS (Best Effort) para não travar a rede
+    this->pointcloud_pub_ = this->ros_node_->create_publisher<sensor_msgs::msg::PointCloud2>(camera_name_ + "/lidar", rclcpp::SensorDataQoS());
+    // ---------------------------------------------------
+
     this->static_tf_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this->ros_node_);
     createStaticTransforms();
   }
@@ -442,6 +449,9 @@ public:
 
     sensor_msgs::msg::CameraInfo info = cameraInfo(d_msg, cam);
     this->depth_pub_.publish(d_msg, info);
+
+    // ---- PUBLICAR POINTCLOUD ----
+    publishPointCloud(current_time, info, this->depthMap.data(), d_msg.width, d_msg.height);
   }
 
   virtual void OnNewDepthFrameRealistic(const rendering::CameraPtr cam, const transport::PublisherPtr pub) {
@@ -457,6 +467,9 @@ public:
 
     sensor_msgs::msg::CameraInfo info = cameraInfo(d_msg, cam);
     this->depth_pub_.publish(d_msg, info);
+
+    // ---- PUBLICAR POINTCLOUD (Com os ruídos já aplicados!) ----
+    publishPointCloud(current_time, info, this->depthMap.data(), d_msg.width, d_msg.height);
   }
 
   sensor_msgs::msg::CameraInfo cameraInfo(const sensor_msgs::msg::Image& image, const gazebo::rendering::CameraPtr cam) {
@@ -491,13 +504,77 @@ public:
     return info_msg;
   }
 
+  void publishPointCloud(const rclcpp::Time& current_time, const sensor_msgs::msg::CameraInfo& info, const uint16_t* depth_data, unsigned int width,
+                         unsigned int height) {
+    // ====================================================================
+    // CONTROLE DE DECIMAÇÃO (PULO DE PIXELS)
+    // decimation = 1 -> 100% dos pontos (nuvem completa)
+    // decimation = 2 -> 25% dos pontos (ignora metade das linhas e colunas)
+    // decimation = 3 -> ~11% dos pontos (extremamente leve e rápida)
+    // ====================================================================
+    const unsigned int decimation = 4;
+
+    unsigned int new_width  = width / decimation;
+    unsigned int new_height = height / decimation;
+
+    sensor_msgs::msg::PointCloud2 cloud_msg;
+    cloud_msg.header.stamp    = current_time;
+    cloud_msg.header.frame_id = depth_camera_optical_frame_id_;
+    cloud_msg.height          = 1;
+    cloud_msg.width           = new_width * new_height;
+    cloud_msg.is_dense        = false;
+    cloud_msg.is_bigendian    = false;
+
+    sensor_msgs::PointCloud2Modifier modifier(cloud_msg);
+    modifier.setPointCloud2FieldsByString(1, "xyz");
+    modifier.resize(new_width * new_height);
+
+    sensor_msgs::PointCloud2Iterator<float> iter_x(cloud_msg, "x");
+    sensor_msgs::PointCloud2Iterator<float> iter_y(cloud_msg, "y");
+    sensor_msgs::PointCloud2Iterator<float> iter_z(cloud_msg, "z");
+
+    double fx = info.k[0];
+    double fy = info.k[4];
+    double cx = info.k[2];
+    double cy = info.k[5];
+
+    for (unsigned int nv = 0; nv < new_height; ++nv) {
+      unsigned int v = nv * decimation;
+
+      for (unsigned int nu = 0; nu < new_width; ++nu) {
+        unsigned int u = nu * decimation;
+
+        uint16_t depth = depth_data[v * width + u];
+
+        if (depth == 0) {
+          *iter_x = *iter_y = *iter_z = std::numeric_limits<float>::quiet_NaN();
+        } else {
+          float z = depth * DEPTH_SCALE_M;
+
+          *iter_x = (u - cx) * z / fx;
+          *iter_y = (v - cy) * z / fy;
+          *iter_z = z;
+        }
+
+        ++iter_x;
+        ++iter_y;
+        ++iter_z;
+      }
+    }
+
+    this->pointcloud_pub_->publish(cloud_msg);
+  }
+
 private:
   gazebo_ros::Node::SharedPtr                             ros_node_;
   std::shared_ptr<camera_info_manager::CameraInfoManager> camera_info_manager_;
   std::unique_ptr<image_transport::ImageTransport>        itnode_;
   image_transport::CameraPublisher                        color_pub_, ir1_pub_, ir2_pub_, depth_pub_;
-  std::shared_ptr<tf2_ros::StaticTransformBroadcaster>    static_tf_broadcaster_;
-  std::string                                             _namespace = "not_linked", camera_name_ = "rgbd", camera_suffix_ = "";
+
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_pub_;
+
+  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_;
+  std::string                                          _namespace = "not_linked", camera_name_ = "rgbd", camera_suffix_ = "";
   std::string parent_frame_name_, depth_camera_frame_id_, color_camera_frame_id_, ired1_camera_frame_id_, ired2_camera_frame_id_, base_frame_id_;
   std::string depth_camera_optical_frame_id_, color_camera_optical_frame_id_, ired1_camera_optical_frame_id_, ired2_camera_optical_frame_id_;
   double      x_, y_, z_, roll_, pitch_, yaw_;
