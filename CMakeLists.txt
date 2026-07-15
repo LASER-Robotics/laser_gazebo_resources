@@ -13,11 +13,13 @@ find_package(pcl_conversions REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(laser_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(MAVLink REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -174,6 +176,12 @@ add_gazebo_plugin_target(ImuPluginGazebo
   LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
 )
 
+add_gazebo_plugin_target(P3dPluginGazebo
+  SRCS src/gazebo_ros_p3d.cpp
+  DEPENDS ${dependencies}
+  LIBS ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} TBB::tbb
+)
+
 add_executable(csv_main src/csv_main.cpp)
 ament_target_dependencies(csv_main rclcpp)
 target_include_directories(csv_main PUBLIC
@@ -191,6 +199,7 @@ install(TARGETS
   LidarPluginGazebo
   VelodynePluginGazebo
   ImuPluginGazebo
+  P3dPluginGazebo
   RealsensePluginGazebo
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
