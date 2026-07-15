@@ -15,68 +15,73 @@
 #ifndef GAZEBO_PLUGINS__GAZEBO_ROS_P3D_HPP_
 #define GAZEBO_PLUGINS__GAZEBO_ROS_P3D_HPP_
 
-#include <gazebo/physics/physics.hh>
-#include <gazebo/common/Plugin.hh>
-
 #include <memory>
+
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/physics/physics.hh>
+#include <sdf/sdf.hh>
 
 namespace gazebo_plugins
 {
 
 class GazeboRosP3DPrivate;
 
-/// Broadcasts the inertial pose of an model's link via a nav_msgs/Odometry message on a ROS topic.
 /**
-  Example Usage:
-  \code{.xml}
-    <plugin name="gazebo_ros_p3d" filename="libgazebo_ros_p3d.so">
-
-      <ros>
-
-        <!-- Add a namespace -->
-        <namespace>/demo</namespace>
-
-        <!-- Remap the default topic -->
-        <remapping>odom:=p3d_demo</remapping>
-
-      </ros>
-
-      <!-- Name of the link within this model whose pose will be published -->
-      <body_name>box_link</body_name>
-
-      <!-- Name of another link within this model to use as a reference frame.
-           Remove the tag to use the world as a reference. -->
-      <frame_name>sphere_link</frame_name>
-
-      <!-- Update rate in Hz, defaults to 0.0, which means as fast as possible -->
-      <update_rate>1</update_rate>
-
-      <!-- Translation offset to be added to the pose. -->
-      <xyz_offset>10 10 10</xyz_offset>
-
-      <!-- Rotation offset to be added to the pose, in Euler angles. -->
-      <rpy_offset>0.1 0.1 0.1</rpy_offset>
-
-      <!-- Standard deviation of the noise to be added to the reported velocities. -->
-      <gaussian_noise>0.01</gaussian_noise>
-
-    </plugin>
-  \endcode
-*/
+ * @brief Publishes a model link's pose and twist as a ROS odometry message.
+ *
+ * The configured link is measured relative to either the Gazebo world or another link in the
+ * same model.
+ * Optional translation, rotation, and Gaussian-noise parameters can be provided in the plugin's
+ * SDF configuration.
+ *
+ * Example usage:
+ * @code{.xml}
+ * <plugin name="gazebo_ros_p3d" filename="libgazebo_ros_p3d.so">
+ *   <ros>
+ *     <!-- Add a namespace. -->
+ *     <namespace>/demo</namespace>
+ *
+ *     <!-- Remap the default odometry topic. -->
+ *     <remapping>odom:=p3d_demo</remapping>
+ *   </ros>
+ *
+ *   <!-- Link whose pose and twist will be published. -->
+ *   <body_name>box_link</body_name>
+ *
+ *   <!-- Optional reference link.
+ *        Remove this tag to use the world frame. -->
+ *   <frame_name>sphere_link</frame_name>
+ *
+ *   <!-- Publishing rate in hertz.
+ *        Zero publishes as fast as possible. -->
+ *   <update_rate>1.0</update_rate>
+ *
+ *   <!-- Constant translation and rotation offsets applied to the reported pose. -->
+ *   <xyz_offset>10 10 10</xyz_offset>
+ *   <rpy_offset>0.1 0.1 0.1</rpy_offset>
+ *
+ *   <!-- Report twist in the tracked link's local frame instead of the world frame. -->
+ *   <local_twist>false</local_twist>
+ *
+ *   <!-- Standard deviation of Gaussian noise added to each reported velocity axis. -->
+ *   <gaussian_noise>0.01</gaussian_noise>
+ * </plugin>
+ * @endcode
+ */
 class GazeboRosP3D : public gazebo::ModelPlugin
 {
 public:
-  /// Constructor
+  /// Create the plugin and its private implementation.
   GazeboRosP3D();
 
-  /// Destructor
-  virtual ~GazeboRosP3D();
+  /// Destroy the plugin after disconnecting its owned resources.
+  ~GazeboRosP3D() override;
 
-  // Documentation inherited
-  void Load(gazebo::physics::ModelPtr _parent, sdf::ElementPtr _sdf) override;
+  /// Load and configure the plugin from the model's SDF description.
+  void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
 
 private:
-  /// Private data pointer
+  /// Private implementation that keeps Gazebo and ROS details out of the public header.
   std::unique_ptr<GazeboRosP3DPrivate> impl_;
 };
 
