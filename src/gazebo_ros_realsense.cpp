@@ -2,583 +2,1039 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/PhysicsTypes.hh>
 #include <gazebo/physics/physics.hh>
-#include <gazebo/rendering/DepthCamera.hh>
 #include <gazebo/rendering/Camera.hh>
+#include <gazebo/rendering/DepthCamera.hh>
 #include <gazebo/sensors/CameraSensor.hh>
 #include <gazebo/sensors/MultiCameraSensor.hh>
 #include <gazebo/sensors/sensors.hh>
 #include <sdf/sdf.hh>
 
-#include <string>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <functional>
+#include <limits>
 #include <memory>
 #include <random>
-#include <chrono>
-#include <algorithm>
+#include <string>
+#include <vector>
 
+#include <camera_info_manager/camera_info_manager.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <image_transport/image_transport.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/distortion_models.hpp>
+#include <sensor_msgs/fill_image.hpp>
+#include <sensor_msgs/image_encodings.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <sensor_msgs/image_encodings.hpp>
-#include <sensor_msgs/fill_image.hpp>
-#include <sensor_msgs/distortion_models.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
-#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/static_transform_broadcaster.h>
-#include <cmath>
 
-#include <image_transport/image_transport.hpp>
-#include <camera_info_manager/camera_info_manager.hpp>
 #include <gazebo_ros/node.hpp>
 
-#include "laser_gazebo_resources/perlin_noise.h"
 #include "laser_gazebo_resources/common.h"
-
-#define DEPTH_CAMERA_TOPIC "aligned_depth_to_color"
-#define COLOR_CAMERA_TOPIC "color"
-#define IRED1_CAMERA_TOPIC "infra1"
-#define IRED2_CAMERA_TOPIC "infra2"
-#define DEPTH_PUB_FREQ_HZ 60
-#define COLOR_PUB_FREQ_HZ 30
-#define IRED1_PUB_FREQ_HZ 60
-#define IRED2_PUB_FREQ_HZ 60
-
-#define DEPTH_SCALE_M 0.001
+#include "laser_gazebo_resources/perlin_noise.h"
 
 namespace gazebo
 {
+namespace
+{
 
-const std::string DEPTH_CAMERA_SUFFIX = "aligned_depth_to_color";
-const std::string COLOR_CAMERA_SUFFIX = "color";
-const std::string IREDS_CAMERA_SUFFIX = "infra_stereo";
-const std::string IRED1_CAMERA_SUFFIX = "infra1";
-const std::string IRED2_CAMERA_SUFFIX = "infra2";
-const std::string BASE_FRAME_SUFFIX   = "link";
+constexpr char kDepthCameraTopic[] = "aligned_depth_to_color";
+constexpr char kColorCameraTopic[] = "color";
+constexpr char kInfrared1CameraTopic[] = "infra1";
+constexpr char kInfrared2CameraTopic[] = "infra2";
 
-class RealSensePlugin : public ModelPlugin {
+constexpr char kDepthCameraSuffix[] = "aligned_depth_to_color";
+constexpr char kColorCameraSuffix[] = "color";
+constexpr char kInfraredStereoCameraSuffix[] = "infra_stereo";
+constexpr char kInfrared1CameraSuffix[] = "infra1";
+constexpr char kInfrared2CameraSuffix[] = "infra2";
+constexpr char kBaseFrameSuffix[] = "link";
 
-  void dm_upscale(const cv::Mat& in, cv::Mat& out, int scale) {
-    const unsigned  i_rows     = in.rows;
-    const unsigned  i_cols     = in.cols;
-    const unsigned  o_rows     = i_rows * scale;
-    const unsigned  o_cols     = i_cols * scale;
-    cv::Mat         ret        = cv::Mat(int(o_rows), int(o_cols), CV_16UC1);
-    const uint16_t* i_data_ptr = in.ptr<uint16_t>(0);
+constexpr unsigned int kDepthPublishFrequencyHz = 60U;
+constexpr unsigned int kColorPublishFrequencyHz = 30U;
+constexpr unsigned int kInfrared1PublishFrequencyHz = 60U;
+constexpr unsigned int kInfrared2PublishFrequencyHz = 60U;
 
-    uint16_t* o_px_ptr = ret.ptr<uint16_t>(0);
-    for (unsigned rit = 0; rit < o_rows; rit++) {
-      for (unsigned cit = 0; cit < o_cols; cit++) {
-        *o_px_ptr = i_data_ptr[cit / scale + (rit / scale) * i_cols];
-        o_px_ptr++;
-      }
-    }
-    out = ret;
-  }
+constexpr double kDepthScaleMeters = 0.001;
+constexpr unsigned int kPointCloudDecimation = 4U;
+constexpr double kHalfPi = 1.57079632679489661923;
 
+}  // namespace
+
+class RealSensePlugin : public ModelPlugin
+{
 public:
-  RealSensePlugin() {
-    this->depthCam      = nullptr;
-    this->iredStereoCam = nullptr;
-    this->colorCam      = nullptr;
-  }
+  RealSensePlugin() = default;
+  ~RealSensePlugin() override = default;
 
-  virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
-    this->rsModel                    = _model;
-    this->world                      = this->rsModel->GetWorld();
-    sensors::SensorManager* smanager = sensors::SensorManager::Instance();
+  /// Configure the Gazebo sensors, transport publishers, and frame callbacks.
+  void Load(physics::ModelPtr model, sdf::ElementPtr sdf) override
+  {
+    model_ = model;
+    world_ = model_->GetWorld();
 
-    std::string camera_name = "rgbd";
-    if (_sdf->HasElement("camera_name")) {
-      camera_name = _sdf->Get<std::string>("camera_name");
-    }
+    auto * sensor_manager = sensors::SensorManager::Instance();
 
-    std::string camera_suffix = "";
-    if (_sdf->HasElement("camera_suffix")) {
-      camera_suffix = _sdf->Get<std::string>("camera_suffix");
-    }
+    const std::string camera_name =
+      sdf->HasElement("camera_name") ? sdf->Get<std::string>("camera_name") : "rgbd";
+    const std::string camera_suffix =
+      sdf->HasElement("camera_suffix") ? sdf->Get<std::string>("camera_suffix") : "";
+    const std::string ros_namespace =
+      sdf->HasElement("namespace") ? sdf->Get<std::string>("namespace") : "";
 
-    std::string _namespace = "";
-    if (_sdf->HasElement("namespace")) {
-      _namespace = _sdf->Get<std::string>("namespace");
-    }
-
-    depth_camera_plugin_name_ = _namespace + "/" + camera_name + camera_suffix + "_" + DEPTH_CAMERA_SUFFIX;
-    color_camera_plugin_name_ = _namespace + "/" + camera_name + camera_suffix + "_" + COLOR_CAMERA_SUFFIX;
-    ireds_camera_plugin_name_ = _namespace + "/" + camera_name + camera_suffix + "_" + IREDS_CAMERA_SUFFIX;
-    ired1_camera_plugin_name_ = _namespace + "/" + camera_name + camera_suffix + "_" + IRED1_CAMERA_SUFFIX;
-    ired2_camera_plugin_name_ = _namespace + "/" + camera_name + camera_suffix + "_" + IRED2_CAMERA_SUFFIX;
-
-    const auto depthPtr = smanager->GetSensor(depth_camera_plugin_name_);
-    const auto colorPtr = smanager->GetSensor(color_camera_plugin_name_);
-    const auto iredsPtr = smanager->GetSensor(ireds_camera_plugin_name_);
-
-    if (!depthPtr || !colorPtr || !iredsPtr) {
-      gzerr << "RealSensePlugin: One or more sensors not found!" << std::endl;
+    ConfigureSensorNames(ros_namespace, camera_name, camera_suffix);
+    if (!ConfigureSensors(sensor_manager)) {
       return;
     }
 
-    this->depthCam      = std::dynamic_pointer_cast<sensors::DepthCameraSensor>(depthPtr)->DepthCamera();
-    this->iredStereoCam = std::dynamic_pointer_cast<sensors::MultiCameraSensor>(iredsPtr);
-    this->colorCam      = std::dynamic_pointer_cast<sensors::CameraSensor>(colorPtr)->Camera();
-
-    getSdfParam(_sdf, "useRealistic", this->useRealistic, false);
-
-    if (this->useRealistic) {
-      getSdfParam(_sdf, "imageScaling", this->scaling, 4u);
-      getSdfParam(_sdf, "noisePerMeter", this->noisePerMeter, 0.2f);
-      getSdfParam(_sdf, "noiseMinDistance", this->noiseMinDistance, 4.0f);
-      getSdfParam(_sdf, "perlinEmptySpeed", this->perlinEmptySpeed, 0.1f);
-      getSdfParam(_sdf, "perlinEmptyThreshold", this->perlinEmptyThreshold, 0.8f);
-      getSdfParam(_sdf, "blurSize", this->blurSize, 15u);
-      getSdfParam(_sdf, "erosionSize", this->erosionSize, 5u);
-
-      unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-      rand_gen      = std::default_random_engine(seed);
-      randn_dist    = std::normal_distribution<float>(0.0f, noisePerMeter / 3);
-      perlinNoise   = PerlinNoise(seed);
-    } else {
-      this->scaling = 1;
-    }
-
-    this->depthMap.resize(this->scaling * this->depthCam->ImageWidth() * this->scaling * this->depthCam->ImageHeight());
-    if (this->useRealistic)
-      this->depthMapSmall.resize(this->depthCam->ImageWidth() * this->depthCam->ImageHeight());
-
-    this->transportNode = transport::NodePtr(new transport::Node());
-    this->transportNode->Init(this->world->Name());
-
-    std::string rsTopicRoot = "~/" + this->rsModel->GetName() + "/rs/stream/";
-    this->depthPub          = this->transportNode->Advertise<msgs::ImageStamped>(rsTopicRoot + "/" + DEPTH_CAMERA_TOPIC, 1, DEPTH_PUB_FREQ_HZ);
-    this->ired1Pub          = this->transportNode->Advertise<msgs::ImageStamped>(rsTopicRoot + "/" + IRED1_CAMERA_TOPIC, 1, IRED1_PUB_FREQ_HZ);
-    this->ired2Pub          = this->transportNode->Advertise<msgs::ImageStamped>(rsTopicRoot + "/" + IRED2_CAMERA_TOPIC, 1, IRED2_PUB_FREQ_HZ);
-    this->colorPub          = this->transportNode->Advertise<msgs::ImageStamped>(rsTopicRoot + "/" + COLOR_CAMERA_TOPIC, 1, COLOR_PUB_FREQ_HZ);
-
-    if (this->useRealistic) {
-      this->newDepthFrameConn =
-          this->depthCam->ConnectNewDepthFrame(std::bind(&RealSensePlugin::OnNewDepthFrameRealistic, this, this->depthCam, this->depthPub));
-    } else {
-      this->newDepthFrameConn = this->depthCam->ConnectNewDepthFrame(std::bind(&RealSensePlugin::OnNewDepthFrame, this, this->depthCam, this->depthPub));
-    }
-
-    for (unsigned int i = 0; i < this->iredStereoCam->CameraCount(); ++i) {
-      this->iredCams.push_back(this->iredStereoCam->Camera(i));
-      std::string cameraName = this->iredStereoCam->Camera(i)->Name();
-      if (cameraName.find(ired1_camera_plugin_name_) != std::string::npos) {
-        this->newIred1FrameConn = this->iredCams[i]->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, this->iredCams[i], this->ired1Pub));
-      } else if (cameraName.find(ired2_camera_plugin_name_) != std::string::npos) {
-        this->newIred2FrameConn = this->iredCams[i]->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, this->iredCams[i], this->ired2Pub));
-      }
-    }
-
-    this->iredStereoCam->SetActive(true);
-    this->newColorFrameConn = this->colorCam->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, this->colorCam, this->colorPub));
-    this->updateConnection  = event::Events::ConnectWorldUpdateBegin(std::bind(&RealSensePlugin::OnUpdate, this));
+    ConfigureRealisticDepth(sdf);
+    AllocateDepthBuffers();
+    ConfigureGazeboTransport();
+    ConnectSensorCallbacks();
   }
 
-  virtual void OnNewFrame(const rendering::CameraPtr cam, const transport::PublisherPtr pub) {
-    msgs::ImageStamped msg;
-    msgs::Set(msg.mutable_time(), this->world->SimTime());
-    msg.mutable_image()->set_width(cam->ImageWidth());
-    msg.mutable_image()->set_height(cam->ImageHeight());
-    msg.mutable_image()->set_pixel_format(common::Image::ConvertPixelFormat(cam->ImageFormat()));
-    msg.mutable_image()->set_step(cam->ImageWidth() * cam->ImageDepth());
-    msg.mutable_image()->set_data(cam->ImageData(), cam->ImageDepth() * cam->ImageWidth() * cam->ImageHeight());
-    pub->Publish(msg);
+  /// Forward a regular camera frame through Gazebo transport.
+  virtual void OnNewFrame(
+    const rendering::CameraPtr camera,
+    const transport::PublisherPtr publisher)
+  {
+    msgs::ImageStamped message;
+    msgs::Set(message.mutable_time(), world_->SimTime());
+
+    auto * image = message.mutable_image();
+    image->set_width(camera->ImageWidth());
+    image->set_height(camera->ImageHeight());
+    image->set_pixel_format(
+      common::Image::ConvertPixelFormat(camera->ImageFormat()));
+    image->set_step(camera->ImageWidth() * camera->ImageDepth());
+    image->set_data(
+      camera->ImageData(),
+      camera->ImageDepth() * camera->ImageWidth() * camera->ImageHeight());
+
+    publisher->Publish(message);
   }
 
-  virtual void OnNewDepthFrame(const rendering::CameraPtr cam, const transport::PublisherPtr pub) {
-    const unsigned     imageWidth  = this->depthCam->ImageWidth();
-    const unsigned     imageHeight = this->depthCam->ImageHeight();
-    const unsigned     imageSize   = imageWidth * imageHeight;
-    msgs::ImageStamped msg;
-    const float*       depthDataFloat = this->depthCam->DepthData();
-    for (unsigned int i = 0; i < imageSize; ++i) {
-      const float cur_depth = depthDataFloat[i];
-      if (cur_depth <= this->depthCam->NearClip() || cur_depth >= this->depthCam->FarClip() || cur_depth > DEPTH_SCALE_M * UINT16_MAX || cur_depth < 0) {
-        this->depthMap[i] = 0;
+  /// Convert the simulated floating-point depth image to a 16-bit depth image.
+  virtual void OnNewDepthFrame(
+    const rendering::CameraPtr camera,
+    const transport::PublisherPtr publisher)
+  {
+    (void)camera;
+
+    const unsigned int image_width = depth_camera_->ImageWidth();
+    const unsigned int image_height = depth_camera_->ImageHeight();
+    const unsigned int image_size = image_width * image_height;
+    const float * depth_data = depth_camera_->DepthData();
+
+    for (unsigned int index = 0; index < image_size; ++index) {
+      const float depth = depth_data[index];
+      if (IsDepthInvalid(depth)) {
+        depth_map_[index] = 0U;
       } else {
-        this->depthMap[i] = (cur_depth) / DEPTH_SCALE_M;
+        depth_map_[index] = depth / kDepthScaleMeters;
       }
     }
-    msgs::Set(msg.mutable_time(), this->world->SimTime());
-    msg.mutable_image()->set_width(imageWidth);
-    msg.mutable_image()->set_height(imageHeight);
-    msg.mutable_image()->set_pixel_format(common::Image::L_INT16);
-    msg.mutable_image()->set_step(imageWidth * imageHeight * 2);
-    msg.mutable_image()->set_data(this->depthMap.data(), sizeof(uint16_t) * imageSize);
-    pub->Publish(msg);
+
+    PublishGazeboDepthImage(
+      publisher, depth_map_.data(), image_width, image_height, image_size);
   }
 
-  virtual void OnNewDepthFrameRealistic(const rendering::CameraPtr cam, const transport::PublisherPtr pub) {
-    const unsigned imageWidth  = this->depthCam->ImageWidth();
-    const unsigned imageHeight = this->depthCam->ImageHeight();
-    const unsigned imageSize   = imageWidth * imageHeight;
-    static float   cur_z       = 6.0;
-    cur_z += this->perlinEmptySpeed;
-    msgs::ImageStamped msg;
-    const float*       depthDataFloat = this->depthCam->DepthData();
-    unsigned           x = 0, y = 0;
-    for (unsigned int i = 0; i < imageSize; ++i) {
-      const float x_rel     = 5.0f * float(x) / float(imageWidth);
-      const float y_rel     = 5.0f * float(y) / float(imageHeight);
-      const float cur_depth = depthDataFloat[i];
-      if (cur_depth <= this->depthCam->NearClip() || cur_depth >= this->depthCam->FarClip() || cur_depth > DEPTH_SCALE_M * UINT16_MAX || cur_depth < 0 ||
-          this->perlinNoise.noise(x_rel, y_rel, cur_z) > this->perlinEmptyThreshold) {
-        this->depthMapSmall[i] = 0;
+  /// Apply the configured sensor artifacts before publishing the depth image.
+  virtual void OnNewDepthFrameRealistic(
+    const rendering::CameraPtr camera,
+    const transport::PublisherPtr publisher)
+  {
+    (void)camera;
+
+    const unsigned int image_width = depth_camera_->ImageWidth();
+    const unsigned int image_height = depth_camera_->ImageHeight();
+    const unsigned int image_size = image_width * image_height;
+    const float * depth_data = depth_camera_->DepthData();
+
+    // This value intentionally remains shared across callbacks, matching the
+    // original noise evolution over time.
+    static float current_perlin_z = 6.0F;
+    current_perlin_z += perlin_empty_speed_;
+
+    unsigned int x = 0U;
+    unsigned int y = 0U;
+    for (unsigned int index = 0; index < image_size; ++index) {
+      const float relative_x =
+        5.0F * static_cast<float>(x) / static_cast<float>(image_width);
+      const float relative_y =
+        5.0F * static_cast<float>(y) / static_cast<float>(image_height);
+      const float depth = depth_data[index];
+
+      const bool remove_pixel =
+        IsDepthInvalid(depth) ||
+        perlin_noise_.noise(relative_x, relative_y, current_perlin_z) >
+        perlin_empty_threshold_;
+
+      if (remove_pixel) {
+        small_depth_map_[index] = 0U;
       } else {
-        const float noise_scale = cur_depth > this->noiseMinDistance ? cur_depth : this->noiseMinDistance;
-        const float noise       = noise_scale * this->randn_dist(rand_gen);
-        float       noisy_depth = (noise + cur_depth);
-        if (noisy_depth < 0 || noisy_depth > DEPTH_SCALE_M * UINT16_MAX)
-          noisy_depth = 0;
-        this->depthMapSmall[i] = noisy_depth / DEPTH_SCALE_M;
-      }
-      x++;
-      if (x >= imageWidth) {
-        x = 0;
-        y++;
-      }
-    }
-    const unsigned n_width  = depthCam->ImageWidth() * this->scaling;
-    const unsigned n_height = depthCam->ImageHeight() * this->scaling;
-    const unsigned n_imsize = n_width * n_height;
-    cv::Mat        im(int(depthCam->ImageHeight()), int(depthCam->ImageWidth()), CV_16UC1, this->depthMapSmall.data());
-    dm_upscale(im, im, int(this->scaling));
-    if (this->blurSize != 0) {
-      cv::Mat mask, blr_im, blr_mask;
-      cv::compare(im, 0, mask, cv::CMP_NE);
-      cv::GaussianBlur(im, blr_im, cv::Size(this->blurSize, this->blurSize), 2 * this->blurSize);
-      cv::GaussianBlur(mask, blr_mask, cv::Size(this->blurSize, this->blurSize), 2 * this->blurSize);
-      cv::divide(blr_im, blr_mask, blr_im, 255.0, CV_16UC1);
-      blr_im.copyTo(im, mask);
-    }
-    if (this->erosionSize != 0) {
-      cv::Mat element = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(this->erosionSize, this->erosionSize));
-      cv::erode(im, im, element);
-    }
-    memcpy(this->depthMap.data(), im.ptr(0), sizeof(uint16_t) * n_imsize);
-    msgs::Set(msg.mutable_time(), this->world->SimTime());
-    msg.mutable_image()->set_width(n_width);
-    msg.mutable_image()->set_height(n_height);
-    msg.mutable_image()->set_pixel_format(common::Image::L_INT16);
-    msg.mutable_image()->set_step(n_width * n_height * 2);
-    msg.mutable_image()->set_data(this->depthMap.data(), sizeof(uint16_t) * n_imsize);
-    pub->Publish(msg);
-  }
+        const float noise_scale =
+          depth > noise_min_distance_ ? depth : noise_min_distance_;
+        const float noise = noise_scale * normal_distribution_(random_generator_);
+        float noisy_depth = noise + depth;
 
-  void OnUpdate() {
+        if (
+          noisy_depth < 0.0F ||
+          noisy_depth > kDepthScaleMeters * std::numeric_limits<uint16_t>::max())
+        {
+          noisy_depth = 0.0F;
+        }
+
+        small_depth_map_[index] = noisy_depth / kDepthScaleMeters;
+      }
+
+      ++x;
+      if (x >= image_width) {
+        x = 0U;
+        ++y;
+      }
+    }
+
+    const unsigned int output_width = image_width * scaling_;
+    const unsigned int output_height = image_height * scaling_;
+    const unsigned int output_size = output_width * output_height;
+
+    cv::Mat depth_image(
+      static_cast<int>(image_height),
+      static_cast<int>(image_width),
+      CV_16UC1,
+      small_depth_map_.data());
+
+    UpscaleDepthMap(depth_image, depth_image, static_cast<int>(scaling_));
+    ApplyDepthBlur(depth_image);
+    ApplyDepthErosion(depth_image);
+
+    std::memcpy(
+      depth_map_.data(),
+      depth_image.ptr(0),
+      sizeof(uint16_t) * output_size);
+
+    PublishGazeboDepthImage(
+      publisher, depth_map_.data(), output_width, output_height, output_size);
   }
 
 protected:
-  std::string depth_camera_plugin_name_, color_camera_plugin_name_, ireds_camera_plugin_name_, ired1_camera_plugin_name_, ired2_camera_plugin_name_;
-  bool        useRealistic;
-  unsigned    scaling = 4;
-  float       noisePerMeter, noiseMinDistance, perlinEmptySpeed, perlinEmptyThreshold;
-  unsigned    blurSize, erosionSize;
-  PerlinNoise perlinNoise;
-  std::default_random_engine        rand_gen;
-  std::normal_distribution<float>   randn_dist;
-  physics::ModelPtr                 rsModel;
-  physics::WorldPtr                 world;
-  rendering::DepthCameraPtr         depthCam;
-  rendering::CameraPtr              colorCam;
-  sensors::MultiCameraSensorPtr     iredStereoCam;
-  std::vector<rendering::CameraPtr> iredCams;
-  transport::NodePtr                transportNode;
-  std::vector<uint16_t>             depthMap, depthMapSmall;
-  transport::PublisherPtr           depthPub, colorPub, ired1Pub, ired2Pub;
-  event::ConnectionPtr              newDepthFrameConn, newIred1FrameConn, newIred2FrameConn, newColorFrameConn, updateConnection;
-};
-
-class GazeboRosRealsense : public RealSensePlugin {
-public:
-  GazeboRosRealsense() {
-  }
-  ~GazeboRosRealsense() {
-    RCLCPP_DEBUG(this->ros_node_->get_logger(), "Unloaded");
+  /// Keep the world-update connection used by the original plugin.
+  void OnUpdate()
+  {
   }
 
-  virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
-    this->ros_node_ = gazebo_ros::Node::Get(_sdf);
-    RCLCPP_INFO(this->ros_node_->get_logger(), "Realsense Gazebo ROS 2 plugin loading...");
-    RealSensePlugin::Load(_model, _sdf);
+  std::string depth_camera_plugin_name_;
+  std::string color_camera_plugin_name_;
+  std::string infrared_stereo_camera_plugin_name_;
+  std::string infrared1_camera_plugin_name_;
+  std::string infrared2_camera_plugin_name_;
 
-    if (!_sdf->HasElement("camera_name")) {
-      camera_name_ = "rgbd";
-    } else {
-      camera_name_ = _sdf->Get<std::string>("camera_name");
-    }
+  bool use_realistic_{false};
+  unsigned int scaling_{4U};
+  float noise_per_meter_{0.0F};
+  float noise_min_distance_{0.0F};
+  float perlin_empty_speed_{0.0F};
+  float perlin_empty_threshold_{0.0F};
+  unsigned int blur_size_{0U};
+  unsigned int erosion_size_{0U};
 
-    if (!_sdf->HasElement("camera_suffix")) {
-      camera_suffix_ = "";
-    } else {
-      camera_suffix_ = _sdf->Get<std::string>("camera_suffix");
-    }
+  PerlinNoise perlin_noise_;
+  std::default_random_engine random_generator_;
+  std::normal_distribution<float> normal_distribution_;
 
-    std::string _namespace = "";
-    if (_sdf->HasElement("namespace")) {
-      _namespace = _sdf->Get<std::string>("namespace");
-    }
+  physics::ModelPtr model_{nullptr};
+  physics::WorldPtr world_{nullptr};
+  rendering::DepthCameraPtr depth_camera_{nullptr};
+  rendering::CameraPtr color_camera_{nullptr};
+  sensors::MultiCameraSensorPtr infrared_stereo_camera_{nullptr};
+  std::vector<rendering::CameraPtr> infrared_cameras_;
 
-    depth_camera_frame_id_ = _namespace + "/" + camera_name_ + camera_suffix_ + "/" + DEPTH_CAMERA_SUFFIX;
-    color_camera_frame_id_ = _namespace + "/" + camera_name_ + camera_suffix_ + "/" + COLOR_CAMERA_SUFFIX;
-    ired1_camera_frame_id_ = _namespace + "/" + camera_name_ + camera_suffix_ + "/" + IRED1_CAMERA_SUFFIX;
-    ired2_camera_frame_id_ = _namespace + "/" + camera_name_ + camera_suffix_ + "/" + IRED2_CAMERA_SUFFIX;
-    base_frame_id_         = _namespace + "/" + camera_name_ + camera_suffix_ + "/" + BASE_FRAME_SUFFIX;
+  transport::NodePtr transport_node_{nullptr};
+  std::vector<uint16_t> depth_map_;
+  std::vector<uint16_t> small_depth_map_;
 
-    depth_camera_optical_frame_id_ = depth_camera_frame_id_ + "_optical";
-    color_camera_optical_frame_id_ = color_camera_frame_id_ + "_optical";
-    ired1_camera_optical_frame_id_ = ired1_camera_frame_id_ + "_optical";
-    ired2_camera_optical_frame_id_ = ired2_camera_frame_id_ + "_optical";
+  transport::PublisherPtr depth_publisher_{nullptr};
+  transport::PublisherPtr color_publisher_{nullptr};
+  transport::PublisherPtr infrared1_publisher_{nullptr};
+  transport::PublisherPtr infrared2_publisher_{nullptr};
 
-    if (!_sdf->HasElement("parentFrameName"))
-      this->parent_frame_name_ = "world";
-    else
-      this->parent_frame_name_ = _sdf->Get<std::string>("parentFrameName");
+  event::ConnectionPtr new_depth_frame_connection_{nullptr};
+  event::ConnectionPtr new_infrared1_frame_connection_{nullptr};
+  event::ConnectionPtr new_infrared2_frame_connection_{nullptr};
+  event::ConnectionPtr new_color_frame_connection_{nullptr};
+  event::ConnectionPtr update_connection_{nullptr};
 
-    this->x_     = _sdf->HasElement("x") ? _sdf->Get<double>("x") : 0.0;
-    this->y_     = _sdf->HasElement("y") ? _sdf->Get<double>("y") : 0.0;
-    this->z_     = _sdf->HasElement("z") ? _sdf->Get<double>("z") : 0.0;
-    this->roll_  = _sdf->HasElement("roll") ? _sdf->Get<double>("roll") : 0.0;
-    this->pitch_ = _sdf->HasElement("pitch") ? _sdf->Get<double>("pitch") : 0.0;
-    this->yaw_   = _sdf->HasElement("yaw") ? _sdf->Get<double>("yaw") : 0.0;
+private:
+  static void UpscaleDepthMap(
+    const cv::Mat & input,
+    cv::Mat & output,
+    int scale)
+  {
+    const unsigned int input_rows = input.rows;
+    const unsigned int input_columns = input.cols;
+    const unsigned int output_rows = input_rows * scale;
+    const unsigned int output_columns = input_columns * scale;
 
-    this->camera_info_manager_ =
-        std::make_shared<camera_info_manager::CameraInfoManager>(this->ros_node_.get(), _namespace + "/" + camera_name_ + camera_suffix_);
-    this->itnode_ = std::make_unique<image_transport::ImageTransport>(this->ros_node_);
+    cv::Mat resized(
+      static_cast<int>(output_rows),
+      static_cast<int>(output_columns),
+      CV_16UC1);
 
-    this->color_pub_ = this->itnode_->advertiseCamera(camera_name_ + "/color/image_raw", 2);
-    this->ir1_pub_   = this->itnode_->advertiseCamera(camera_name_ + "/infra1/image_raw", 2);
-    this->ir2_pub_   = this->itnode_->advertiseCamera(camera_name_ + "/infra2/image_raw", 2);
-    this->depth_pub_ = this->itnode_->advertiseCamera(camera_name_ + "/aligned_depth_to_color/image_raw", 2);
+    const uint16_t * input_data = input.ptr<uint16_t>(0);
+    uint16_t * output_pixel = resized.ptr<uint16_t>(0);
 
-    // ---- ADICIONADO: PUBLICADOR DA NUVEM DE PONTOS ----
-    // Configurado como SensorDataQoS (Best Effort) para não travar a rede
-    this->pointcloud_pub_ = this->ros_node_->create_publisher<sensor_msgs::msg::PointCloud2>(camera_name_ + "/lidar", rclcpp::SensorDataQoS());
-    // ---------------------------------------------------
-
-    this->static_tf_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this->ros_node_);
-    createStaticTransforms();
-  }
-
-  void createStaticTransforms() {
-    std::vector<geometry_msgs::msg::TransformStamped> transforms;
-    rclcpp::Time                                      now = this->ros_node_->now();
-
-    auto make_tf = [&](const std::string& parent, const std::string& child, double tx, double ty, double tz, double r, double p, double y_rot) {
-      geometry_msgs::msg::TransformStamped ts;
-      ts.header.stamp            = now;
-      ts.header.frame_id         = parent;
-      ts.child_frame_id          = child;
-      ts.transform.translation.x = tx;
-      ts.transform.translation.y = ty;
-      ts.transform.translation.z = tz;
-      tf2::Quaternion q;
-      q.setRPY(r, p, y_rot);
-      ts.transform.rotation.x = q.x();
-      ts.transform.rotation.y = q.y();
-      ts.transform.rotation.z = q.z();
-      ts.transform.rotation.w = q.w();
-      return ts;
-    };
-
-    transforms.push_back(make_tf(parent_frame_name_, base_frame_id_, x_, y_, z_, roll_, pitch_, yaw_));
-    transforms.push_back(make_tf(base_frame_id_, depth_camera_frame_id_, 0, -0.0115, 0, 0, 0, 0));
-    transforms.push_back(make_tf(base_frame_id_, color_camera_frame_id_, 0, -0.0115, 0, 0, 0, 0));
-    transforms.push_back(make_tf(base_frame_id_, ired1_camera_frame_id_, 0, 0.0175, 0, 0, 0, 0));
-    transforms.push_back(make_tf(base_frame_id_, ired2_camera_frame_id_, 0, -0.0325, 0, 0, 0, 0));
-
-    transforms.push_back(make_tf(depth_camera_frame_id_, depth_camera_optical_frame_id_, 0, 0, 0, -M_PI_2, 0, -M_PI_2));
-    transforms.push_back(make_tf(color_camera_frame_id_, color_camera_optical_frame_id_, 0, 0, 0, -M_PI_2, 0, -M_PI_2));
-    transforms.push_back(make_tf(ired1_camera_frame_id_, ired1_camera_optical_frame_id_, 0, 0, 0, -M_PI_2, 0, -M_PI_2));
-    transforms.push_back(make_tf(ired2_camera_frame_id_, ired2_camera_optical_frame_id_, 0, 0, 0, -M_PI_2, 0, -M_PI_2));
-
-    this->static_tf_broadcaster_->sendTransform(transforms);
-  }
-
-  virtual void OnNewFrame(const rendering::CameraPtr cam, const transport::PublisherPtr pub) {
-    rclcpp::Time                      current_time = this->ros_node_->now();
-    std::string                       camera_id    = cam->Name();
-    image_transport::CameraPublisher* image_pub;
-
-    if (camera_id.find(color_camera_plugin_name_) != std::string::npos) {
-      camera_id = color_camera_optical_frame_id_;
-      image_pub = &(this->color_pub_);
-    } else if (camera_id.find(ired1_camera_plugin_name_) != std::string::npos) {
-      camera_id = ired1_camera_optical_frame_id_;
-      image_pub = &(this->ir1_pub_);
-    } else if (camera_id.find(ired2_camera_plugin_name_) != std::string::npos) {
-      camera_id = ired2_camera_optical_frame_id_;
-      image_pub = &(this->ir2_pub_);
-    } else {
-      camera_id = depth_camera_optical_frame_id_;
-      image_pub = &(this->depth_pub_);
-    }
-
-    sensor_msgs::msg::Image img;
-    img.header.frame_id = camera_id;
-    img.header.stamp    = current_time;
-
-    std::string pixel_format = cam->ImageFormat();
-    if (pixel_format == "L_INT8")
-      pixel_format = sensor_msgs::image_encodings::MONO8;
-    else if (pixel_format == "RGB_INT8")
-      pixel_format = sensor_msgs::image_encodings::RGB8;
-    else
-      pixel_format = sensor_msgs::image_encodings::BGR8;
-
-    sensor_msgs::fillImage(img, pixel_format, cam->ImageHeight(), cam->ImageWidth(), cam->ImageDepth() * cam->ImageWidth(),
-                           reinterpret_cast<const void*>(cam->ImageData()));
-    sensor_msgs::msg::CameraInfo cam_info_msg = cameraInfo(img, cam);
-    image_pub->publish(img, cam_info_msg);
-  }
-
-  virtual void OnNewDepthFrame(const rendering::CameraPtr cam, const transport::PublisherPtr pub) {
-    rclcpp::Time current_time = this->ros_node_->now();
-    RealSensePlugin::OnNewDepthFrame(cam, pub);
-
-    sensor_msgs::msg::Image d_msg;
-    d_msg.header.frame_id = depth_camera_optical_frame_id_;
-    d_msg.header.stamp    = current_time;
-    sensor_msgs::fillImage(d_msg, sensor_msgs::image_encodings::TYPE_16UC1, this->scaling * this->depthCam->ImageHeight(),
-                           this->scaling * this->depthCam->ImageWidth(), sizeof(uint16_t) * this->scaling * this->depthCam->ImageWidth(),
-                           reinterpret_cast<const void*>(this->depthMap.data()));
-
-    sensor_msgs::msg::CameraInfo info = cameraInfo(d_msg, cam);
-    this->depth_pub_.publish(d_msg, info);
-
-    // ---- PUBLICAR POINTCLOUD ----
-    publishPointCloud(current_time, info, this->depthMap.data(), d_msg.width, d_msg.height);
-  }
-
-  virtual void OnNewDepthFrameRealistic(const rendering::CameraPtr cam, const transport::PublisherPtr pub) {
-    rclcpp::Time current_time = this->ros_node_->now();
-    RealSensePlugin::OnNewDepthFrameRealistic(cam, pub);
-
-    sensor_msgs::msg::Image d_msg;
-    d_msg.header.frame_id = depth_camera_optical_frame_id_;
-    d_msg.header.stamp    = current_time;
-    sensor_msgs::fillImage(d_msg, sensor_msgs::image_encodings::TYPE_16UC1, this->scaling * this->depthCam->ImageHeight(),
-                           this->scaling * this->depthCam->ImageWidth(), sizeof(uint16_t) * this->scaling * this->depthCam->ImageWidth(),
-                           reinterpret_cast<const void*>(this->depthMap.data()));
-
-    sensor_msgs::msg::CameraInfo info = cameraInfo(d_msg, cam);
-    this->depth_pub_.publish(d_msg, info);
-
-    // ---- PUBLICAR POINTCLOUD (Com os ruídos já aplicados!) ----
-    publishPointCloud(current_time, info, this->depthMap.data(), d_msg.width, d_msg.height);
-  }
-
-  sensor_msgs::msg::CameraInfo cameraInfo(const sensor_msgs::msg::Image& image, const gazebo::rendering::CameraPtr cam) {
-    sensor_msgs::msg::CameraInfo info_msg;
-    info_msg.header = image.header;
-    info_msg.height = image.height;
-    info_msg.width  = image.width;
-
-    double hfov = cam->HFOV().Radian();
-    double hfoc = (image.width / 2.0) / tan(hfov / 2.0);
-    double vfov = cam->VFOV().Radian();
-    double vfoc = (image.height / 2.0) / tan(vfov / 2.0);
-
-    info_msg.distortion_model = sensor_msgs::distortion_models::RATIONAL_POLYNOMIAL;
-
-    info_msg.k.fill(0.0);
-    info_msg.k[0] = hfoc;
-    info_msg.k[4] = vfoc;
-    info_msg.k[2] = (info_msg.width + 1.0) / 2.0;
-    info_msg.k[5] = (info_msg.height + 1.0) / 2.0;
-    info_msg.k[8] = 1.0;
-
-    info_msg.p.fill(0.0);
-    info_msg.p[0]  = info_msg.k[0];
-    info_msg.p[5]  = info_msg.k[4];
-    info_msg.p[2]  = info_msg.k[2];
-    info_msg.p[6]  = info_msg.k[5];
-    info_msg.p[10] = info_msg.k[8];
-
-    info_msg.d.assign(5, 0.0);
-
-    return info_msg;
-  }
-
-  void publishPointCloud(const rclcpp::Time& current_time, const sensor_msgs::msg::CameraInfo& info, const uint16_t* depth_data, unsigned int width,
-                         unsigned int height) {
-    // ====================================================================
-    // CONTROLE DE DECIMAÇÃO (PULO DE PIXELS)
-    // decimation = 1 -> 100% dos pontos (nuvem completa)
-    // decimation = 2 -> 25% dos pontos (ignora metade das linhas e colunas)
-    // decimation = 3 -> ~11% dos pontos (extremamente leve e rápida)
-    // ====================================================================
-    const unsigned int decimation = 4;
-
-    unsigned int new_width  = width / decimation;
-    unsigned int new_height = height / decimation;
-
-    sensor_msgs::msg::PointCloud2 cloud_msg;
-    cloud_msg.header.stamp    = current_time;
-    cloud_msg.header.frame_id = depth_camera_optical_frame_id_;
-    cloud_msg.height          = 1;
-    cloud_msg.width           = new_width * new_height;
-    cloud_msg.is_dense        = false;
-    cloud_msg.is_bigendian    = false;
-
-    sensor_msgs::PointCloud2Modifier modifier(cloud_msg);
-    modifier.setPointCloud2FieldsByString(1, "xyz");
-    modifier.resize(new_width * new_height);
-
-    sensor_msgs::PointCloud2Iterator<float> iter_x(cloud_msg, "x");
-    sensor_msgs::PointCloud2Iterator<float> iter_y(cloud_msg, "y");
-    sensor_msgs::PointCloud2Iterator<float> iter_z(cloud_msg, "z");
-
-    double fx = info.k[0];
-    double fy = info.k[4];
-    double cx = info.k[2];
-    double cy = info.k[5];
-
-    for (unsigned int nv = 0; nv < new_height; ++nv) {
-      unsigned int v = nv * decimation;
-
-      for (unsigned int nu = 0; nu < new_width; ++nu) {
-        unsigned int u = nu * decimation;
-
-        uint16_t depth = depth_data[v * width + u];
-
-        if (depth == 0) {
-          *iter_x = *iter_y = *iter_z = std::numeric_limits<float>::quiet_NaN();
-        } else {
-          float z = depth * DEPTH_SCALE_M;
-
-          *iter_x = (u - cx) * z / fx;
-          *iter_y = (v - cy) * z / fy;
-          *iter_z = z;
-        }
-
-        ++iter_x;
-        ++iter_y;
-        ++iter_z;
+    for (unsigned int row = 0; row < output_rows; ++row) {
+      for (unsigned int column = 0; column < output_columns; ++column) {
+        *output_pixel =
+          input_data[column / scale + (row / scale) * input_columns];
+        ++output_pixel;
       }
     }
 
-    this->pointcloud_pub_->publish(cloud_msg);
+    output = resized;
+  }
+
+  void ConfigureSensorNames(
+    const std::string & ros_namespace,
+    const std::string & camera_name,
+    const std::string & camera_suffix)
+  {
+    const std::string sensor_prefix =
+      ros_namespace + "/" + camera_name + camera_suffix + "_";
+
+    depth_camera_plugin_name_ = sensor_prefix + kDepthCameraSuffix;
+    color_camera_plugin_name_ = sensor_prefix + kColorCameraSuffix;
+    infrared_stereo_camera_plugin_name_ =
+      sensor_prefix + kInfraredStereoCameraSuffix;
+    infrared1_camera_plugin_name_ = sensor_prefix + kInfrared1CameraSuffix;
+    infrared2_camera_plugin_name_ = sensor_prefix + kInfrared2CameraSuffix;
+  }
+
+  bool ConfigureSensors(sensors::SensorManager * sensor_manager)
+  {
+    const auto depth_sensor =
+      sensor_manager->GetSensor(depth_camera_plugin_name_);
+    const auto color_sensor =
+      sensor_manager->GetSensor(color_camera_plugin_name_);
+    const auto infrared_sensor =
+      sensor_manager->GetSensor(infrared_stereo_camera_plugin_name_);
+
+    if (!depth_sensor || !color_sensor || !infrared_sensor) {
+      gzerr << "RealSensePlugin: One or more sensors not found!" << std::endl;
+      return false;
+    }
+
+    // Keep the original sensor-type assumptions. The SDF configuration must
+    // provide the expected Gazebo sensor types.
+    depth_camera_ =
+      std::dynamic_pointer_cast<sensors::DepthCameraSensor>(
+      depth_sensor)->DepthCamera();
+    infrared_stereo_camera_ =
+      std::dynamic_pointer_cast<sensors::MultiCameraSensor>(infrared_sensor);
+    color_camera_ =
+      std::dynamic_pointer_cast<sensors::CameraSensor>(
+      color_sensor)->Camera();
+
+    return true;
+  }
+
+  void ConfigureRealisticDepth(sdf::ElementPtr sdf)
+  {
+    getSdfParam(sdf, "useRealistic", use_realistic_, false);
+
+    if (use_realistic_) {
+      getSdfParam(sdf, "imageScaling", scaling_, 4U);
+      getSdfParam(sdf, "noisePerMeter", noise_per_meter_, 0.2F);
+      getSdfParam(sdf, "noiseMinDistance", noise_min_distance_, 4.0F);
+      getSdfParam(sdf, "perlinEmptySpeed", perlin_empty_speed_, 0.1F);
+      getSdfParam(
+        sdf, "perlinEmptyThreshold", perlin_empty_threshold_, 0.8F);
+      getSdfParam(sdf, "blurSize", blur_size_, 15U);
+      getSdfParam(sdf, "erosionSize", erosion_size_, 5U);
+
+      const unsigned int seed =
+        std::chrono::system_clock::now().time_since_epoch().count();
+      random_generator_ = std::default_random_engine(seed);
+      normal_distribution_ =
+        std::normal_distribution<float>(0.0F, noise_per_meter_ / 3.0F);
+      perlin_noise_ = PerlinNoise(seed);
+    } else {
+      scaling_ = 1U;
+    }
+  }
+
+  void AllocateDepthBuffers()
+  {
+    const unsigned int image_width = depth_camera_->ImageWidth();
+    const unsigned int image_height = depth_camera_->ImageHeight();
+
+    depth_map_.resize(
+      scaling_ * image_width * scaling_ * image_height);
+
+    if (use_realistic_) {
+      small_depth_map_.resize(image_width * image_height);
+    }
+  }
+
+  void ConfigureGazeboTransport()
+  {
+    transport_node_.reset(new transport::Node());
+    transport_node_->Init(world_->Name());
+
+    const std::string topic_root =
+      "~/" + model_->GetName() + "/rs/stream/";
+
+    // The additional separator is retained to preserve the original Gazebo
+    // transport topic strings.
+    depth_publisher_ = transport_node_->Advertise<msgs::ImageStamped>(
+      topic_root + "/" + kDepthCameraTopic,
+      1,
+      kDepthPublishFrequencyHz);
+    infrared1_publisher_ = transport_node_->Advertise<msgs::ImageStamped>(
+      topic_root + "/" + kInfrared1CameraTopic,
+      1,
+      kInfrared1PublishFrequencyHz);
+    infrared2_publisher_ = transport_node_->Advertise<msgs::ImageStamped>(
+      topic_root + "/" + kInfrared2CameraTopic,
+      1,
+      kInfrared2PublishFrequencyHz);
+    color_publisher_ = transport_node_->Advertise<msgs::ImageStamped>(
+      topic_root + "/" + kColorCameraTopic,
+      1,
+      kColorPublishFrequencyHz);
+  }
+
+  void ConnectSensorCallbacks()
+  {
+    if (use_realistic_) {
+      new_depth_frame_connection_ = depth_camera_->ConnectNewDepthFrame(
+        std::bind(
+          &RealSensePlugin::OnNewDepthFrameRealistic,
+          this,
+          depth_camera_,
+          depth_publisher_));
+    } else {
+      new_depth_frame_connection_ = depth_camera_->ConnectNewDepthFrame(
+        std::bind(
+          &RealSensePlugin::OnNewDepthFrame,
+          this,
+          depth_camera_,
+          depth_publisher_));
+    }
+
+    for (
+      unsigned int index = 0;
+      index < infrared_stereo_camera_->CameraCount();
+      ++index)
+    {
+      infrared_cameras_.push_back(infrared_stereo_camera_->Camera(index));
+      const std::string camera_name = infrared_cameras_[index]->Name();
+
+      if (camera_name.find(infrared1_camera_plugin_name_) != std::string::npos) {
+        new_infrared1_frame_connection_ =
+          infrared_cameras_[index]->ConnectNewImageFrame(
+          std::bind(
+            &RealSensePlugin::OnNewFrame,
+            this,
+            infrared_cameras_[index],
+            infrared1_publisher_));
+      } else if (
+        camera_name.find(infrared2_camera_plugin_name_) != std::string::npos)
+      {
+        new_infrared2_frame_connection_ =
+          infrared_cameras_[index]->ConnectNewImageFrame(
+          std::bind(
+            &RealSensePlugin::OnNewFrame,
+            this,
+            infrared_cameras_[index],
+            infrared2_publisher_));
+      }
+    }
+
+    infrared_stereo_camera_->SetActive(true);
+    new_color_frame_connection_ = color_camera_->ConnectNewImageFrame(
+      std::bind(
+        &RealSensePlugin::OnNewFrame,
+        this,
+        color_camera_,
+        color_publisher_));
+    update_connection_ = event::Events::ConnectWorldUpdateBegin(
+      std::bind(&RealSensePlugin::OnUpdate, this));
+  }
+
+  bool IsDepthInvalid(float depth) const
+  {
+    return
+      depth <= depth_camera_->NearClip() ||
+      depth >= depth_camera_->FarClip() ||
+      depth > kDepthScaleMeters * std::numeric_limits<uint16_t>::max() ||
+      depth < 0.0F;
+  }
+
+  void ApplyDepthBlur(cv::Mat & depth_image) const
+  {
+    if (blur_size_ == 0U) {
+      return;
+    }
+
+    // Normalize the blurred depth by the blurred validity mask so that empty
+    // pixels do not pull valid measurements toward zero.
+    cv::Mat valid_mask;
+    cv::Mat blurred_depth;
+    cv::Mat blurred_mask;
+
+    cv::compare(depth_image, 0, valid_mask, cv::CMP_NE);
+    cv::GaussianBlur(
+      depth_image,
+      blurred_depth,
+      cv::Size(blur_size_, blur_size_),
+      2 * blur_size_);
+    cv::GaussianBlur(
+      valid_mask,
+      blurred_mask,
+      cv::Size(blur_size_, blur_size_),
+      2 * blur_size_);
+    cv::divide(
+      blurred_depth,
+      blurred_mask,
+      blurred_depth,
+      255.0,
+      CV_16UC1);
+    blurred_depth.copyTo(depth_image, valid_mask);
+  }
+
+  void ApplyDepthErosion(cv::Mat & depth_image) const
+  {
+    if (erosion_size_ == 0U) {
+      return;
+    }
+
+    const cv::Mat element = cv::getStructuringElement(
+      cv::MORPH_ELLIPSE,
+      cv::Size(erosion_size_, erosion_size_));
+    cv::erode(depth_image, depth_image, element);
+  }
+
+  void PublishGazeboDepthImage(
+    const transport::PublisherPtr & publisher,
+    const uint16_t * depth_data,
+    unsigned int width,
+    unsigned int height,
+    unsigned int image_size)
+  {
+    msgs::ImageStamped message;
+    msgs::Set(message.mutable_time(), world_->SimTime());
+
+    auto * image = message.mutable_image();
+    image->set_width(width);
+    image->set_height(height);
+    image->set_pixel_format(common::Image::L_INT16);
+
+    // Keep the original step calculation for Gazebo transport compatibility.
+    image->set_step(width * height * 2U);
+    image->set_data(depth_data, sizeof(uint16_t) * image_size);
+
+    publisher->Publish(message);
+  }
+};
+
+class GazeboRosRealsense : public RealSensePlugin
+{
+public:
+  GazeboRosRealsense() = default;
+
+  ~GazeboRosRealsense() override
+  {
+    RCLCPP_DEBUG(ros_node_->get_logger(), "Unloaded");
+  }
+
+  /// Configure ROS publishers, camera frames, and static transforms.
+  void Load(physics::ModelPtr model, sdf::ElementPtr sdf) override
+  {
+    ros_node_ = gazebo_ros::Node::Get(sdf);
+    RCLCPP_INFO(
+      ros_node_->get_logger(),
+      "Realsense Gazebo ROS 2 plugin loading...");
+
+    RealSensePlugin::Load(model, sdf);
+
+    camera_name_ =
+      sdf->HasElement("camera_name") ?
+      sdf->Get<std::string>("camera_name") : "rgbd";
+    camera_suffix_ =
+      sdf->HasElement("camera_suffix") ?
+      sdf->Get<std::string>("camera_suffix") : "";
+    const std::string ros_namespace =
+      sdf->HasElement("namespace") ?
+      sdf->Get<std::string>("namespace") : "";
+
+    ConfigureFrameIds(ros_namespace);
+    ConfigureParentTransform(sdf);
+    ConfigureRosPublishers(ros_namespace);
+
+    static_tf_broadcaster_ =
+      std::make_shared<tf2_ros::StaticTransformBroadcaster>(ros_node_);
+    CreateStaticTransforms();
+  }
+
+  void OnNewFrame(
+    const rendering::CameraPtr camera,
+    const transport::PublisherPtr publisher) override
+  {
+    (void)publisher;
+
+    const rclcpp::Time current_time = ros_node_->now();
+    std::string camera_frame_id = camera->Name();
+    image_transport::CameraPublisher * image_publisher = nullptr;
+
+    if (
+      camera_frame_id.find(color_camera_plugin_name_) != std::string::npos)
+    {
+      camera_frame_id = color_camera_optical_frame_id_;
+      image_publisher = &color_publisher_ros_;
+    } else if (
+      camera_frame_id.find(infrared1_camera_plugin_name_) != std::string::npos)
+    {
+      camera_frame_id = infrared1_camera_optical_frame_id_;
+      image_publisher = &infrared1_publisher_ros_;
+    } else if (
+      camera_frame_id.find(infrared2_camera_plugin_name_) != std::string::npos)
+    {
+      camera_frame_id = infrared2_camera_optical_frame_id_;
+      image_publisher = &infrared2_publisher_ros_;
+    } else {
+      camera_frame_id = depth_camera_optical_frame_id_;
+      image_publisher = &depth_publisher_ros_;
+    }
+
+    sensor_msgs::msg::Image image;
+    image.header.frame_id = camera_frame_id;
+    image.header.stamp = current_time;
+
+    std::string pixel_format = camera->ImageFormat();
+    if (pixel_format == "L_INT8") {
+      pixel_format = sensor_msgs::image_encodings::MONO8;
+    } else if (pixel_format == "RGB_INT8") {
+      pixel_format = sensor_msgs::image_encodings::RGB8;
+    } else {
+      pixel_format = sensor_msgs::image_encodings::BGR8;
+    }
+
+    sensor_msgs::fillImage(
+      image,
+      pixel_format,
+      camera->ImageHeight(),
+      camera->ImageWidth(),
+      camera->ImageDepth() * camera->ImageWidth(),
+      reinterpret_cast<const void *>(camera->ImageData()));
+
+    const sensor_msgs::msg::CameraInfo camera_info =
+      CreateCameraInfo(image, camera);
+    image_publisher->publish(image, camera_info);
+  }
+
+  void OnNewDepthFrame(
+    const rendering::CameraPtr camera,
+    const transport::PublisherPtr publisher) override
+  {
+    const rclcpp::Time current_time = ros_node_->now();
+    RealSensePlugin::OnNewDepthFrame(camera, publisher);
+    PublishRosDepthData(current_time, camera);
+  }
+
+  void OnNewDepthFrameRealistic(
+    const rendering::CameraPtr camera,
+    const transport::PublisherPtr publisher) override
+  {
+    const rclcpp::Time current_time = ros_node_->now();
+    RealSensePlugin::OnNewDepthFrameRealistic(camera, publisher);
+    PublishRosDepthData(current_time, camera);
   }
 
 private:
-  gazebo_ros::Node::SharedPtr                             ros_node_;
-  std::shared_ptr<camera_info_manager::CameraInfoManager> camera_info_manager_;
-  std::unique_ptr<image_transport::ImageTransport>        itnode_;
-  image_transport::CameraPublisher                        color_pub_, ir1_pub_, ir2_pub_, depth_pub_;
+  void ConfigureFrameIds(const std::string & ros_namespace)
+  {
+    const std::string frame_prefix =
+      ros_namespace + "/" + camera_name_ + camera_suffix_ + "/";
 
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_pub_;
+    depth_camera_frame_id_ = frame_prefix + kDepthCameraSuffix;
+    color_camera_frame_id_ = frame_prefix + kColorCameraSuffix;
+    infrared1_camera_frame_id_ = frame_prefix + kInfrared1CameraSuffix;
+    infrared2_camera_frame_id_ = frame_prefix + kInfrared2CameraSuffix;
+    base_frame_id_ = frame_prefix + kBaseFrameSuffix;
 
-  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> static_tf_broadcaster_;
-  std::string                                          _namespace = "not_linked", camera_name_ = "rgbd", camera_suffix_ = "";
-  std::string parent_frame_name_, depth_camera_frame_id_, color_camera_frame_id_, ired1_camera_frame_id_, ired2_camera_frame_id_, base_frame_id_;
-  std::string depth_camera_optical_frame_id_, color_camera_optical_frame_id_, ired1_camera_optical_frame_id_, ired2_camera_optical_frame_id_;
-  double      x_, y_, z_, roll_, pitch_, yaw_;
+    depth_camera_optical_frame_id_ =
+      depth_camera_frame_id_ + "_optical";
+    color_camera_optical_frame_id_ =
+      color_camera_frame_id_ + "_optical";
+    infrared1_camera_optical_frame_id_ =
+      infrared1_camera_frame_id_ + "_optical";
+    infrared2_camera_optical_frame_id_ =
+      infrared2_camera_frame_id_ + "_optical";
+  }
+
+  void ConfigureParentTransform(sdf::ElementPtr sdf)
+  {
+    parent_frame_name_ =
+      sdf->HasElement("parentFrameName") ?
+      sdf->Get<std::string>("parentFrameName") : "world";
+
+    x_ = sdf->HasElement("x") ? sdf->Get<double>("x") : 0.0;
+    y_ = sdf->HasElement("y") ? sdf->Get<double>("y") : 0.0;
+    z_ = sdf->HasElement("z") ? sdf->Get<double>("z") : 0.0;
+    roll_ =
+      sdf->HasElement("roll") ? sdf->Get<double>("roll") : 0.0;
+    pitch_ =
+      sdf->HasElement("pitch") ? sdf->Get<double>("pitch") : 0.0;
+    yaw_ =
+      sdf->HasElement("yaw") ? sdf->Get<double>("yaw") : 0.0;
+  }
+
+  void ConfigureRosPublishers(const std::string & ros_namespace)
+  {
+    camera_info_manager_ =
+      std::make_shared<camera_info_manager::CameraInfoManager>(
+      ros_node_.get(),
+      ros_namespace + "/" + camera_name_ + camera_suffix_);
+
+    image_transport_ =
+      std::make_unique<image_transport::ImageTransport>(ros_node_);
+
+    color_publisher_ros_ =
+      image_transport_->advertiseCamera(
+      camera_name_ + "/color/image_raw", 2);
+    infrared1_publisher_ros_ =
+      image_transport_->advertiseCamera(
+      camera_name_ + "/infra1/image_raw", 2);
+    infrared2_publisher_ros_ =
+      image_transport_->advertiseCamera(
+      camera_name_ + "/infra2/image_raw", 2);
+    depth_publisher_ros_ =
+      image_transport_->advertiseCamera(
+      camera_name_ + "/aligned_depth_to_color/image_raw", 2);
+
+    // SensorDataQoS keeps the point cloud publisher suitable for high-rate
+    // sensor traffic and preserves the original best-effort behavior.
+    point_cloud_publisher_ =
+      ros_node_->create_publisher<sensor_msgs::msg::PointCloud2>(
+      camera_name_ + "/lidar",
+      rclcpp::SensorDataQoS());
+  }
+
+  void CreateStaticTransforms()
+  {
+    const rclcpp::Time timestamp = ros_node_->now();
+    std::vector<geometry_msgs::msg::TransformStamped> transforms;
+
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        parent_frame_name_,
+        base_frame_id_,
+        x_,
+        y_,
+        z_,
+        roll_,
+        pitch_,
+        yaw_));
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        base_frame_id_,
+        depth_camera_frame_id_,
+        0.0,
+        -0.0115,
+        0.0,
+        0.0,
+        0.0,
+        0.0));
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        base_frame_id_,
+        color_camera_frame_id_,
+        0.0,
+        -0.0115,
+        0.0,
+        0.0,
+        0.0,
+        0.0));
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        base_frame_id_,
+        infrared1_camera_frame_id_,
+        0.0,
+        0.0175,
+        0.0,
+        0.0,
+        0.0,
+        0.0));
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        base_frame_id_,
+        infrared2_camera_frame_id_,
+        0.0,
+        -0.0325,
+        0.0,
+        0.0,
+        0.0,
+        0.0));
+
+    // ROS optical frames use x-right, y-down, and z-forward axes.
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        depth_camera_frame_id_,
+        depth_camera_optical_frame_id_,
+        0.0,
+        0.0,
+        0.0,
+        -kHalfPi,
+        0.0,
+        -kHalfPi));
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        color_camera_frame_id_,
+        color_camera_optical_frame_id_,
+        0.0,
+        0.0,
+        0.0,
+        -kHalfPi,
+        0.0,
+        -kHalfPi));
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        infrared1_camera_frame_id_,
+        infrared1_camera_optical_frame_id_,
+        0.0,
+        0.0,
+        0.0,
+        -kHalfPi,
+        0.0,
+        -kHalfPi));
+    transforms.push_back(
+      MakeTransform(
+        timestamp,
+        infrared2_camera_frame_id_,
+        infrared2_camera_optical_frame_id_,
+        0.0,
+        0.0,
+        0.0,
+        -kHalfPi,
+        0.0,
+        -kHalfPi));
+
+    static_tf_broadcaster_->sendTransform(transforms);
+  }
+
+  static geometry_msgs::msg::TransformStamped MakeTransform(
+    const rclcpp::Time & timestamp,
+    const std::string & parent_frame,
+    const std::string & child_frame,
+    double x,
+    double y,
+    double z,
+    double roll,
+    double pitch,
+    double yaw)
+  {
+    geometry_msgs::msg::TransformStamped transform;
+    transform.header.stamp = timestamp;
+    transform.header.frame_id = parent_frame;
+    transform.child_frame_id = child_frame;
+    transform.transform.translation.x = x;
+    transform.transform.translation.y = y;
+    transform.transform.translation.z = z;
+
+    tf2::Quaternion rotation;
+    rotation.setRPY(roll, pitch, yaw);
+    transform.transform.rotation.x = rotation.x();
+    transform.transform.rotation.y = rotation.y();
+    transform.transform.rotation.z = rotation.z();
+    transform.transform.rotation.w = rotation.w();
+
+    return transform;
+  }
+
+  sensor_msgs::msg::CameraInfo CreateCameraInfo(
+    const sensor_msgs::msg::Image & image,
+    const rendering::CameraPtr camera) const
+  {
+    sensor_msgs::msg::CameraInfo camera_info;
+    camera_info.header = image.header;
+    camera_info.height = image.height;
+    camera_info.width = image.width;
+
+    const double horizontal_fov = camera->HFOV().Radian();
+    const double horizontal_focal_length =
+      (image.width / 2.0) / std::tan(horizontal_fov / 2.0);
+    const double vertical_fov = camera->VFOV().Radian();
+    const double vertical_focal_length =
+      (image.height / 2.0) / std::tan(vertical_fov / 2.0);
+
+    camera_info.distortion_model =
+      sensor_msgs::distortion_models::RATIONAL_POLYNOMIAL;
+
+    camera_info.k.fill(0.0);
+    camera_info.k[0] = horizontal_focal_length;
+    camera_info.k[4] = vertical_focal_length;
+    camera_info.k[2] = (camera_info.width + 1.0) / 2.0;
+    camera_info.k[5] = (camera_info.height + 1.0) / 2.0;
+    camera_info.k[8] = 1.0;
+
+    camera_info.p.fill(0.0);
+    camera_info.p[0] = camera_info.k[0];
+    camera_info.p[5] = camera_info.k[4];
+    camera_info.p[2] = camera_info.k[2];
+    camera_info.p[6] = camera_info.k[5];
+    camera_info.p[10] = camera_info.k[8];
+
+    camera_info.d.assign(5, 0.0);
+    return camera_info;
+  }
+
+  void PublishRosDepthData(
+    const rclcpp::Time & current_time,
+    const rendering::CameraPtr camera)
+  {
+    sensor_msgs::msg::Image depth_image;
+    depth_image.header.frame_id = depth_camera_optical_frame_id_;
+    depth_image.header.stamp = current_time;
+
+    sensor_msgs::fillImage(
+      depth_image,
+      sensor_msgs::image_encodings::TYPE_16UC1,
+      scaling_ * depth_camera_->ImageHeight(),
+      scaling_ * depth_camera_->ImageWidth(),
+      sizeof(uint16_t) * scaling_ * depth_camera_->ImageWidth(),
+      reinterpret_cast<const void *>(depth_map_.data()));
+
+    const sensor_msgs::msg::CameraInfo camera_info =
+      CreateCameraInfo(depth_image, camera);
+    depth_publisher_ros_.publish(depth_image, camera_info);
+
+    // The point cloud is generated from the same depth buffer, so the
+    // realistic path automatically includes its configured artifacts.
+    PublishPointCloud(
+      current_time,
+      camera_info,
+      depth_map_.data(),
+      depth_image.width,
+      depth_image.height);
+  }
+
+  void PublishPointCloud(
+    const rclcpp::Time & current_time,
+    const sensor_msgs::msg::CameraInfo & camera_info,
+    const uint16_t * depth_data,
+    unsigned int width,
+    unsigned int height)
+  {
+    const unsigned int cloud_width = width / kPointCloudDecimation;
+    const unsigned int cloud_height = height / kPointCloudDecimation;
+    const unsigned int point_count = cloud_width * cloud_height;
+
+    sensor_msgs::msg::PointCloud2 cloud;
+    cloud.header.stamp = current_time;
+    cloud.header.frame_id = depth_camera_optical_frame_id_;
+    cloud.height = 1U;
+    cloud.width = point_count;
+    cloud.is_dense = false;
+    cloud.is_bigendian = false;
+
+    sensor_msgs::PointCloud2Modifier modifier(cloud);
+    modifier.setPointCloud2FieldsByString(1, "xyz");
+    modifier.resize(point_count);
+
+    sensor_msgs::PointCloud2Iterator<float> x_iterator(cloud, "x");
+    sensor_msgs::PointCloud2Iterator<float> y_iterator(cloud, "y");
+    sensor_msgs::PointCloud2Iterator<float> z_iterator(cloud, "z");
+
+    const double focal_x = camera_info.k[0];
+    const double focal_y = camera_info.k[4];
+    const double center_x = camera_info.k[2];
+    const double center_y = camera_info.k[5];
+    const float invalid_value = std::numeric_limits<float>::quiet_NaN();
+
+    // Decimation samples one pixel from each block without changing the
+    // original projection model or the unorganized cloud layout.
+    for (unsigned int cloud_v = 0; cloud_v < cloud_height; ++cloud_v) {
+      const unsigned int image_v = cloud_v * kPointCloudDecimation;
+
+      for (unsigned int cloud_u = 0; cloud_u < cloud_width; ++cloud_u) {
+        const unsigned int image_u = cloud_u * kPointCloudDecimation;
+        const uint16_t depth = depth_data[image_v * width + image_u];
+
+        if (depth == 0U) {
+          *x_iterator = invalid_value;
+          *y_iterator = invalid_value;
+          *z_iterator = invalid_value;
+        } else {
+          const float z = depth * kDepthScaleMeters;
+          *x_iterator = (image_u - center_x) * z / focal_x;
+          *y_iterator = (image_v - center_y) * z / focal_y;
+          *z_iterator = z;
+        }
+
+        ++x_iterator;
+        ++y_iterator;
+        ++z_iterator;
+      }
+    }
+
+    point_cloud_publisher_->publish(cloud);
+  }
+
+  gazebo_ros::Node::SharedPtr ros_node_{nullptr};
+  std::shared_ptr<camera_info_manager::CameraInfoManager>
+  camera_info_manager_{nullptr};
+  std::unique_ptr<image_transport::ImageTransport> image_transport_{nullptr};
+
+  image_transport::CameraPublisher color_publisher_ros_;
+  image_transport::CameraPublisher infrared1_publisher_ros_;
+  image_transport::CameraPublisher infrared2_publisher_ros_;
+  image_transport::CameraPublisher depth_publisher_ros_;
+
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr
+  point_cloud_publisher_{nullptr};
+  std::shared_ptr<tf2_ros::StaticTransformBroadcaster>
+  static_tf_broadcaster_{nullptr};
+
+  std::string camera_name_{"rgbd"};
+  std::string camera_suffix_;
+  std::string parent_frame_name_;
+
+  std::string depth_camera_frame_id_;
+  std::string color_camera_frame_id_;
+  std::string infrared1_camera_frame_id_;
+  std::string infrared2_camera_frame_id_;
+  std::string base_frame_id_;
+
+  std::string depth_camera_optical_frame_id_;
+  std::string color_camera_optical_frame_id_;
+  std::string infrared1_camera_optical_frame_id_;
+  std::string infrared2_camera_optical_frame_id_;
+
+  double x_{0.0};
+  double y_{0.0};
+  double z_{0.0};
+  double roll_{0.0};
+  double pitch_{0.0};
+  double yaw_{0.0};
 };
 
 GZ_REGISTER_MODEL_PLUGIN(GazeboRosRealsense)
+
 }  // namespace gazebo
