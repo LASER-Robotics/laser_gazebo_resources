@@ -1,0 +1,6882 @@
+<?xml version="1.0"?>
+<?xml-model href="http://sdformat.org/schemas/root.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- coordinate system {-->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>47.397743</latitude_deg>
+      <longitude_deg>8.545594</longitude_deg>
+      <elevation>0.0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+    <!--}-->
+
+    <!-- physics engine {-->
+    <physics name="default_physics" default="0" type="ode">
+      <gravity>0 0 -9.8066</gravity>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>50</iters>
+          <sor>1.3</sor>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>100</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <magnetic_field>6.0e-06 2.3e-05 -4.2e-05</magnetic_field>
+    </physics>
+    <!--}-->
+
+    <!-- setup shadows {-->
+    <scene>
+      <shadows>false</shadows>
+      <!-- <sky> -->
+      <!--   <clouds/> -->
+      <!-- </sky> -->
+    </scene>
+    <!--}-->
+
+    <!-- sun {-->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>250 250 600 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+    </light>
+    <!--}-->
+
+    <!-- ground plane {-->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>500 500</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <!-- <visual name="grass">
+          <pose>0 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>150 250</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grass</name>
+            </script>
+          </material>
+        </visual> -->
+      </link>
+    </model>
+
+    <!-- user camera {-->
+    <gui>
+      <camera name="camera">
+        <pose>35 -15 10 0 0.6 -2.64</pose>
+      </camera>
+    </gui>
+    <!--}-->
+
+    <!-- Models Worlds -->
+    <!-- Environment -->
+    <include>
+      <name>city_terrain_1</name>
+      <pose>
+        0
+        0
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://city_terrain</uri>
+    </include>
+
+    <include>
+      <name>ocean_2</name>
+      <pose>
+        40
+        -20
+        -2
+        0
+        0
+        0
+      </pose>
+      <uri>model://ocean</uri>
+    </include>
+
+
+    <road name="road_y_1">
+      <width>7.4</width>
+      <point>-45 -48.7 0.01</point>
+      <point>-45 105.0 0.01</point>
+
+
+    </road>
+
+
+    <road name="road_y_2">
+      <width>7.4</width>
+      <point>-15 -48.7 0.01</point>
+      <point>-15 105.0 0.01</point>
+
+
+      <material>
+        <script>
+          <uri>file://media/materials/scripts/gazebo.material</uri>
+          <name>Gazebo/Residential</name>
+        </script>
+      </material>
+
+
+    </road>
+
+
+    <road name="road_y_3">
+      <width>7.4</width>
+      <point>45 -48.7 0.01</point>
+      <point>45 105.0 0.01</point>
+
+
+      <material>
+        <script>
+          <uri>file://media/materials/scripts/gazebo.material</uri>
+          <name>Gazebo/Residential</name>
+        </script>
+      </material>
+
+
+    </road>
+
+
+    <road name="road_y_4">
+      <width>7.4</width>
+      <point>110 -48.7 0.01</point>
+      <point>110 105.0 0.01</point>
+
+
+      <material>
+        <script>
+          <uri>file://media/materials/scripts/gazebo.material</uri>
+          <name>Gazebo/Residential</name>
+        </script>
+      </material>
+
+
+    </road>
+
+
+    <road name="road_y_5">
+      <width>7.4</width>
+      <point>120 -48.7 0.01</point>
+      <point>120 105.0 0.01</point>
+
+
+    </road>
+
+
+    <road name="road_x_0">
+
+      <width>8.4</width>
+      <point>-41.3 100.8 0.015</point>
+      <point>116.3 100.8 0.015</point>
+
+
+    </road>
+    
+    <road name="road_x_1">
+
+      <width>8.4</width>
+      <point>-41.3 -45 0.015</point>
+      <point>116.3 -45 0.015</point>
+
+
+    </road>
+
+
+    <road name="road_x_2">
+
+      <width>8.4</width>
+      <point>-41.3 0 0.015</point>
+      <point>116.3 0 0.015</point>
+
+
+      <material>
+        <script>
+          <uri>file://media/materials/scripts/gazebo.material</uri>
+          <name>Gazebo/Residential</name>
+        </script>
+      </material>
+
+
+    </road>
+
+
+    <road name="road_x_3">
+
+      <width>8.4</width>
+      <point>-41.3 45 0.015</point>
+      <point>116.3 45 0.015</point>
+
+
+    </road>
+
+    <include>
+      <name>suv_a</name>
+      <pose>
+        -16
+        0
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://suv</uri>
+    </include>
+
+    <include>
+      <name>suv_b</name>
+      <pose>
+        -6
+        -2.55
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://suv</uri>
+    </include>
+
+
+    <include>
+      <name>suv_c</name>
+      <pose>
+        7
+        2.55
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://suv</uri>
+    </include>
+
+
+    <!-- Sidewalks -->
+
+    <!-- East -->
+    <model name="sidewalk_3">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 -40.8</point>
+              <point>-41.275528258147574 -40.95450849718747</point>
+              <point>-41.20450849718747 -41.093892626146236</point>
+              <point>-41.093892626146236 -41.20450849718747</point>
+              <point>-40.95450849718747 -41.275528258147574</point>
+              <point>-40.8 -41.3</point>
+              <point>-19.2 -41.3</point>
+              <point>-19.045491502812524 -41.275528258147574</point>
+              <point>-18.906107373853764 -41.20450849718747</point>
+              <point>-18.795491502812524 -41.093892626146236</point>
+              <point>-18.724471741852422 -40.95450849718747</point>
+              <point>-18.7 -40.8</point>
+              <point>-18.7 -38.8</point>
+              <point>-18.724471741852422 -38.645491502812526</point>
+              <point>-18.795491502812524 -38.50610737385376</point>
+              <point>-18.906107373853764 -38.395491502812526</point>
+              <point>-19.045491502812524 -38.32447174185242</point>
+              <point>-19.2 -38.3</point>
+              <point>-40.8 -38.3</point>
+              <point>-40.95450849718747 -38.32447174185242</point>
+              <point>-41.093892626146236 -38.395491502812526</point>
+              <point>-41.20450849718747 -38.50610737385376</point>
+              <point>-41.275528258147574 -38.645491502812526</point>
+              <point>-41.3 -38.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- West -->
+
+    <model name="sidewalk_4">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 -6.2</point>
+              <point>-41.275528258147574 -6.3545084971874735</point>
+              <point>-41.20450849718747 -6.493892626146237</point>
+              <point>-41.093892626146236 -6.604508497187474</point>
+              <point>-40.95450849718747 -6.675528258147577</point>
+              <point>-40.8 -6.7</point>
+              <point>-19.2 -6.7</point>
+              <point>-19.045491502812524 -6.675528258147577</point>
+              <point>-18.906107373853764 -6.604508497187474</point>
+              <point>-18.795491502812524 -6.493892626146237</point>
+              <point>-18.724471741852422 -6.3545084971874735</point>
+              <point>-18.7 -6.2</point>
+              <point>-18.7 -4.2</point>
+              <point>-18.724471741852422 -4.045491502812527</point>
+              <point>-18.795491502812524 -3.9061073738537635</point>
+              <point>-18.906107373853764 -3.7954915028125265</point>
+              <point>-19.045491502812524 -3.7244717418524234</point>
+              <point>-19.2 -3.7</point>
+              <point>-40.8 -3.7</point>
+              <point>-40.95450849718747 -3.7244717418524234</point>
+              <point>-41.093892626146236 -3.7954915028125265</point>
+              <point>-41.20450849718747 -3.9061073738537635</point>
+              <point>-41.275528258147574 -4.045491502812527</point>
+              <point>-41.3 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- South -->
+
+    <model name="sidewalk_5">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 -40.8</point>
+              <point>-41.275528258147574 -40.95450849718747</point>
+              <point>-41.20450849718747 -41.093892626146236</point>
+              <point>-41.093892626146236 -41.20450849718747</point>
+              <point>-40.95450849718747 -41.275528258147574</point>
+              <point>-40.8 -41.3</point>
+              <point>-38.8 -41.3</point>
+              <point>-38.645491502812526 -41.275528258147574</point>
+              <point>-38.50610737385376 -41.20450849718747</point>
+              <point>-38.395491502812526 -41.093892626146236</point>
+              <point>-38.32447174185242 -40.95450849718747</point>
+              <point>-38.3 -40.8</point>
+              <point>-38.3 -4.2</point>
+              <point>-38.32447174185242 -4.045491502812527</point>
+              <point>-38.395491502812526 -3.9061073738537635</point>
+              <point>-38.50610737385376 -3.7954915028125265</point>
+              <point>-38.645491502812526 -3.7244717418524234</point>
+              <point>-38.8 -3.7</point>
+              <point>-40.8 -3.7</point>
+              <point>-40.95450849718747 -3.7244717418524234</point>
+              <point>-41.093892626146236 -3.7954915028125265</point>
+              <point>-41.20450849718747 -3.9061073738537635</point>
+              <point>-41.275528258147574 -4.045491502812527</point>
+              <point>-41.3 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- North -->
+    <model name="sidewalk_6">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-21.7 -40.8</point>
+              <point>-21.675528258147576 -40.95450849718747</point>
+              <point>-21.604508497187474 -41.093892626146236</point>
+              <point>-21.493892626146234 -41.20450849718747</point>
+              <point>-21.354508497187474 -41.275528258147574</point>
+              <point>-21.2 -41.3</point>
+              <point>-19.2 -41.3</point>
+              <point>-19.045491502812524 -41.275528258147574</point>
+              <point>-18.906107373853764 -41.20450849718747</point>
+              <point>-18.795491502812524 -41.093892626146236</point>
+              <point>-18.724471741852422 -40.95450849718747</point>
+              <point>-18.7 -40.8</point>
+              <point>-18.7 -4.2</point>
+              <point>-18.724471741852422 -4.045491502812527</point>
+              <point>-18.795491502812524 -3.9061073738537635</point>
+              <point>-18.906107373853764 -3.7954915028125265</point>
+              <point>-19.045491502812524 -3.7244717418524234</point>
+              <point>-19.2 -3.7</point>
+              <point>-21.2 -3.7</point>
+              <point>-21.354508497187474 -3.7244717418524234</point>
+              <point>-21.493892626146234 -3.7954915028125265</point>
+              <point>-21.604508497187474 -3.9061073738537635</point>
+              <point>-21.675528258147576 -4.045491502812527</point>
+              <point>-21.7 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- East -->
+    <model name="sidewalk_7">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 4.2</point>
+              <point>-41.275528258147574 4.045491502812527</point>
+              <point>-41.20450849718747 3.9061073738537635</point>
+              <point>-41.093892626146236 3.7954915028125265</point>
+              <point>-40.95450849718747 3.7244717418524234</point>
+              <point>-40.8 3.7</point>
+              <point>-19.2 3.7</point>
+              <point>-19.045491502812524 3.7244717418524234</point>
+              <point>-18.906107373853764 3.7954915028125265</point>
+              <point>-18.795491502812524 3.9061073738537635</point>
+              <point>-18.724471741852422 4.045491502812527</point>
+              <point>-18.7 4.2</point>
+              <point>-18.7 6.2</point>
+              <point>-18.724471741852422 6.3545084971874735</point>
+              <point>-18.795491502812524 6.493892626146237</point>
+              <point>-18.906107373853764 6.604508497187474</point>
+              <point>-19.045491502812524 6.675528258147577</point>
+              <point>-19.2 6.7</point>
+              <point>-40.8 6.7</point>
+              <point>-40.95450849718747 6.675528258147577</point>
+              <point>-41.093892626146236 6.604508497187474</point>
+              <point>-41.20450849718747 6.493892626146237</point>
+              <point>-41.275528258147574 6.3545084971874735</point>
+              <point>-41.3 6.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 4.2</point>
+              <point>-41.275528258147574 4.045491502812527</point>
+              <point>-41.20450849718747 3.9061073738537635</point>
+              <point>-41.093892626146236 3.7954915028125265</point>
+              <point>-40.95450849718747 3.7244717418524234</point>
+              <point>-40.8 3.7</point>
+              <point>-19.2 3.7</point>
+              <point>-19.045491502812524 3.7244717418524234</point>
+              <point>-18.906107373853764 3.7954915028125265</point>
+              <point>-18.795491502812524 3.9061073738537635</point>
+              <point>-18.724471741852422 4.045491502812527</point>
+              <point>-18.7 4.2</point>
+              <point>-18.7 6.2</point>
+              <point>-18.724471741852422 6.3545084971874735</point>
+              <point>-18.795491502812524 6.493892626146237</point>
+              <point>-18.906107373853764 6.604508497187474</point>
+              <point>-19.045491502812524 6.675528258147577</point>
+              <point>-19.2 6.7</point>
+              <point>-40.8 6.7</point>
+              <point>-40.95450849718747 6.675528258147577</point>
+              <point>-41.093892626146236 6.604508497187474</point>
+              <point>-41.20450849718747 6.493892626146237</point>
+              <point>-41.275528258147574 6.3545084971874735</point>
+              <point>-41.3 6.2</point>
+            </polyline>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- West -->
+
+    <model name="sidewalk_8">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 38.8</point>
+              <point>-41.275528258147574 38.645491502812526</point>
+              <point>-41.20450849718747 38.50610737385376</point>
+              <point>-41.093892626146236 38.395491502812526</point>
+              <point>-40.95450849718747 38.32447174185242</point>
+              <point>-40.8 38.3</point>
+              <point>-19.2 38.3</point>
+              <point>-19.045491502812524 38.32447174185242</point>
+              <point>-18.906107373853764 38.395491502812526</point>
+              <point>-18.795491502812524 38.50610737385376</point>
+              <point>-18.724471741852422 38.645491502812526</point>
+              <point>-18.7 38.8</point>
+              <point>-18.7 40.8</point>
+              <point>-18.724471741852422 40.95450849718747</point>
+              <point>-18.795491502812524 41.093892626146236</point>
+              <point>-18.906107373853764 41.20450849718747</point>
+              <point>-19.045491502812524 41.275528258147574</point>
+              <point>-19.2 41.3</point>
+              <point>-40.8 41.3</point>
+              <point>-40.95450849718747 41.275528258147574</point>
+              <point>-41.093892626146236 41.20450849718747</point>
+              <point>-41.20450849718747 41.093892626146236</point>
+              <point>-41.275528258147574 40.95450849718747</point>
+              <point>-41.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_8_1">
+      <static>true</static>
+      <pose>0 55.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 38.8</point>
+              <point>-41.275528258147574 38.645491502812526</point>
+              <point>-41.20450849718747 38.50610737385376</point>
+              <point>-41.093892626146236 38.395491502812526</point>
+              <point>-40.95450849718747 38.32447174185242</point>
+              <point>-40.8 38.3</point>
+              <point>-19.2 38.3</point>
+              <point>-19.045491502812524 38.32447174185242</point>
+              <point>-18.906107373853764 38.395491502812526</point>
+              <point>-18.795491502812524 38.50610737385376</point>
+              <point>-18.724471741852422 38.645491502812526</point>
+              <point>-18.7 38.8</point>
+              <point>-18.7 40.8</point>
+              <point>-18.724471741852422 40.95450849718747</point>
+              <point>-18.795491502812524 41.093892626146236</point>
+              <point>-18.906107373853764 41.20450849718747</point>
+              <point>-19.045491502812524 41.275528258147574</point>
+              <point>-19.2 41.3</point>
+              <point>-40.8 41.3</point>
+              <point>-40.95450849718747 41.275528258147574</point>
+              <point>-41.093892626146236 41.20450849718747</point>
+              <point>-41.20450849718747 41.093892626146236</point>
+              <point>-41.275528258147574 40.95450849718747</point>
+              <point>-41.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_8_2">
+      <static>true</static>
+      <pose>0 10.8 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 38.8</point>
+              <point>-41.275528258147574 38.645491502812526</point>
+              <point>-41.20450849718747 38.50610737385376</point>
+              <point>-41.093892626146236 38.395491502812526</point>
+              <point>-40.95450849718747 38.32447174185242</point>
+              <point>-40.8 38.3</point>
+              <point>-19.2 38.3</point>
+              <point>-19.045491502812524 38.32447174185242</point>
+              <point>-18.906107373853764 38.395491502812526</point>
+              <point>-18.795491502812524 38.50610737385376</point>
+              <point>-18.724471741852422 38.645491502812526</point>
+              <point>-18.7 38.8</point>
+              <point>-18.7 40.8</point>
+              <point>-18.724471741852422 40.95450849718747</point>
+              <point>-18.795491502812524 41.093892626146236</point>
+              <point>-18.906107373853764 41.20450849718747</point>
+              <point>-19.045491502812524 41.275528258147574</point>
+              <point>-19.2 41.3</point>
+              <point>-40.8 41.3</point>
+              <point>-40.95450849718747 41.275528258147574</point>
+              <point>-41.093892626146236 41.20450849718747</point>
+              <point>-41.20450849718747 41.093892626146236</point>
+              <point>-41.275528258147574 40.95450849718747</point>
+              <point>-41.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- South -->
+
+    <model name="sidewalk_9">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-41.3 4.2</point>
+              <point>-41.275528258147574 4.045491502812527</point>
+              <point>-41.20450849718747 3.9061073738537635</point>
+              <point>-41.093892626146236 3.7954915028125265</point>
+              <point>-40.95450849718747 3.7244717418524234</point>
+              <point>-40.8 3.7</point>
+              <point>-38.8 3.7</point>
+              <point>-38.645491502812526 3.7244717418524234</point>
+              <point>-38.50610737385376 3.7954915028125265</point>
+              <point>-38.395491502812526 3.9061073738537635</point>
+              <point>-38.32447174185242 4.045491502812527</point>
+              <point>-38.3 4.2</point>
+              <point>-38.3 40.8</point>
+              <point>-38.32447174185242 40.95450849718747</point>
+              <point>-38.395491502812526 41.093892626146236</point>
+              <point>-38.50610737385376 41.20450849718747</point>
+              <point>-38.645491502812526 41.275528258147574</point>
+              <point>-38.8 41.3</point>
+              <point>-40.8 41.3</point>
+              <point>-40.95450849718747 41.275528258147574</point>
+              <point>-41.093892626146236 41.20450849718747</point>
+              <point>-41.20450849718747 41.093892626146236</point>
+              <point>-41.275528258147574 40.95450849718747</point>
+              <point>-41.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- North -->
+    <model name="sidewalk_10">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-21.7 4.2</point>
+              <point>-21.675528258147576 4.045491502812527</point>
+              <point>-21.604508497187474 3.9061073738537635</point>
+              <point>-21.493892626146234 3.7954915028125265</point>
+              <point>-21.354508497187474 3.7244717418524234</point>
+              <point>-21.2 3.7</point>
+              <point>-19.2 3.7</point>
+              <point>-19.045491502812524 3.7244717418524234</point>
+              <point>-18.906107373853764 3.7954915028125265</point>
+              <point>-18.795491502812524 3.9061073738537635</point>
+              <point>-18.724471741852422 4.045491502812527</point>
+              <point>-18.7 4.2</point>
+              <point>-18.7 40.8</point>
+              <point>-18.724471741852422 40.95450849718747</point>
+              <point>-18.795491502812524 41.093892626146236</point>
+              <point>-18.906107373853764 41.20450849718747</point>
+              <point>-19.045491502812524 41.275528258147574</point>
+              <point>-19.2 41.3</point>
+              <point>-21.2 41.3</point>
+              <point>-21.354508497187474 41.275528258147574</point>
+              <point>-21.493892626146234 41.20450849718747</point>
+              <point>-21.604508497187474 41.093892626146236</point>
+              <point>-21.675528258147576 40.95450849718747</point>
+              <point>-21.7 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- East -->
+    <model name="sidewalk_11">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 -40.8</point>
+              <point>-11.275528258147578 -40.95450849718747</point>
+              <point>-11.204508497187474 -41.093892626146236</point>
+              <point>-11.093892626146237 -41.20450849718747</point>
+              <point>-10.954508497187474 -41.275528258147574</point>
+              <point>-10.8 -41.3</point>
+              <point>40.8 -41.3</point>
+              <point>40.95450849718747 -41.275528258147574</point>
+              <point>41.093892626146236 -41.20450849718747</point>
+              <point>41.20450849718747 -41.093892626146236</point>
+              <point>41.275528258147574 -40.95450849718747</point>
+              <point>41.3 -40.8</point>
+              <point>41.3 -38.8</point>
+              <point>41.275528258147574 -38.645491502812526</point>
+              <point>41.20450849718747 -38.50610737385376</point>
+              <point>41.093892626146236 -38.395491502812526</point>
+              <point>40.95450849718747 -38.32447174185242</point>
+              <point>40.8 -38.3</point>
+              <point>-10.8 -38.3</point>
+              <point>-10.954508497187474 -38.32447174185242</point>
+              <point>-11.093892626146237 -38.395491502812526</point>
+              <point>-11.204508497187474 -38.50610737385376</point>
+              <point>-11.275528258147578 -38.645491502812526</point>
+              <point>-11.3 -38.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- West -->
+
+    <model name="sidewalk_12">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 -6.2</point>
+              <point>-11.275528258147578 -6.3545084971874735</point>
+              <point>-11.204508497187474 -6.493892626146237</point>
+              <point>-11.093892626146237 -6.604508497187474</point>
+              <point>-10.954508497187474 -6.675528258147577</point>
+              <point>-10.8 -6.7</point>
+              <point>40.8 -6.7</point>
+              <point>40.95450849718747 -6.675528258147577</point>
+              <point>41.093892626146236 -6.604508497187474</point>
+              <point>41.20450849718747 -6.493892626146237</point>
+              <point>41.275528258147574 -6.3545084971874735</point>
+              <point>41.3 -6.2</point>
+              <point>41.3 -4.2</point>
+              <point>41.275528258147574 -4.045491502812527</point>
+              <point>41.20450849718747 -3.9061073738537635</point>
+              <point>41.093892626146236 -3.7954915028125265</point>
+              <point>40.95450849718747 -3.7244717418524234</point>
+              <point>40.8 -3.7</point>
+              <point>-10.8 -3.7</point>
+              <point>-10.954508497187474 -3.7244717418524234</point>
+              <point>-11.093892626146237 -3.7954915028125265</point>
+              <point>-11.204508497187474 -3.9061073738537635</point>
+              <point>-11.275528258147578 -4.045491502812527</point>
+              <point>-11.3 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- South -->
+
+    <model name="sidewalk_13">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 -40.8</point>
+              <point>-11.275528258147578 -40.95450849718747</point>
+              <point>-11.204508497187474 -41.093892626146236</point>
+              <point>-11.093892626146237 -41.20450849718747</point>
+              <point>-10.954508497187474 -41.275528258147574</point>
+              <point>-10.8 -41.3</point>
+              <point>-8.8 -41.3</point>
+              <point>-8.645491502812527 -41.275528258147574</point>
+              <point>-8.506107373853764 -41.20450849718747</point>
+              <point>-8.395491502812527 -41.093892626146236</point>
+              <point>-8.324471741852424 -40.95450849718747</point>
+              <point>-8.3 -40.8</point>
+              <point>-8.3 -16.5</point>
+              <point>-8.324471741852424 -16.345491502812525</point>
+              <point>-8.395491502812527 -16.206107373853765</point>
+              <point>-8.506107373853764 -16.095491502812525</point>
+              <point>-8.645491502812527 -16.024471741852423</point>
+              <point>-8.8 -16.0</point>
+              <point>-10.8 -16.0</point>
+              <point>-10.954508497187474 -16.024471741852423</point>
+              <point>-11.093892626146237 -16.095491502812525</point>
+              <point>-11.204508497187474 -16.206107373853765</point>
+              <point>-11.275528258147578 -16.345491502812525</point>
+              <point>-11.3 -16.5</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_14">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 -9.5</point>
+              <point>-11.275528258147578 -9.654508497187473</point>
+              <point>-11.204508497187474 -9.793892626146237</point>
+              <point>-11.093892626146237 -9.904508497187473</point>
+              <point>-10.954508497187474 -9.975528258147577</point>
+              <point>-10.8 -10.0</point>
+              <point>-8.8 -10.0</point>
+              <point>-8.645491502812527 -9.975528258147577</point>
+              <point>-8.506107373853764 -9.904508497187473</point>
+              <point>-8.395491502812527 -9.793892626146237</point>
+              <point>-8.324471741852424 -9.654508497187473</point>
+              <point>-8.3 -9.5</point>
+              <point>-8.3 -4.2</point>
+              <point>-8.324471741852424 -4.045491502812527</point>
+              <point>-8.395491502812527 -3.9061073738537635</point>
+              <point>-8.506107373853764 -3.7954915028125265</point>
+              <point>-8.645491502812527 -3.7244717418524234</point>
+              <point>-8.8 -3.7</point>
+              <point>-10.8 -3.7</point>
+              <point>-10.954508497187474 -3.7244717418524234</point>
+              <point>-11.093892626146237 -3.7954915028125265</point>
+              <point>-11.204508497187474 -3.9061073738537635</point>
+              <point>-11.275528258147578 -4.045491502812527</point>
+              <point>-11.3 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- North -->
+    <model name="sidewalk_15">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>38.3 -40.8</point>
+              <point>38.32447174185242 -40.95450849718747</point>
+              <point>38.395491502812526 -41.093892626146236</point>
+              <point>38.50610737385376 -41.20450849718747</point>
+              <point>38.645491502812526 -41.275528258147574</point>
+              <point>38.8 -41.3</point>
+              <point>40.8 -41.3</point>
+              <point>40.95450849718747 -41.275528258147574</point>
+              <point>41.093892626146236 -41.20450849718747</point>
+              <point>41.20450849718747 -41.093892626146236</point>
+              <point>41.275528258147574 -40.95450849718747</point>
+              <point>41.3 -40.8</point>
+              <point>41.3 -4.2</point>
+              <point>41.275528258147574 -4.045491502812527</point>
+              <point>41.20450849718747 -3.9061073738537635</point>
+              <point>41.093892626146236 -3.7954915028125265</point>
+              <point>40.95450849718747 -3.7244717418524234</point>
+              <point>40.8 -3.7</point>
+              <point>38.8 -3.7</point>
+              <point>38.645491502812526 -3.7244717418524234</point>
+              <point>38.50610737385376 -3.7954915028125265</point>
+              <point>38.395491502812526 -3.9061073738537635</point>
+              <point>38.32447174185242 -4.045491502812527</point>
+              <point>38.3 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- East -->
+    <model name="sidewalk_16">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 4.2</point>
+              <point>-11.275528258147578 4.045491502812527</point>
+              <point>-11.204508497187474 3.9061073738537635</point>
+              <point>-11.093892626146237 3.7954915028125265</point>
+              <point>-10.954508497187474 3.7244717418524234</point>
+              <point>-10.8 3.7</point>
+              <point>40.8 3.7</point>
+              <point>40.95450849718747 3.7244717418524234</point>
+              <point>41.093892626146236 3.7954915028125265</point>
+              <point>41.20450849718747 3.9061073738537635</point>
+              <point>41.275528258147574 4.045491502812527</point>
+              <point>41.3 4.2</point>
+              <point>41.3 6.2</point>
+              <point>41.275528258147574 6.3545084971874735</point>
+              <point>41.20450849718747 6.493892626146237</point>
+              <point>41.093892626146236 6.604508497187474</point>
+              <point>40.95450849718747 6.675528258147577</point>
+              <point>40.8 6.7</point>
+              <point>-10.8 6.7</point>
+              <point>-10.954508497187474 6.675528258147577</point>
+              <point>-11.093892626146237 6.604508497187474</point>
+              <point>-11.204508497187474 6.493892626146237</point>
+              <point>-11.275528258147578 6.3545084971874735</point>
+              <point>-11.3 6.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- West -->
+
+    <model name="sidewalk_17">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 38.8</point>
+              <point>-11.275528258147578 38.645491502812526</point>
+              <point>-11.204508497187474 38.50610737385376</point>
+              <point>-11.093892626146237 38.395491502812526</point>
+              <point>-10.954508497187474 38.32447174185242</point>
+              <point>-10.8 38.3</point>
+              <point>40.8 38.3</point>
+              <point>40.95450849718747 38.32447174185242</point>
+              <point>41.093892626146236 38.395491502812526</point>
+              <point>41.20450849718747 38.50610737385376</point>
+              <point>41.275528258147574 38.645491502812526</point>
+              <point>41.3 38.8</point>
+              <point>41.3 40.8</point>
+              <point>41.275528258147574 40.95450849718747</point>
+              <point>41.20450849718747 41.093892626146236</point>
+              <point>41.093892626146236 41.20450849718747</point>
+              <point>40.95450849718747 41.275528258147574</point>
+              <point>40.8 41.3</point>
+              <point>-10.8 41.3</point>
+              <point>-10.954508497187474 41.275528258147574</point>
+              <point>-11.093892626146237 41.20450849718747</point>
+              <point>-11.204508497187474 41.093892626146236</point>
+              <point>-11.275528258147578 40.95450849718747</point>
+              <point>-11.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_17_1">
+      <static>true</static>
+      <pose>0 55.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 38.8</point>
+              <point>-11.275528258147578 38.645491502812526</point>
+              <point>-11.204508497187474 38.50610737385376</point>
+              <point>-11.093892626146237 38.395491502812526</point>
+              <point>-10.954508497187474 38.32447174185242</point>
+              <point>-10.8 38.3</point>
+              <point>40.8 38.3</point>
+              <point>40.95450849718747 38.32447174185242</point>
+              <point>41.093892626146236 38.395491502812526</point>
+              <point>41.20450849718747 38.50610737385376</point>
+              <point>41.275528258147574 38.645491502812526</point>
+              <point>41.3 38.8</point>
+              <point>41.3 40.8</point>
+              <point>41.275528258147574 40.95450849718747</point>
+              <point>41.20450849718747 41.093892626146236</point>
+              <point>41.093892626146236 41.20450849718747</point>
+              <point>40.95450849718747 41.275528258147574</point>
+              <point>40.8 41.3</point>
+              <point>-10.8 41.3</point>
+              <point>-10.954508497187474 41.275528258147574</point>
+              <point>-11.093892626146237 41.20450849718747</point>
+              <point>-11.204508497187474 41.093892626146236</point>
+              <point>-11.275528258147578 40.95450849718747</point>
+              <point>-11.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_17_2">
+      <static>true</static>
+      <pose>0 10.8 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 38.8</point>
+              <point>-11.275528258147578 38.645491502812526</point>
+              <point>-11.204508497187474 38.50610737385376</point>
+              <point>-11.093892626146237 38.395491502812526</point>
+              <point>-10.954508497187474 38.32447174185242</point>
+              <point>-10.8 38.3</point>
+              <point>40.8 38.3</point>
+              <point>40.95450849718747 38.32447174185242</point>
+              <point>41.093892626146236 38.395491502812526</point>
+              <point>41.20450849718747 38.50610737385376</point>
+              <point>41.275528258147574 38.645491502812526</point>
+              <point>41.3 38.8</point>
+              <point>41.3 40.8</point>
+              <point>41.275528258147574 40.95450849718747</point>
+              <point>41.20450849718747 41.093892626146236</point>
+              <point>41.093892626146236 41.20450849718747</point>
+              <point>40.95450849718747 41.275528258147574</point>
+              <point>40.8 41.3</point>
+              <point>-10.8 41.3</point>
+              <point>-10.954508497187474 41.275528258147574</point>
+              <point>-11.093892626146237 41.20450849718747</point>
+              <point>-11.204508497187474 41.093892626146236</point>
+              <point>-11.275528258147578 40.95450849718747</point>
+              <point>-11.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+
+    <!-- South -->
+
+    <model name="sidewalk_18">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-11.3 4.2</point>
+              <point>-11.275528258147578 4.045491502812527</point>
+              <point>-11.204508497187474 3.9061073738537635</point>
+              <point>-11.093892626146237 3.7954915028125265</point>
+              <point>-10.954508497187474 3.7244717418524234</point>
+              <point>-10.8 3.7</point>
+              <point>-8.8 3.7</point>
+              <point>-8.645491502812527 3.7244717418524234</point>
+              <point>-8.506107373853764 3.7954915028125265</point>
+              <point>-8.395491502812527 3.9061073738537635</point>
+              <point>-8.324471741852424 4.045491502812527</point>
+              <point>-8.3 4.2</point>
+              <point>-8.3 40.8</point>
+              <point>-8.324471741852424 40.95450849718747</point>
+              <point>-8.395491502812527 41.093892626146236</point>
+              <point>-8.506107373853764 41.20450849718747</point>
+              <point>-8.645491502812527 41.275528258147574</point>
+              <point>-8.8 41.3</point>
+              <point>-10.8 41.3</point>
+              <point>-10.954508497187474 41.275528258147574</point>
+              <point>-11.093892626146237 41.20450849718747</point>
+              <point>-11.204508497187474 41.093892626146236</point>
+              <point>-11.275528258147578 40.95450849718747</point>
+              <point>-11.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- North -->
+    <model name="sidewalk_19">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>38.3 4.2</point>
+              <point>38.32447174185242 4.045491502812527</point>
+              <point>38.395491502812526 3.9061073738537635</point>
+              <point>38.50610737385376 3.7954915028125265</point>
+              <point>38.645491502812526 3.7244717418524234</point>
+              <point>38.8 3.7</point>
+              <point>40.8 3.7</point>
+              <point>40.95450849718747 3.7244717418524234</point>
+              <point>41.093892626146236 3.7954915028125265</point>
+              <point>41.20450849718747 3.9061073738537635</point>
+              <point>41.275528258147574 4.045491502812527</point>
+              <point>41.3 4.2</point>
+              <point>41.3 40.8</point>
+              <point>41.275528258147574 40.95450849718747</point>
+              <point>41.20450849718747 41.093892626146236</point>
+              <point>41.093892626146236 41.20450849718747</point>
+              <point>40.95450849718747 41.275528258147574</point>
+              <point>40.8 41.3</point>
+              <point>38.8 41.3</point>
+              <point>38.645491502812526 41.275528258147574</point>
+              <point>38.50610737385376 41.20450849718747</point>
+              <point>38.395491502812526 41.093892626146236</point>
+              <point>38.32447174185242 40.95450849718747</point>
+              <point>38.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- East -->
+    <model name="sidewalk_20">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>48.7 -40.8</point>
+              <point>48.724471741852426 -40.95450849718747</point>
+              <point>48.79549150281253 -41.093892626146236</point>
+              <point>48.906107373853764 -41.20450849718747</point>
+              <point>49.04549150281253 -41.275528258147574</point>
+              <point>49.2 -41.3</point>
+              <point>105.8 -41.3</point>
+              <point>105.95450849718748 -41.275528258147574</point>
+              <point>106.09389262614623 -41.20450849718747</point>
+              <point>106.20450849718748 -41.093892626146236</point>
+              <point>106.27552825814757 -40.95450849718747</point>
+              <point>106.3 -40.8</point>
+              <point>106.3 -38.8</point>
+              <point>106.27552825814757 -38.645491502812526</point>
+              <point>106.20450849718748 -38.50610737385376</point>
+              <point>106.09389262614623 -38.395491502812526</point>
+              <point>105.95450849718748 -38.32447174185242</point>
+              <point>105.8 -38.3</point>
+              <point>49.2 -38.3</point>
+              <point>49.04549150281253 -38.32447174185242</point>
+              <point>48.906107373853764 -38.395491502812526</point>
+              <point>48.79549150281253 -38.50610737385376</point>
+              <point>48.724471741852426 -38.645491502812526</point>
+              <point>48.7 -38.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- West -->
+
+    <model name="sidewalk_21">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>48.7 -6.2</point>
+              <point>48.724471741852426 -6.3545084971874735</point>
+              <point>48.79549150281253 -6.493892626146237</point>
+              <point>48.906107373853764 -6.604508497187474</point>
+              <point>49.04549150281253 -6.675528258147577</point>
+              <point>49.2 -6.7</point>
+              <point>84.5 -6.7</point>
+              <point>84.65450849718748 -6.675528258147577</point>
+              <point>84.79389262614623 -6.604508497187474</point>
+              <point>84.90450849718748 -6.493892626146237</point>
+              <point>84.97552825814758 -6.3545084971874735</point>
+              <point>85.0 -6.2</point>
+              <point>85.0 -4.2</point>
+              <point>84.97552825814758 -4.045491502812527</point>
+              <point>84.90450849718748 -3.9061073738537635</point>
+              <point>84.79389262614623 -3.7954915028125265</point>
+              <point>84.65450849718748 -3.7244717418524234</point>
+              <point>84.5 -3.7</point>
+              <point>49.2 -3.7</point>
+              <point>49.04549150281253 -3.7244717418524234</point>
+              <point>48.906107373853764 -3.7954915028125265</point>
+              <point>48.79549150281253 -3.9061073738537635</point>
+              <point>48.724471741852426 -4.045491502812527</point>
+              <point>48.7 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_22">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>95.0 -6.2</point>
+              <point>95.02447174185242 -6.3545084971874735</point>
+              <point>95.09549150281252 -6.493892626146237</point>
+              <point>95.20610737385377 -6.604508497187474</point>
+              <point>95.34549150281252 -6.675528258147577</point>
+              <point>95.5 -6.7</point>
+              <point>105.8 -6.7</point>
+              <point>105.95450849718748 -6.675528258147577</point>
+              <point>106.09389262614623 -6.604508497187474</point>
+              <point>106.20450849718748 -6.493892626146237</point>
+              <point>106.27552825814757 -6.3545084971874735</point>
+              <point>106.3 -6.2</point>
+              <point>106.3 -4.2</point>
+              <point>106.27552825814757 -4.045491502812527</point>
+              <point>106.20450849718748 -3.9061073738537635</point>
+              <point>106.09389262614623 -3.7954915028125265</point>
+              <point>105.95450849718748 -3.7244717418524234</point>
+              <point>105.8 -3.7</point>
+              <point>95.5 -3.7</point>
+              <point>95.34549150281252 -3.7244717418524234</point>
+              <point>95.20610737385377 -3.7954915028125265</point>
+              <point>95.09549150281252 -3.9061073738537635</point>
+              <point>95.02447174185242 -4.045491502812527</point>
+              <point>95.0 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- South -->
+
+    <model name="sidewalk_23">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>48.7 -40.8</point>
+              <point>48.724471741852426 -40.95450849718747</point>
+              <point>48.79549150281253 -41.093892626146236</point>
+              <point>48.906107373853764 -41.20450849718747</point>
+              <point>49.04549150281253 -41.275528258147574</point>
+              <point>49.2 -41.3</point>
+              <point>51.2 -41.3</point>
+              <point>51.354508497187474 -41.275528258147574</point>
+              <point>51.49389262614624 -41.20450849718747</point>
+              <point>51.604508497187474 -41.093892626146236</point>
+              <point>51.67552825814758 -40.95450849718747</point>
+              <point>51.7 -40.8</point>
+              <point>51.7 -4.2</point>
+              <point>51.67552825814758 -4.045491502812527</point>
+              <point>51.604508497187474 -3.9061073738537635</point>
+              <point>51.49389262614624 -3.7954915028125265</point>
+              <point>51.354508497187474 -3.7244717418524234</point>
+              <point>51.2 -3.7</point>
+              <point>49.2 -3.7</point>
+              <point>49.04549150281253 -3.7244717418524234</point>
+              <point>48.906107373853764 -3.7954915028125265</point>
+              <point>48.79549150281253 -3.9061073738537635</point>
+              <point>48.724471741852426 -4.045491502812527</point>
+              <point>48.7 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- North -->
+    <model name="sidewalk_24">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>103.3 -40.8</point>
+              <point>103.32447174185242 -40.95450849718747</point>
+              <point>103.39549150281252 -41.093892626146236</point>
+              <point>103.50610737385377 -41.20450849718747</point>
+              <point>103.64549150281252 -41.275528258147574</point>
+              <point>103.8 -41.3</point>
+              <point>105.8 -41.3</point>
+              <point>105.95450849718748 -41.275528258147574</point>
+              <point>106.09389262614623 -41.20450849718747</point>
+              <point>106.20450849718748 -41.093892626146236</point>
+              <point>106.27552825814757 -40.95450849718747</point>
+              <point>106.3 -40.8</point>
+              <point>106.3 -4.2</point>
+              <point>106.27552825814757 -4.045491502812527</point>
+              <point>106.20450849718748 -3.9061073738537635</point>
+              <point>106.09389262614623 -3.7954915028125265</point>
+              <point>105.95450849718748 -3.7244717418524234</point>
+              <point>105.8 -3.7</point>
+              <point>103.8 -3.7</point>
+              <point>103.64549150281252 -3.7244717418524234</point>
+              <point>103.50610737385377 -3.7954915028125265</point>
+              <point>103.39549150281252 -3.9061073738537635</point>
+              <point>103.32447174185242 -4.045491502812527</point>
+              <point>103.3 -4.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- East -->
+    <model name="sidewalk_25">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>48.7 4.2</point>
+              <point>48.724471741852426 4.045491502812527</point>
+              <point>48.79549150281253 3.9061073738537635</point>
+              <point>48.906107373853764 3.7954915028125265</point>
+              <point>49.04549150281253 3.7244717418524234</point>
+              <point>49.2 3.7</point>
+              <point>105.8 3.7</point>
+              <point>105.95450849718748 3.7244717418524234</point>
+              <point>106.09389262614623 3.7954915028125265</point>
+              <point>106.20450849718748 3.9061073738537635</point>
+              <point>106.27552825814757 4.045491502812527</point>
+              <point>106.3 4.2</point>
+              <point>106.3 6.2</point>
+              <point>106.27552825814757 6.3545084971874735</point>
+              <point>106.20450849718748 6.493892626146237</point>
+              <point>106.09389262614623 6.604508497187474</point>
+              <point>105.95450849718748 6.675528258147577</point>
+              <point>105.8 6.7</point>
+              <point>49.2 6.7</point>
+              <point>49.04549150281253 6.675528258147577</point>
+              <point>48.906107373853764 6.604508497187474</point>
+              <point>48.79549150281253 6.493892626146237</point>
+              <point>48.724471741852426 6.3545084971874735</point>
+              <point>48.7 6.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- West -->
+
+    <model name="sidewalk_26">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>48.7 38.8</point>
+              <point>48.724471741852426 38.645491502812526</point>
+              <point>48.79549150281253 38.50610737385376</point>
+              <point>48.906107373853764 38.395491502812526</point>
+              <point>49.04549150281253 38.32447174185242</point>
+              <point>49.2 38.3</point>
+              <point>105.8 38.3</point>
+              <point>105.95450849718748 38.32447174185242</point>
+              <point>106.09389262614623 38.395491502812526</point>
+              <point>106.20450849718748 38.50610737385376</point>
+              <point>106.27552825814757 38.645491502812526</point>
+              <point>106.3 38.8</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 40.95450849718747</point>
+              <point>106.20450849718748 41.093892626146236</point>
+              <point>106.09389262614623 41.20450849718747</point>
+              <point>105.95450849718748 41.275528258147574</point>
+              <point>105.8 41.3</point>
+              <point>49.2 41.3</point>
+              <point>49.04549150281253 41.275528258147574</point>
+              <point>48.906107373853764 41.20450849718747</point>
+              <point>48.79549150281253 41.093892626146236</point>
+              <point>48.724471741852426 40.95450849718747</point>
+              <point>48.7 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <model name="sidewalk_26_">
+      <static>true</static>
+      <pose>0 55.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>48.7 38.8</point>
+              <point>48.724471741852426 38.645491502812526</point>
+              <point>48.79549150281253 38.50610737385376</point>
+              <point>48.906107373853764 38.395491502812526</point>
+              <point>49.04549150281253 38.32447174185242</point>
+              <point>49.2 38.3</point>
+              <point>105.8 38.3</point>
+              <point>105.95450849718748 38.32447174185242</point>
+              <point>106.09389262614623 38.395491502812526</point>
+              <point>106.20450849718748 38.50610737385376</point>
+              <point>106.27552825814757 38.645491502812526</point>
+              <point>106.3 38.8</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 40.95450849718747</point>
+              <point>106.20450849718748 41.093892626146236</point>
+              <point>106.09389262614623 41.20450849718747</point>
+              <point>105.95450849718748 41.275528258147574</point>
+              <point>105.8 41.3</point>
+              <point>49.2 41.3</point>
+              <point>49.04549150281253 41.275528258147574</point>
+              <point>48.906107373853764 41.20450849718747</point>
+              <point>48.79549150281253 41.093892626146236</point>
+              <point>48.724471741852426 40.95450849718747</point>
+              <point>48.7 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_26_1">
+      <static>true</static>
+      <pose>0 10.8 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>48.7 38.8</point>
+              <point>48.724471741852426 38.645491502812526</point>
+              <point>48.79549150281253 38.50610737385376</point>
+              <point>48.906107373853764 38.395491502812526</point>
+              <point>49.04549150281253 38.32447174185242</point>
+              <point>49.2 38.3</point>
+              <point>105.8 38.3</point>
+              <point>105.95450849718748 38.32447174185242</point>
+              <point>106.09389262614623 38.395491502812526</point>
+              <point>106.20450849718748 38.50610737385376</point>
+              <point>106.27552825814757 38.645491502812526</point>
+              <point>106.3 38.8</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 40.95450849718747</point>
+              <point>106.20450849718748 41.093892626146236</point>
+              <point>106.09389262614623 41.20450849718747</point>
+              <point>105.95450849718748 41.275528258147574</point>
+              <point>105.8 41.3</point>
+              <point>49.2 41.3</point>
+              <point>49.04549150281253 41.275528258147574</point>
+              <point>48.906107373853764 41.20450849718747</point>
+              <point>48.79549150281253 41.093892626146236</point>
+              <point>48.724471741852426 40.95450849718747</point>
+              <point>48.7 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- South -->
+
+    <model name="sidewalk_27">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>48.7 4.2</point>
+              <point>48.724471741852426 4.045491502812527</point>
+              <point>48.79549150281253 3.9061073738537635</point>
+              <point>48.906107373853764 3.7954915028125265</point>
+              <point>49.04549150281253 3.7244717418524234</point>
+              <point>49.2 3.7</point>
+              <point>51.2 3.7</point>
+              <point>51.354508497187474 3.7244717418524234</point>
+              <point>51.49389262614624 3.7954915028125265</point>
+              <point>51.604508497187474 3.9061073738537635</point>
+              <point>51.67552825814758 4.045491502812527</point>
+              <point>51.7 4.2</point>
+              <point>51.7 40.8</point>
+              <point>51.67552825814758 40.95450849718747</point>
+              <point>51.604508497187474 41.093892626146236</point>
+              <point>51.49389262614624 41.20450849718747</point>
+              <point>51.354508497187474 41.275528258147574</point>
+              <point>51.2 41.3</point>
+              <point>49.2 41.3</point>
+              <point>49.04549150281253 41.275528258147574</point>
+              <point>48.906107373853764 41.20450849718747</point>
+              <point>48.79549150281253 41.093892626146236</point>
+              <point>48.724471741852426 40.95450849718747</point>
+              <point>48.7 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- North -->
+    <model name="sidewalk_28">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>103.3 4.2</point>
+              <point>103.32447174185242 4.045491502812527</point>
+              <point>103.39549150281252 3.9061073738537635</point>
+              <point>103.50610737385377 3.7954915028125265</point>
+              <point>103.64549150281252 3.7244717418524234</point>
+              <point>103.8 3.7</point>
+              <point>105.8 3.7</point>
+              <point>105.95450849718748 3.7244717418524234</point>
+              <point>106.09389262614623 3.7954915028125265</point>
+              <point>106.20450849718748 3.9061073738537635</point>
+              <point>106.27552825814757 4.045491502812527</point>
+              <point>106.3 4.2</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 40.95450849718747</point>
+              <point>106.20450849718748 41.093892626146236</point>
+              <point>106.09389262614623 41.20450849718747</point>
+              <point>105.95450849718748 41.275528258147574</point>
+              <point>105.8 41.3</point>
+              <point>103.8 41.3</point>
+              <point>103.64549150281252 41.275528258147574</point>
+              <point>103.50610737385377 41.20450849718747</point>
+              <point>103.39549150281252 41.093892626146236</point>
+              <point>103.32447174185242 40.95450849718747</point>
+              <point>103.3 40.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_28_">
+      <static>true</static>
+      <pose>0.1 45.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>103.3 4.2</point>
+              <point>103.32447174185242 4.045491502812527</point>
+              <point>103.39549150281252 3.9061073738537635</point>
+              <point>103.50610737385377 3.7954915028125265</point>
+              <point>103.64549150281252 3.7244717418524234</point>
+              <point>103.8 3.7</point>
+              <point>105.8 3.7</point>
+              <point>105.95450849718748 3.7244717418524234</point>
+              <point>106.09389262614623 3.7954915028125265</point>
+              <point>106.20450849718748 3.9061073738537635</point>
+              <point>106.27552825814757 4.045491502812527</point>
+              <point>106.3 4.2</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 50.95450849718747</point>
+              <point>106.20450849718748 51.093892626146236</point>
+              <point>106.09389262614623 51.20450849718747</point>
+              <point>105.95450849718748 51.275528258147574</point>
+              <point>105.8 51.3</point>
+              <point>103.8 51.3</point>
+              <point>103.64549150281252 51.275528258147574</point>
+              <point>103.50610737385377 51.20450849718747</point>
+              <point>103.39549150281252 51.093892626146236</point>
+              <point>103.32447174185242 50.95450849718747</point>
+              <point>103.3 50.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_28_1">
+      <static>true</static>
+      <pose>-54.6 45.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>103.3 4.2</point>
+              <point>103.32447174185242 4.045491502812527</point>
+              <point>103.39549150281252 3.9061073738537635</point>
+              <point>103.50610737385377 3.7954915028125265</point>
+              <point>103.64549150281252 3.7244717418524234</point>
+              <point>103.8 3.7</point>
+              <point>105.8 3.7</point>
+              <point>105.95450849718748 3.7244717418524234</point>
+              <point>106.09389262614623 3.7954915028125265</point>
+              <point>106.20450849718748 3.9061073738537635</point>
+              <point>106.27552825814757 4.045491502812527</point>
+              <point>106.3 4.2</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 50.95450849718747</point>
+              <point>106.20450849718748 51.093892626146236</point>
+              <point>106.09389262614623 51.20450849718747</point>
+              <point>105.95450849718748 51.275528258147574</point>
+              <point>105.8 51.3</point>
+              <point>103.8 51.3</point>
+              <point>103.64549150281252 51.275528258147574</point>
+              <point>103.50610737385377 51.20450849718747</point>
+              <point>103.39549150281252 51.093892626146236</point>
+              <point>103.32447174185242 50.95450849718747</point>
+              <point>103.3 50.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_28_2">
+      <static>true</static>
+      <pose>-65 45.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>103.3 4.2</point>
+              <point>103.32447174185242 4.045491502812527</point>
+              <point>103.39549150281252 3.9061073738537635</point>
+              <point>103.50610737385377 3.7954915028125265</point>
+              <point>103.64549150281252 3.7244717418524234</point>
+              <point>103.8 3.7</point>
+              <point>105.8 3.7</point>
+              <point>105.95450849718748 3.7244717418524234</point>
+              <point>106.09389262614623 3.7954915028125265</point>
+              <point>106.20450849718748 3.9061073738537635</point>
+              <point>106.27552825814757 4.045491502812527</point>
+              <point>106.3 4.2</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 50.95450849718747</point>
+              <point>106.20450849718748 51.093892626146236</point>
+              <point>106.09389262614623 51.20450849718747</point>
+              <point>105.95450849718748 51.275528258147574</point>
+              <point>105.8 51.3</point>
+              <point>103.8 51.3</point>
+              <point>103.64549150281252 51.275528258147574</point>
+              <point>103.50610737385377 51.20450849718747</point>
+              <point>103.39549150281252 51.093892626146236</point>
+              <point>103.32447174185242 50.95450849718747</point>
+              <point>103.3 50.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_28_3">
+      <static>true</static>
+      <pose>-115 45.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>103.3 4.2</point>
+              <point>103.32447174185242 4.045491502812527</point>
+              <point>103.39549150281252 3.9061073738537635</point>
+              <point>103.50610737385377 3.7954915028125265</point>
+              <point>103.64549150281252 3.7244717418524234</point>
+              <point>103.8 3.7</point>
+              <point>105.8 3.7</point>
+              <point>105.95450849718748 3.7244717418524234</point>
+              <point>106.09389262614623 3.7954915028125265</point>
+              <point>106.20450849718748 3.9061073738537635</point>
+              <point>106.27552825814757 4.045491502812527</point>
+              <point>106.3 4.2</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 50.95450849718747</point>
+              <point>106.20450849718748 51.093892626146236</point>
+              <point>106.09389262614623 51.20450849718747</point>
+              <point>105.95450849718748 51.275528258147574</point>
+              <point>105.8 51.3</point>
+              <point>103.8 51.3</point>
+              <point>103.64549150281252 51.275528258147574</point>
+              <point>103.50610737385377 51.20450849718747</point>
+              <point>103.39549150281252 51.093892626146236</point>
+              <point>103.32447174185242 50.95450849718747</point>
+              <point>103.3 50.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_28_4">
+      <static>true</static>
+      <pose>-124 45.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>103.3 4.2</point>
+              <point>103.32447174185242 4.045491502812527</point>
+              <point>103.39549150281252 3.9061073738537635</point>
+              <point>103.50610737385377 3.7954915028125265</point>
+              <point>103.64549150281252 3.7244717418524234</point>
+              <point>103.8 3.7</point>
+              <point>105.8 3.7</point>
+              <point>105.95450849718748 3.7244717418524234</point>
+              <point>106.09389262614623 3.7954915028125265</point>
+              <point>106.20450849718748 3.9061073738537635</point>
+              <point>106.27552825814757 4.045491502812527</point>
+              <point>106.3 4.2</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 50.95450849718747</point>
+              <point>106.20450849718748 51.093892626146236</point>
+              <point>106.09389262614623 51.20450849718747</point>
+              <point>105.95450849718748 51.275528258147574</point>
+              <point>105.8 51.3</point>
+              <point>103.8 51.3</point>
+              <point>103.64549150281252 51.275528258147574</point>
+              <point>103.50610737385377 51.20450849718747</point>
+              <point>103.39549150281252 51.093892626146236</point>
+              <point>103.32447174185242 50.95450849718747</point>
+              <point>103.3 50.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_28_5">
+      <static>true</static>
+      <pose>-144.7 45.5 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>103.3 4.2</point>
+              <point>103.32447174185242 4.045491502812527</point>
+              <point>103.39549150281252 3.9061073738537635</point>
+              <point>103.50610737385377 3.7954915028125265</point>
+              <point>103.64549150281252 3.7244717418524234</point>
+              <point>103.8 3.7</point>
+              <point>105.8 3.7</point>
+              <point>105.95450849718748 3.7244717418524234</point>
+              <point>106.09389262614623 3.7954915028125265</point>
+              <point>106.20450849718748 3.9061073738537635</point>
+              <point>106.27552825814757 4.045491502812527</point>
+              <point>106.3 4.2</point>
+              <point>106.3 40.8</point>
+              <point>106.27552825814757 50.95450849718747</point>
+              <point>106.20450849718748 51.093892626146236</point>
+              <point>106.09389262614623 51.20450849718747</point>
+              <point>105.95450849718748 51.275528258147574</point>
+              <point>105.8 51.3</point>
+              <point>103.8 51.3</point>
+              <point>103.64549150281252 51.275528258147574</point>
+              <point>103.50610737385377 51.20450849718747</point>
+              <point>103.39549150281252 51.093892626146236</point>
+              <point>103.32447174185242 50.95450849718747</point>
+              <point>103.3 50.8</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <model name="sidewalk_29">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 -41.199999999999996</point>
+              <point>113.70489434837049 -41.23090169943749</point>
+              <point>113.71909830056251 -41.258778525229246</point>
+              <point>113.74122147477075 -41.28090169943749</point>
+              <point>113.7690983005625 -41.29510565162951</point>
+              <point>113.8 -41.3</point>
+              <point>116.2 -41.3</point>
+              <point>116.2309016994375 -41.29510565162951</point>
+              <point>116.25877852522925 -41.28090169943749</point>
+              <point>116.28090169943749 -41.258778525229246</point>
+              <point>116.29510565162951 -41.23090169943749</point>
+              <point>116.3 -41.199999999999996</point>
+              <point>116.3 -40.9</point>
+              <point>116.29510565162951 -40.869098300562506</point>
+              <point>116.28090169943749 -40.84122147477075</point>
+              <point>116.25877852522925 -40.8190983005625</point>
+              <point>116.2309016994375 -40.80489434837048</point>
+              <point>116.2 -40.8</point>
+              <point>113.8 -40.8</point>
+              <point>113.7690983005625 -40.80489434837048</point>
+              <point>113.74122147477075 -40.8190983005625</point>
+              <point>113.71909830056251 -40.84122147477075</point>
+              <point>113.70489434837049 -40.869098300562506</point>
+              <point>113.7 -40.9</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_30">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 -4.1000000000000005</point>
+              <point>113.70489434837049 -4.130901699437495</point>
+              <point>113.71909830056251 -4.1587785252292475</point>
+              <point>113.74122147477075 -4.180901699437495</point>
+              <point>113.7690983005625 -4.1951056516295155</point>
+              <point>113.8 -4.2</point>
+              <point>116.2 -4.2</point>
+              <point>116.2309016994375 -4.1951056516295155</point>
+              <point>116.25877852522925 -4.180901699437495</point>
+              <point>116.28090169943749 -4.1587785252292475</point>
+              <point>116.29510565162951 -4.130901699437495</point>
+              <point>116.3 -4.1000000000000005</point>
+              <point>116.3 -3.8000000000000003</point>
+              <point>116.29510565162951 -3.7690983005625056</point>
+              <point>116.28090169943749 -3.741221474770753</point>
+              <point>116.25877852522925 -3.7190983005625053</point>
+              <point>116.2309016994375 -3.704894348370485</point>
+              <point>116.2 -3.7</point>
+              <point>113.8 -3.7</point>
+              <point>113.7690983005625 -3.704894348370485</point>
+              <point>113.74122147477075 -3.7190983005625053</point>
+              <point>113.71909830056251 -3.741221474770753</point>
+              <point>113.70489434837049 -3.7690983005625056</point>
+              <point>113.7 -3.8000000000000003</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_31">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 -41.199999999999996</point>
+              <point>113.70489434837049 -41.23090169943749</point>
+              <point>113.71909830056251 -41.258778525229246</point>
+              <point>113.74122147477075 -41.28090169943749</point>
+              <point>113.7690983005625 -41.29510565162951</point>
+              <point>113.8 -41.3</point>
+              <point>114.10000000000001 -41.3</point>
+              <point>114.1309016994375 -41.29510565162951</point>
+              <point>114.15877852522925 -41.28090169943749</point>
+              <point>114.1809016994375 -41.258778525229246</point>
+              <point>114.19510565162952 -41.23090169943749</point>
+              <point>114.2 -41.199999999999996</point>
+              <point>114.2 -3.8000000000000003</point>
+              <point>114.19510565162952 -3.7690983005625056</point>
+              <point>114.1809016994375 -3.741221474770753</point>
+              <point>114.15877852522925 -3.7190983005625053</point>
+              <point>114.1309016994375 -3.704894348370485</point>
+              <point>114.10000000000001 -3.7</point>
+              <point>113.8 -3.7</point>
+              <point>113.7690983005625 -3.704894348370485</point>
+              <point>113.74122147477075 -3.7190983005625053</point>
+              <point>113.71909830056251 -3.741221474770753</point>
+              <point>113.70489434837049 -3.7690983005625056</point>
+              <point>113.7 -3.8000000000000003</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    
+
+    <model name="sidewalk_32">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>115.8 -41.199999999999996</point>
+              <point>115.80489434837048 -41.23090169943749</point>
+              <point>115.8190983005625 -41.258778525229246</point>
+              <point>115.84122147477075 -41.28090169943749</point>
+              <point>115.8690983005625 -41.29510565162951</point>
+              <point>115.89999999999999 -41.3</point>
+              <point>116.2 -41.3</point>
+              <point>116.2309016994375 -41.29510565162951</point>
+              <point>116.25877852522925 -41.28090169943749</point>
+              <point>116.28090169943749 -41.258778525229246</point>
+              <point>116.29510565162951 -41.23090169943749</point>
+              <point>116.3 -41.199999999999996</point>
+              <point>116.3 -3.8000000000000003</point>
+              <point>116.29510565162951 -3.7690983005625056</point>
+              <point>116.28090169943749 -3.741221474770753</point>
+              <point>116.25877852522925 -3.7190983005625053</point>
+              <point>116.2309016994375 -3.704894348370485</point>
+              <point>116.2 -3.7</point>
+              <point>115.89999999999999 -3.7</point>
+              <point>115.8690983005625 -3.704894348370485</point>
+              <point>115.84122147477075 -3.7190983005625053</point>
+              <point>115.8190983005625 -3.741221474770753</point>
+              <point>115.80489434837048 -3.7690983005625056</point>
+              <point>115.8 -3.8000000000000003</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <model name="sidewalk_33">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 3.8000000000000003</point>
+              <point>113.70489434837049 3.7690983005625056</point>
+              <point>113.71909830056251 3.741221474770753</point>
+              <point>113.74122147477075 3.7190983005625053</point>
+              <point>113.7690983005625 3.704894348370485</point>
+              <point>113.8 3.7</point>
+              <point>116.2 3.7</point>
+              <point>116.2309016994375 3.704894348370485</point>
+              <point>116.25877852522925 3.7190983005625053</point>
+              <point>116.28090169943749 3.741221474770753</point>
+              <point>116.29510565162951 3.7690983005625056</point>
+              <point>116.3 3.8000000000000003</point>
+              <point>116.3 4.1000000000000005</point>
+              <point>116.29510565162951 4.130901699437495</point>
+              <point>116.28090169943749 4.1587785252292475</point>
+              <point>116.25877852522925 4.180901699437495</point>
+              <point>116.2309016994375 4.1951056516295155</point>
+              <point>116.2 4.2</point>
+              <point>113.8 4.2</point>
+              <point>113.7690983005625 4.1951056516295155</point>
+              <point>113.74122147477075 4.180901699437495</point>
+              <point>113.71909830056251 4.1587785252292475</point>
+              <point>113.70489434837049 4.130901699437495</point>
+              <point>113.7 4.1000000000000005</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_34">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 40.9</point>
+              <point>113.70489434837049 40.869098300562506</point>
+              <point>113.71909830056251 40.84122147477075</point>
+              <point>113.74122147477075 40.8190983005625</point>
+              <point>113.7690983005625 40.80489434837048</point>
+              <point>113.8 40.8</point>
+              <point>116.2 40.8</point>
+              <point>116.2309016994375 40.80489434837048</point>
+              <point>116.25877852522925 40.8190983005625</point>
+              <point>116.28090169943749 40.84122147477075</point>
+              <point>116.29510565162951 40.869098300562506</point>
+              <point>116.3 40.9</point>
+              <point>116.3 41.199999999999996</point>
+              <point>116.29510565162951 41.23090169943749</point>
+              <point>116.28090169943749 41.258778525229246</point>
+              <point>116.25877852522925 41.28090169943749</point>
+              <point>116.2309016994375 41.29510565162951</point>
+              <point>116.2 41.3</point>
+              <point>113.8 41.3</point>
+              <point>113.7690983005625 41.29510565162951</point>
+              <point>113.74122147477075 41.28090169943749</point>
+              <point>113.71909830056251 41.258778525229246</point>
+              <point>113.70489434837049 41.23090169943749</point>
+              <point>113.7 41.199999999999996</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_35">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 3.8000000000000003</point>
+              <point>113.70489434837049 3.7690983005625056</point>
+              <point>113.71909830056251 3.741221474770753</point>
+              <point>113.74122147477075 3.7190983005625053</point>
+              <point>113.7690983005625 3.704894348370485</point>
+              <point>113.8 3.7</point>
+              <point>114.10000000000001 3.7</point>
+              <point>114.1309016994375 3.704894348370485</point>
+              <point>114.15877852522925 3.7190983005625053</point>
+              <point>114.1809016994375 3.741221474770753</point>
+              <point>114.19510565162952 3.7690983005625056</point>
+              <point>114.2 3.8000000000000003</point>
+              <point>114.2 41.199999999999996</point>
+              <point>114.19510565162952 41.23090169943749</point>
+              <point>114.1809016994375 41.258778525229246</point>
+              <point>114.15877852522925 41.28090169943749</point>
+              <point>114.1309016994375 41.29510565162951</point>
+              <point>114.10000000000001 41.3</point>
+              <point>113.8 41.3</point>
+              <point>113.7690983005625 41.29510565162951</point>
+              <point>113.74122147477075 41.28090169943749</point>
+              <point>113.71909830056251 41.258778525229246</point>
+              <point>113.70489434837049 41.23090169943749</point>
+              <point>113.7 41.199999999999996</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_36">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>115.8 3.8000000000000003</point>
+              <point>115.80489434837048 3.7690983005625056</point>
+              <point>115.8190983005625 3.741221474770753</point>
+              <point>115.84122147477075 3.7190983005625053</point>
+              <point>115.8690983005625 3.704894348370485</point>
+              <point>115.89999999999999 3.7</point>
+              <point>116.2 3.7</point>
+              <point>116.2309016994375 3.704894348370485</point>
+              <point>116.25877852522925 3.7190983005625053</point>
+              <point>116.28090169943749 3.741221474770753</point>
+              <point>116.29510565162951 3.7690983005625056</point>
+              <point>116.3 3.8000000000000003</point>
+              <point>116.3 41.199999999999996</point>
+              <point>116.29510565162951 41.23090169943749</point>
+              <point>116.28090169943749 41.258778525229246</point>
+              <point>116.25877852522925 41.28090169943749</point>
+              <point>116.2309016994375 41.29510565162951</point>
+              <point>116.2 41.3</point>
+              <point>115.89999999999999 41.3</point>
+              <point>115.8690983005625 41.29510565162951</point>
+              <point>115.84122147477075 41.28090169943749</point>
+              <point>115.8190983005625 41.258778525229246</point>
+              <point>115.80489434837048 41.23090169943749</point>
+              <point>115.8 41.199999999999996</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <model name="sidewalk_33_">
+      <static>true</static>
+      <pose>0 45 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 3.8000000000000003</point>
+              <point>113.70489434837049 3.7690983005625056</point>
+              <point>113.71909830056251 3.741221474770753</point>
+              <point>113.74122147477075 3.7190983005625053</point>
+              <point>113.7690983005625 3.704894348370485</point>
+              <point>113.8 3.7</point>
+              <point>116.2 3.7</point>
+              <point>116.2309016994375 3.704894348370485</point>
+              <point>116.25877852522925 3.7190983005625053</point>
+              <point>116.28090169943749 3.741221474770753</point>
+              <point>116.29510565162951 3.7690983005625056</point>
+              <point>116.3 3.8000000000000003</point>
+              <point>116.3 4.1000000000000005</point>
+              <point>116.29510565162951 4.130901699437495</point>
+              <point>116.28090169943749 4.1587785252292475</point>
+              <point>116.25877852522925 4.180901699437495</point>
+              <point>116.2309016994375 4.1951056516295155</point>
+              <point>116.2 4.2</point>
+              <point>113.8 4.2</point>
+              <point>113.7690983005625 4.1951056516295155</point>
+              <point>113.74122147477075 4.180901699437495</point>
+              <point>113.71909830056251 4.1587785252292475</point>
+              <point>113.70489434837049 4.130901699437495</point>
+              <point>113.7 4.1000000000000005</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_34_">
+      <static>true</static>
+      <pose>0 55 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 40.9</point>
+              <point>113.70489434837049 40.869098300562506</point>
+              <point>113.71909830056251 40.84122147477075</point>
+              <point>113.74122147477075 40.8190983005625</point>
+              <point>113.7690983005625 40.80489434837048</point>
+              <point>113.8 40.8</point>
+              <point>116.2 40.8</point>
+              <point>116.2309016994375 40.80489434837048</point>
+              <point>116.25877852522925 40.8190983005625</point>
+              <point>116.28090169943749 40.84122147477075</point>
+              <point>116.29510565162951 40.869098300562506</point>
+              <point>116.3 40.9</point>
+              <point>116.3 41.199999999999996</point>
+              <point>116.29510565162951 41.23090169943749</point>
+              <point>116.28090169943749 41.258778525229246</point>
+              <point>116.25877852522925 41.28090169943749</point>
+              <point>116.2309016994375 41.29510565162951</point>
+              <point>116.2 41.3</point>
+              <point>113.8 41.3</point>
+              <point>113.7690983005625 41.29510565162951</point>
+              <point>113.74122147477075 41.28090169943749</point>
+              <point>113.71909830056251 41.258778525229246</point>
+              <point>113.70489434837049 41.23090169943749</point>
+              <point>113.7 41.199999999999996</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_35_">
+      <static>true</static>
+      <pose>0 45 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>113.7 3.8000000000000003</point>
+              <point>113.70489434837049 3.7690983005625056</point>
+              <point>113.71909830056251 3.741221474770753</point>
+              <point>113.74122147477075 3.7190983005625053</point>
+              <point>113.7690983005625 3.704894348370485</point>
+              <point>113.8 3.7</point>
+              <point>114.10000000000001 3.7</point>
+              <point>114.1309016994375 3.704894348370485</point>
+              <point>114.15877852522925 3.7190983005625053</point>
+              <point>114.1809016994375 3.741221474770753</point>
+              <point>114.19510565162952 3.7690983005625056</point>
+              <point>114.2 3.8000000000000003</point>
+              <point>114.2 51.199999999999996</point>
+              <point>114.19510565162952 51.23090169943749</point>
+              <point>114.1809016994375 51.258778525229246</point>
+              <point>114.15877852522925 51.28090169943749</point>
+              <point>114.1309016994375 51.29510565162951</point>
+              <point>114.10000000000001 51.3</point>
+              <point>113.8 51.3</point>
+              <point>113.7690983005625 51.29510565162951</point>
+              <point>113.74122147477075 51.28090169943749</point>
+              <point>113.71909830056251 51.258778525229246</point>
+              <point>113.70489434837049 51.23090169943749</point>
+              <point>113.7 51.199999999999996</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="sidewalk_36_">
+      <static>true</static>
+      <pose>0 45 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>115.8 3.8000000000000003</point>
+              <point>115.80489434837048 3.7690983005625056</point>
+              <point>115.8190983005625 3.741221474770753</point>
+              <point>115.84122147477075 3.7190983005625053</point>
+              <point>115.8690983005625 3.704894348370485</point>
+              <point>115.89999999999999 3.7</point>
+              <point>116.2 3.7</point>
+              <point>116.2309016994375 3.704894348370485</point>
+              <point>116.25877852522925 3.7190983005625053</point>
+              <point>116.28090169943749 3.741221474770753</point>
+              <point>116.29510565162951 3.7690983005625056</point>
+              <point>116.3 3.8000000000000003</point>
+              <point>116.3 51.199999999999996</point>
+              <point>116.29510565162951 51.23090169943749</point>
+              <point>116.28090169943749 51.258778525229246</point>
+              <point>116.25877852522925 51.28090169943749</point>
+              <point>116.2309016994375 51.29510565162951</point>
+              <point>116.2 51.3</point>
+              <point>115.89999999999999 51.3</point>
+              <point>115.8690983005625 51.29510565162951</point>
+              <point>115.84122147477075 51.28090169943749</point>
+              <point>115.8190983005625 51.258778525229246</point>
+              <point>115.80489434837048 51.23090169943749</point>
+              <point>115.8 51.199999999999996</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- North sidewalk -->
+    <model name="sidewalk_37">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>123.7 -51.2</point>
+              <point>123.72447174185243 -51.354508497187474</point>
+              <point>123.79549150281252 -51.49389262614624</point>
+              <point>123.90610737385377 -51.604508497187474</point>
+              <point>124.04549150281252 -51.67552825814758</point>
+              <point>124.2 -51.7</point>
+              <point>126.2 -51.7</point>
+              <point>126.35450849718748 -51.67552825814758</point>
+              <point>126.49389262614623 -51.604508497187474</point>
+              <point>126.60450849718748 -51.49389262614624</point>
+              <point>126.67552825814758 -51.354508497187474</point>
+              <point>126.7 -51.2</point>
+              <point>126.7 105.2</point>
+              <point>126.67552825814758 105.354508497187474</point>
+              <point>126.60450849718748 105.49389262614624</point>
+              <point>126.49389262614623 105.604508497187474</point>
+              <point>126.35450849718748 105.67552825814758</point>
+              <point>126.2 105.7</point>
+              <point>124.2 105.7</point>
+              <point>124.04549150281252 105.67552825814758</point>
+              <point>123.90610737385377 105.604508497187474</point>
+              <point>123.79549150281252 105.49389262614624</point>
+              <point>123.72447174185243 105.354508497187474</point>
+              <point>123.7 105.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- South sidewalk
+         Commented out because it leaks beyond the heightmap and intersects bridges
+    <model name="sidewalk_38">
+  <static>true</static>
+  <pose>0 0 0 0 0 0</pose>
+  <link name="link">
+    <visual name="visual">
+      <geometry>
+        <polyline>
+          <height>0.15</height>
+          <point>-51.7 -51.2</point>
+          <point>-51.67552825814758 -51.354508497187474</point>
+          <point>-51.604508497187474 -51.49389262614624</point>
+          <point>-51.49389262614624 -51.604508497187474</point>
+          <point>-51.354508497187474 -51.67552825814758</point>
+          <point>-51.2 -51.7</point>
+          <point>-49.2 -51.7</point>
+          <point>-49.04549150281253 -51.67552825814758</point>
+          <point>-48.906107373853764 -51.604508497187474</point>
+          <point>-48.79549150281253 -51.49389262614624</point>
+          <point>-48.724471741852426 -51.354508497187474</point>
+          <point>-48.7 -51.2</point>
+          <point>-48.7 51.2</point>
+          <point>-48.724471741852426 51.354508497187474</point>
+          <point>-48.79549150281253 51.49389262614624</point>
+          <point>-48.906107373853764 51.604508497187474</point>
+          <point>-49.04549150281253 51.67552825814758</point>
+          <point>-49.2 51.7</point>
+          <point>-51.2 51.7</point>
+          <point>-51.354508497187474 51.67552825814758</point>
+          <point>-51.49389262614624 51.604508497187474</point>
+          <point>-51.604508497187474 51.49389262614624</point>
+          <point>-51.67552825814758 51.354508497187474</point>
+          <point>-51.7 51.2</point>
+        </polyline>
+      </geometry>
+      <material>
+        <ambient>0.2 0.2 0.2 1.0</ambient>
+      </material>
+    </visual>
+  </link>
+</model>
+
+     -->
+
+    <!-- East sidewalk -->
+    <model name="sidewalk_39">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>0.15</height>
+              <point>-48.7 -51.2</point>
+              <point>-48.67552825814758 -51.354508497187474</point>
+              <point>-48.604508497187474 -51.49389262614624</point>
+              <point>-48.49389262614624 -51.604508497187474</point>
+              <point>-48.354508497187474 -51.67552825814758</point>
+              <point>-48.2 -51.7</point>
+              <point>126.2 -51.7</point>
+              <point>126.35450849718748 -51.67552825814758</point>
+              <point>126.49389262614623 -51.604508497187474</point>
+              <point>126.60450849718748 -51.49389262614624</point>
+              <point>126.67552825814758 -51.354508497187474</point>
+              <point>126.7 -51.2</point>
+              <point>126.7 -49.2</point>
+              <point>126.67552825814758 -49.04549150281253</point>
+              <point>126.60450849718748 -48.906107373853764</point>
+              <point>126.49389262614623 -48.79549150281253</point>
+              <point>126.35450849718748 -48.724471741852426</point>
+              <point>126.2 -48.7</point>
+              <point>-48.2 -48.7</point>
+              <point>-48.354508497187474 -48.724471741852426</point>
+              <point>-48.49389262614624 -48.79549150281253</point>
+              <point>-48.604508497187474 -48.906107373853764</point>
+              <point>-48.67552825814758 -49.04549150281253</point>
+              <point>-48.7 -49.2</point>
+            </polyline>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1.0</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <!-- West sidewalk
+         Commented out because it leaks beyond the heightmap
+    <model name="sidewalk_40">
+  <static>true</static>
+  <pose>0 0 0 0 0 0</pose>
+  <link name="link">
+    <visual name="visual">
+      <geometry>
+        <polyline>
+          <height>0.15</height>
+          <point>-51.7 49.2</point>
+          <point>-51.67552825814758 49.04549150281253</point>
+          <point>-51.604508497187474 48.906107373853764</point>
+          <point>-51.49389262614624 48.79549150281253</point>
+          <point>-51.354508497187474 48.724471741852426</point>
+          <point>-51.2 48.7</point>
+          <point>126.2 48.7</point>
+          <point>126.35450849718748 48.724471741852426</point>
+          <point>126.49389262614623 48.79549150281253</point>
+          <point>126.60450849718748 48.906107373853764</point>
+          <point>126.67552825814758 49.04549150281253</point>
+          <point>126.7 49.2</point>
+          <point>126.7 51.2</point>
+          <point>126.67552825814758 51.354508497187474</point>
+          <point>126.60450849718748 51.49389262614624</point>
+          <point>126.49389262614623 51.604508497187474</point>
+          <point>126.35450849718748 51.67552825814758</point>
+          <point>126.2 51.7</point>
+          <point>-51.2 51.7</point>
+          <point>-51.354508497187474 51.67552825814758</point>
+          <point>-51.49389262614624 51.604508497187474</point>
+          <point>-51.604508497187474 51.49389262614624</point>
+          <point>-51.67552825814758 51.354508497187474</point>
+          <point>-51.7 51.2</point>
+        </polyline>
+      </geometry>
+      <material>
+        <ambient>0.2 0.2 0.2 1.0</ambient>
+      </material>
+    </visual>
+  </link>
+</model>
+
+     -->
+
+    <!-- Buildings -->
+
+    <!-- North block -->
+
+    <include>
+      <name>fountain_41</name>
+      <pose>
+        153.17
+        -32.42
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://fountain</uri>
+    </include>
+
+    <include>
+      <name>gazebo_42</name>
+      <pose>
+        135.5
+        0
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://gazebo</uri>
+    </include>
+
+    <include>
+      <name>pier_43</name>
+      <pose>
+        199.63
+        -17.32
+        -7.6
+        0
+        0
+        0
+      </pose>
+      <uri>model://pier</uri>
+    </include>
+
+    <include>
+      <name>pier_44</name>
+      <pose>
+        43.5
+        105.0
+        -7.6
+        0
+        0
+        0
+      </pose>
+      <uri>model://pier</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_44</name>
+      <pose>
+        129
+        -16.3
+        0.0
+        0
+        0
+        0.5775477007315929
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_45</name>
+      <pose>
+        149.3
+        -15.6
+        0.0
+        0
+        0
+        2.5351725286173554
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_46</name>
+      <pose>
+        128.11
+        -7.09
+        0.0
+        0
+        0
+        3.001574861505007
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_47</name>
+      <pose>
+        128.5
+        9.7
+        0.0
+        0
+        0
+        1.359456124263218
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_48</name>
+      <pose>
+        152
+        10.9
+        0.0
+        0
+        0
+        2.180721833432169
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_49</name>
+      <pose>
+        139.5
+        5.01
+        0.0
+        0
+        0
+        1.8704933219422162
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_50</name>
+      <pose>
+        133.59
+        -34.94
+        0.0
+        0
+        0
+        0.37534211190017314
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_51</name>
+      <pose>
+        130.211
+        -49.55
+        0.0
+        0
+        0
+        2.4820502839303415
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_52</name>
+      <pose>
+        142.37
+        -60.3
+        0.0
+        0
+        0
+        2.781117533499664
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_53</name>
+      <pose>
+        152.151
+        -43.59
+        0.0
+        0
+        0
+        0.6741102634523624
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_54</name>
+      <pose>
+        173.19
+        -34.8
+        0.0
+        0
+        0
+        3.004356115342085
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_55</name>
+      <pose>
+        177.91
+        -7.7
+        0.0
+        0
+        0
+        2.255788306232666
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+
+    <!-- North road -->
+
+
+    <include>
+      <name>pine_tree_56</name>
+      <pose>
+        115.0
+        -37.0
+        0.0
+        0
+        0
+        2.9531852955330726
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_57</name>
+      <pose>
+        115.0
+        -30.25
+        0.0
+        0
+        0
+        2.117073065837722
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_58</name>
+      <pose>
+        115.0
+        -23.5
+        0.0
+        0
+        0
+        0.934598014842663
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_59</name>
+      <pose>
+        115.0
+        -16.75
+        0.0
+        0
+        0
+        2.6430292719946236
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_60</name>
+      <pose>
+        115.0
+        -10.0
+        0.0
+        0
+        0
+        2.7711690796677466
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_61</name>
+      <pose>
+        115.0
+        8.0
+        0.0
+        0
+        0
+        2.3009037363586944
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_62</name>
+      <pose>
+        115.0
+        14.75
+        0.0
+        0
+        0
+        2.2882029205575525
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_63</name>
+      <pose>
+        115.0
+        21.5
+        0.0
+        0
+        0
+        1.6870267822658118
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_64</name>
+      <pose>
+        115.0
+        28.25
+        0.0
+        0
+        0
+        0.4694942515737829
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_65</name>
+      <pose>
+        115.0
+        35.0
+        0.0
+        0
+        0
+        3.0136910512425157
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <!-- Block 0 0 -->
+
+    <!-- Block 0 1 -->
+
+    <include>
+      <name>house_1_66</name>
+      <pose>
+        61.74
+        22.76
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://house_1</uri>
+    </include>
+
+    <include>
+      <name>house_1_67</name>
+      <pose>
+        86.62
+        27.93
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://house_1</uri>
+    </include>
+
+    <include>
+      <name>house_3_68</name>
+      <pose>
+        96.43
+        14.14
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://house_3</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_69</name>
+      <pose>
+        57.97
+        10.72
+        0.0
+        0
+        0
+        3.06
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_70</name>
+      <pose>
+        53.56
+        34.08
+        0.0
+        0
+        0
+        1.16
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>house_2_71</name>
+      <pose>
+        76.71
+        13.4
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://house_2</uri>
+    </include>
+
+    <include>
+      <name>ambulance_72</name>
+      <pose>
+        63.99
+        7.06
+        0.0
+        0
+        0
+        -2.14
+      </pose>
+      <uri>model://ambulance</uri>
+    </include>
+
+
+    <!-- Block 0 2 -->
+
+    <model name="gas_station_73">
+      <static>true</static>
+      <pose>
+        61.88
+        -30.82
+        0
+        0
+        0
+        3.14
+      </pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>model://gas_station/meshes/gas_station.dae</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://gas_station/materials/scripts</uri>
+              <uri>model://gas_station/materials/textures</uri>
+              <name>GasStation/Diffuse</name>
+            </script>
+            <ambient>
+              1
+              1
+              1
+              1
+            </ambient>
+          </material>
+        </visual>
+
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>model://gas_station/meshes/gas_station.dae</uri>
+            </mesh>
+          </geometry>
+        </collision>
+
+      </link>
+    </model>
+
+    <model name="asphalt_plane_74">
+      <static>true</static>
+      <pose>
+        61.581
+        -16.664
+        0
+        0
+        0
+        0
+      </pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size> 20
+                20
+                0.05
+              </size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://asphalt_plane/materials/scripts</uri>
+              <uri>model://asphalt_plane/materials/textures</uri>
+              <name>vrc/asphalt</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <name>hatchback_red_75</name>
+      <pose>
+        61.9
+        -12.36
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://hatchback_red</uri>
+    </include>
+
+
+    <include>
+      <name>apartment_76</name>
+      <pose>
+        87.36
+        -21.48
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://apartment</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_77</name>
+      <pose>
+        74.95
+        -8.29
+        0.0
+        0
+        0
+        2.056583669190494
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_78</name>
+      <pose>
+        79.06
+        -35.8
+        0.0
+        0
+        0
+        3.1229069870073562
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_79</name>
+      <pose>
+        100.33
+        -33.7
+        0.0
+        0
+        0
+        2.847128273271397
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_80</name>
+      <pose>
+        100.15
+        -8.67
+        0.0
+        0
+        0
+        0.03586651278609772
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>fire_hydrant_81</name>
+      <pose>
+        103.0
+        -4.386
+        0.15
+        0
+        0
+        0
+      </pose>
+      <uri>model://fire_hydrant</uri>
+    </include>
+
+
+    <!-- Block 0 3 -->
+
+    <!-- Block 1 0 -->
+
+    <!-- Block 1 1 -->
+
+    <include>
+      <name>law_office_82</name>
+      <pose>
+        8.47
+        9.356
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://law_office</uri>
+    </include>
+
+    <include>
+      <name>thrift_shop_83</name>
+      <pose>
+        1.35
+        9.356
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://thrift_shop</uri>
+    </include>
+
+    <include>
+      <name>salon_84</name>
+      <pose>
+        15.7
+        9.356
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://salon</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_85</name>
+      <pose>
+        -6.418
+        10.37
+        0.0
+        0
+        0
+        0.55
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>apartment_86</name>
+      <pose>
+        1.573
+        27.565
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://apartment</uri>
+    </include>
+
+    <include>
+      <name>osrf_first_office_87</name>
+      <pose>
+        27.003
+        20.15
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://osrf_first_office</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_88</name>
+      <pose>
+        16.096
+        34.82
+        0.0
+        0
+        0
+        2.245460577883453
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_89</name>
+      <pose>
+        18.7
+        29.33
+        0.0
+        0
+        0
+        0.6052257535956022
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_90</name>
+      <pose>
+        22.56
+        34.58
+        0.0
+        0
+        0
+        0.3439695087111236
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_91</name>
+      <pose>
+        31.49
+        35.89
+        0.0
+        0
+        0
+        -3.03
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>postbox_92</name>
+      <pose>
+        24.0
+        4.33
+        0.15
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://postbox</uri>
+    </include>
+
+
+    <!-- Block 1 2 -->
+
+    <include>
+      <name>fast_food_93</name>
+      <pose>
+        30.00
+        -25.00
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://fast_food</uri>
+    </include>
+
+    <!-- <include>
+      <name>dumpster_94</name>
+      <pose>
+      15.94
+      -13.63
+      0.0
+      0
+      0
+      3.14
+      </pose>
+      <uri>model://dumpster</uri>
+    </include> -->
+
+    <include>
+      <name>fire_hydrant_95</name>
+      <pose>
+        38.5
+        -4.38
+        0.15
+        0
+        0
+        0
+      </pose>
+      <uri>model://fire_hydrant</uri>
+    </include>
+
+
+    <include>
+      <name>radio_tower_124</name>
+      <pose>
+        14.0
+        -22.5
+        1.57965648
+        0
+        0
+        0
+      </pose>
+      <uri>model://radio_tower</uri>
+    </include>
+
+    <include>
+      <name>house_2_125</name>
+      <pose>
+        1.61
+        -14.15
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://house_2</uri>
+    </include>
+
+    <include>
+      <name>house_2_126</name>
+      <pose>
+        -0.59
+        -26.6
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://house_2</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_127</name>
+      <pose>
+        -7
+        -37
+        0.0
+        0
+        0
+        0.1241324567878169
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_128</name>
+      <pose>
+        -2
+        -37
+        0.0
+        0
+        0
+        0.14351863969214357
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_129</name>
+      <pose>
+        3
+        -37
+        0.0
+        0
+        0
+        1.743237384682263
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_130</name>
+      <pose>
+        8
+        -37
+        0.0
+        0
+        0
+        2.0482223896898706
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_131</name>
+      <pose>
+        13
+        -37
+        0.0
+        0
+        0
+        0.03564162980101033
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_132</name>
+      <pose>
+        -7
+        -32
+        0.0
+        0
+        0
+        2.6916714227645273
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_133</name>
+      <pose>
+        -7
+        -27
+        0.0
+        0
+        0
+        1.4543242087905008
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_134</name>
+      <pose>
+        -7
+        -22
+        0.0
+        0
+        0
+        2.1028285261132478
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_135</name>
+      <pose>
+        -7
+        -17
+        0.0
+        0
+        0
+        1.3320724403258482
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_136</name>
+      <pose>
+        -7
+        -12
+        0.0
+        0
+        0
+        2.9324530260930635
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_137</name>
+      <pose>
+        -7
+        -7
+        0.0
+        0
+        0
+        0.638709792734367
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_138</name>
+      <pose>
+        -2
+        -8
+        0.0
+        0
+        0
+        0.41683259463499106
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_139</name>
+      <pose>
+        3
+        -8
+        0.0
+        0
+        0
+        1.841062970205981
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_140</name>
+      <pose>
+        8
+        -8
+        0.0
+        0
+        0
+        2.2110726267789658
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_141</name>
+      <pose>
+        13
+        -8
+        0.0
+        0
+        0
+        0.14585161165750554
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <include>
+      <name>pine_tree_142</name>
+      <pose>
+        18
+        -8
+        0.0
+        0
+        0
+        2.3141509725904723
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <!-- Block 1 3 -->
+
+    <!-- Block 2 0 -->
+
+    <!-- Block 2 1 -->
+
+    <include>
+      <name>post_office_143</name>
+      <pose>
+        -26.686
+        11.119
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://post_office</uri>
+    </include>
+
+    <include>
+      <name>postbox_144</name>
+      <pose>
+        -28.58
+        4.33
+        0.15
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://postbox</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_145</name>
+      <pose>
+        -30.709
+        7.15
+        0.0
+        0
+        0
+        2.2424025881002145
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>house_1_146</name>
+      <pose>
+        -27.49
+        25.344
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://house_1</uri>
+    </include>
+
+    <include>
+      <name>pickup_147</name>
+      <pose>
+        -36.72
+        21.02
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://pickup</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_148</name>
+      <pose>
+        -35.811
+        11.78
+        0.0
+        0
+        0
+        0.55
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_149</name>
+      <pose>
+        -22.97
+        15.87
+        0.0
+        0
+        0
+        1.82
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_150</name>
+      <pose>
+        -36.78
+        36.47
+        0.0
+        0
+        0
+        1.7
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_150</name>
+      <pose>
+        -36.78
+        36.47
+        0.0
+        0
+        0
+        1.7
+      </pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_151</name>
+      <pose>
+        -23.94
+        34.92
+        0.0
+        0
+        0
+        0.56
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>cardboard_box_152</name>
+      <pose>
+        -32
+        8
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://cardboard_box</uri>
+    </include>
+
+
+
+    <include>
+      <name>pine_tree_150</name>
+      <pose>-43.41 109.93 -0.58 0 0 0.72</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_151</name>
+      <pose>-43.56 113.61 -0.58 0 0 3.44</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_152</name>
+      <pose>-38.71 109.01 -0.58 0 0 5.15</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_153</name>
+      <pose>-38.74 113.87 -0.58 0 0 4.95</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_154</name>
+      <pose>-34.26 109.58 -0.58 0 0 0.12</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_155</name>
+      <pose>-34.46 113.55 -0.58 0 0 4.91</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_156</name>
+      <pose>-30.59 109.41 -0.58 0 0 3.70</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_157</name>
+      <pose>-30.56 114.08 -0.58 0 0 0.99</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_158</name>
+      <pose>-25.68 109.20 -0.58 0 0 3.57</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_159</name>
+      <pose>-25.49 114.19 -0.58 0 0 3.86</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_160</name>
+      <pose>-21.51 109.56 -0.58 0 0 3.29</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_161</name>
+      <pose>-21.35 114.43 -0.58 0 0 1.66</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_162</name>
+      <pose>-16.67 109.17 -0.58 0 0 1.18</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_163</name>
+      <pose>-16.66 114.23 -0.58 0 0 2.55</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_164</name>
+      <pose>-12.64 109.50 -0.58 0 0 2.21</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_165</name>
+      <pose>-12.35 114.37 -0.58 0 0 2.68</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_166</name>
+      <pose>-7.78 109.19 -0.58 0 0 2.02</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_167</name>
+      <pose>-7.66 113.62 -0.58 0 0 6.11</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_168</name>
+      <pose>-3.68 109.73 -0.58 0 0 0.47</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_169</name>
+      <pose>-3.53 113.65 -0.58 0 0 3.77</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_170</name>
+      <pose>1.06 109.71 -0.58 0 0 0.52</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_171</name>
+      <pose>1.47 114.30 -0.58 0 0 4.89</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_172</name>
+      <pose>5.85 109.55 -0.58 0 0 4.19</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_173</name>
+      <pose>5.77 113.87 -0.58 0 0 3.08</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_174</name>
+      <pose>10.43 109.23 -0.58 0 0 4.20</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_175</name>
+      <pose>10.51 114.35 -0.58 0 0 1.33</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_176</name>
+      <pose>14.24 109.24 -0.58 0 0 0.59</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_177</name>
+      <pose>14.69 113.95 -0.58 0 0 4.07</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_178</name>
+      <pose>19.13 109.94 -0.58 0 0 2.76</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_179</name>
+      <pose>18.66 113.97 -0.58 0 0 2.27</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_180</name>
+      <pose>23.98 109.26 -0.58 0 0 5.18</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_181</name>
+      <pose>23.10 113.84 -0.58 0 0 4.88</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_182</name>
+      <pose>28.45 109.41 -0.58 0 0 5.45</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_183</name>
+      <pose>28.40 113.55 -0.58 0 0 6.01</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_184</name>
+      <pose>32.27 109.84 -0.58 0 0 3.08</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_185</name>
+      <pose>32.67 113.87 -0.58 0 0 5.56</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_186</name>
+      <pose>37.36 109.16 -0.58 0 0 3.85</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+<!-- 
+    <include>
+      <name>oak_tree_187</name>
+      <pose>36.62 113.53 -0.58 0 0 3.20</pose>
+      <uri>model://oak_tree</uri>
+    </include> -->
+
+    <!-- <include>
+      <name>oak_tree_188</name>
+      <pose>41.82 109.64 -0.58 0 0 2.64</pose>
+      <uri>model://oak_tree</uri>
+    </include> -->
+
+    <!-- <include>
+      <name>oak_tree_189</name>
+      <pose>41.55 113.80 -0.58 0 0 3.08</pose>
+      <uri>model://oak_tree</uri>
+    </include> -->
+
+    <!-- <include>
+      <name>oak_tree_190</name>
+      <pose>45.68 109.12 -0.58 0 0 4.68</pose>
+      <uri>model://oak_tree</uri>
+    </include> -->
+
+    <include>
+      <name>pine_tree_191</name>
+      <pose>37.0 114.09 -0.58 0 0 3.75</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_192</name>
+      <pose>50.88 109.54 -0.58 0 0 1.88</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_193</name>
+      <pose>49.97 114.34 -0.58 0 0 5.66</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_194</name>
+      <pose>54.67 109.65 -0.58 0 0 3.93</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_195</name>
+      <pose>54.72 113.88 -0.58 0 0 1.41</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_196</name>
+      <pose>59.38 109.60 -0.58 0 0 1.58</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_197</name>
+      <pose>58.87 114.16 -0.58 0 0 3.07</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_198</name>
+      <pose>63.61 109.84 -0.58 0 0 4.36</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_199</name>
+      <pose>64.10 113.75 -0.58 0 0 3.65</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_200</name>
+      <pose>68.41 109.84 -0.58 0 0 2.70</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_201</name>
+      <pose>68.45 114.18 -0.58 0 0 1.15</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_202</name>
+      <pose>72.27 109.82 -0.58 0 0 0.27</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_203</name>
+      <pose>72.59 114.24 -0.58 0 0 1.67</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_204</name>
+      <pose>72.56 118.17 -0.58 0 0 1.65</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_205</name>
+      <pose>77.00 109.02 -0.58 0 0 1.46</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_206</name>
+      <pose>77.34 114.03 -0.58 0 0 2.64</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_207</name>
+      <pose>77.10 118.38 -0.58 0 0 3.46</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_208</name>
+      <pose>77.56 122.92 -0.58 0 0 5.28</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_209</name>
+      <pose>77.00 127.56 -0.58 0 0 1.43</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_210</name>
+      <pose>81.90 109.78 -0.58 0 0 0.02</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_211</name>
+      <pose>81.48 113.75 -0.58 0 0 2.13</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_212</name>
+      <pose>81.30 118.73 -0.58 0 0 1.41</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_213</name>
+      <pose>82.04 123.23 -0.58 0 0 1.87</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_214</name>
+      <pose>81.71 127.27 -0.58 0 0 5.54</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_215</name>
+      <pose>86.39 109.90 -0.58 0 0 6.21</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_216</name>
+      <pose>86.45 113.91 -0.58 0 0 5.10</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_217</name>
+      <pose>86.33 118.76 -0.58 0 0 2.82</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_218</name>
+      <pose>86.16 122.52 -0.58 0 0 1.83</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_219</name>
+      <pose>91.06 109.15 -0.58 0 0 5.90</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_220</name>
+      <pose>91.03 114.07 -0.58 0 0 3.48</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_221</name>
+      <pose>90.56 118.91 -0.58 0 0 4.46</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_222</name>
+      <pose>90.98 122.92 -0.58 0 0 5.32</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_223</name>
+      <pose>95.02 109.95 -0.58 0 0 3.45</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_224</name>
+      <pose>95.09 114.22 -0.58 0 0 4.33</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_225</name>
+      <pose>95.48 118.14 -0.58 0 0 2.27</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_226</name>
+      <pose>94.65 122.76 -0.58 0 0 3.50</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_227</name>
+      <pose>99.60 109.65 -0.58 0 0 0.85</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_228</name>
+      <pose>99.09 113.60 -0.58 0 0 0.83</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_229</name>
+      <pose>99.42 118.23 -0.58 0 0 5.03</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_230</name>
+      <pose>99.54 122.45 -0.58 0 0 0.69</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_231</name>
+      <pose>104.30 109.91 -0.58 0 0 3.60</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_232</name>
+      <pose>104.02 113.47 -0.58 0 0 3.53</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_233</name>
+      <pose>104.23 118.79 -0.58 0 0 0.53</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_234</name>
+      <pose>108.61 109.87 -0.58 0 0 5.17</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_235</name>
+      <pose>108.88 114.44 -0.58 0 0 6.04</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_236</name>
+      <pose>108.55 118.06 -0.58 0 0 0.96</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_237</name>
+      <pose>112.74 109.93 -0.58 0 0 3.71</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_238</name>
+      <pose>113.13 113.61 -0.58 0 0 3.13</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_239</name>
+      <pose>112.86 118.42 -0.58 0 0 3.94</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_240</name>
+      <pose>117.50 109.29 -0.58 0 0 2.60</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_241</name>
+      <pose>117.84 113.93 -0.58 0 0 5.27</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_242</name>
+      <pose>121.71 109.21 -0.58 0 0 5.97</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_243</name>
+      <pose>122.01 114.07 -0.58 0 0 0.85</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+
+    <include>
+      <name>pine_tree_243</name>
+      <pose>56.10 56.93 0.00 0 0 2.92</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_244</name>
+      <pose>56.94 61.16 0.00 0 0 2.45</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_245</name>
+      <pose>56.23 65.67 0.00 0 0 2.69</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_246</name>
+      <pose>56.63 69.78 0.00 0 0 4.94</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_247</name>
+      <pose>56.10 74.60 0.00 0 0 5.94</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_248</name>
+      <pose>56.84 79.11 0.00 0 0 1.71</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_249</name>
+      <pose>56.80 83.67 0.00 0 0 5.89</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_250</name>
+      <pose>56.64 87.45 0.00 0 0 3.58</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_251</name>
+      <pose>56.82 91.81 0.00 0 0 5.07</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_252</name>
+      <pose>60.74 56.95 0.00 0 0 6.10</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_253</name>
+      <pose>61.20 61.00 0.00 0 0 3.98</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_254</name>
+      <pose>60.54 65.11 0.00 0 0 1.14</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_255</name>
+      <pose>60.68 70.26 0.00 0 0 4.75</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_256</name>
+      <pose>60.99 74.10 0.00 0 0 6.18</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_257</name>
+      <pose>60.97 78.47 0.00 0 0 4.19</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_258</name>
+      <pose>60.49 83.70 0.00 0 0 3.93</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_259</name>
+      <pose>61.28 87.47 0.00 0 0 5.80</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_260</name>
+      <pose>61.16 91.82 0.00 0 0 0.53</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_261</name>
+      <pose>65.11 56.21 0.00 0 0 1.88</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_262</name>
+      <pose>65.32 60.83 0.00 0 0 5.53</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_263</name>
+      <pose>65.26 65.76 0.00 0 0 1.14</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_264</name>
+      <pose>65.65 69.85 0.00 0 0 5.33</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_265</name>
+      <pose>65.19 74.16 0.00 0 0 6.23</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_266</name>
+      <pose>65.80 79.04 0.00 0 0 3.71</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_267</name>
+      <pose>65.40 83.42 0.00 0 0 2.03</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_268</name>
+      <pose>65.71 88.27 0.00 0 0 3.74</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_269</name>
+      <pose>65.00 92.02 0.00 0 0 4.68</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_270</name>
+      <pose>69.81 56.01 0.00 0 0 1.78</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_271</name>
+      <pose>69.82 60.95 0.00 0 0 0.32</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_272</name>
+      <pose>69.48 65.81 0.00 0 0 0.12</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_273</name>
+      <pose>70.24 70.30 0.00 0 0 0.72</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_274</name>
+      <pose>69.72 74.39 0.00 0 0 1.71</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_275</name>
+      <pose>69.83 78.72 0.00 0 0 1.32</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_276</name>
+      <pose>70.17 83.60 0.00 0 0 2.48</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_277</name>
+      <pose>70.10 88.17 0.00 0 0 1.53</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_278</name>
+      <pose>70.38 92.65 0.00 0 0 4.40</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_279</name>
+      <pose>73.90 56.24 0.00 0 0 2.58</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_280</name>
+      <pose>74.66 60.50 0.00 0 0 3.60</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_281</name>
+      <pose>74.37 65.17 0.00 0 0 4.57</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_282</name>
+      <pose>74.41 70.19 0.00 0 0 6.19</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_283</name>
+      <pose>74.51 74.52 0.00 0 0 3.07</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_284</name>
+      <pose>74.25 78.82 0.00 0 0 2.17</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_285</name>
+      <pose>73.89 83.61 0.00 0 0 5.68</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_286</name>
+      <pose>74.27 87.35 0.00 0 0 5.49</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_287</name>
+      <pose>73.96 92.67 0.00 0 0 4.18</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_288</name>
+      <pose>79.27 56.21 0.00 0 0 2.88</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_289</name>
+      <pose>78.49 61.00 0.00 0 0 2.40</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_290</name>
+      <pose>78.72 65.36 0.00 0 0 6.27</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_291</name>
+      <pose>78.48 69.77 0.00 0 0 0.45</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_292</name>
+      <pose>78.33 74.81 0.00 0 0 4.30</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_293</name>
+      <pose>78.88 78.53 0.00 0 0 3.55</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_294</name>
+      <pose>78.34 83.75 0.00 0 0 1.90</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_295</name>
+      <pose>78.38 87.87 0.00 0 0 3.79</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_296</name>
+      <pose>78.95 92.05 0.00 0 0 2.94</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_297</name>
+      <pose>83.48 56.86 0.00 0 0 1.64</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_298</name>
+      <pose>83.07 61.27 0.00 0 0 3.12</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_299</name>
+      <pose>83.02 65.27 0.00 0 0 3.97</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_300</name>
+      <pose>83.23 70.39 0.00 0 0 5.60</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_301</name>
+      <pose>83.36 74.35 0.00 0 0 4.15</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_302</name>
+      <pose>83.73 78.57 0.00 0 0 3.76</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_303</name>
+      <pose>83.51 83.20 0.00 0 0 2.79</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_304</name>
+      <pose>82.97 87.74 0.00 0 0 3.12</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_305</name>
+      <pose>83.50 92.36 0.00 0 0 3.97</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_306</name>
+      <pose>87.35 56.19 0.00 0 0 0.71</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_307</name>
+      <pose>88.22 60.91 0.00 0 0 4.06</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_308</name>
+      <pose>88.04 65.53 0.00 0 0 6.13</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_309</name>
+      <pose>87.40 69.59 0.00 0 0 3.48</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_310</name>
+      <pose>87.41 73.92 0.00 0 0 3.73</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_311</name>
+      <pose>87.50 79.07 0.00 0 0 0.76</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_312</name>
+      <pose>88.01 83.42 0.00 0 0 5.12</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_313</name>
+      <pose>87.72 88.00 0.00 0 0 5.21</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_314</name>
+      <pose>88.26 92.19 0.00 0 0 5.82</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_315</name>
+      <pose>92.24 56.06 0.00 0 0 4.16</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_316</name>
+      <pose>92.27 61.35 0.00 0 0 0.73</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_317</name>
+      <pose>92.59 65.02 0.00 0 0 2.42</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_318</name>
+      <pose>92.43 70.29 0.00 0 0 4.84</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_319</name>
+      <pose>92.32 74.22 0.00 0 0 2.76</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_320</name>
+      <pose>92.28 79.32 0.00 0 0 3.32</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_321</name>
+      <pose>92.37 83.37 0.00 0 0 0.04</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_322</name>
+      <pose>91.88 87.51 0.00 0 0 2.71</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_323</name>
+      <pose>92.06 92.15 0.00 0 0 2.84</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_324</name>
+      <pose>96.97 56.77 0.00 0 0 0.55</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_325</name>
+      <pose>96.79 60.58 0.00 0 0 4.63</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_326</name>
+      <pose>96.35 65.48 0.00 0 0 3.93</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_327</name>
+      <pose>96.92 70.08 0.00 0 0 0.95</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_328</name>
+      <pose>96.75 74.35 0.00 0 0 1.39</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_329</name>
+      <pose>96.79 79.31 0.00 0 0 5.74</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_330</name>
+      <pose>96.70 82.84 0.00 0 0 5.21</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_331</name>
+      <pose>96.72 88.20 0.00 0 0 2.92</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_332</name>
+      <pose>96.44 91.84 0.00 0 0 4.29</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_333</name>
+      <pose>101.04 56.28 0.00 0 0 2.90</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_334</name>
+      <pose>101.66 61.43 0.00 0 0 1.52</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_335</name>
+      <pose>100.95 65.79 0.00 0 0 0.89</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_336</name>
+      <pose>101.59 69.67 0.00 0 0 0.81</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_337</name>
+      <pose>101.40 73.98 0.00 0 0 1.98</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_338</name>
+      <pose>100.85 79.08 0.00 0 0 1.00</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_339</name>
+      <pose>100.99 83.05 0.00 0 0 2.21</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_340</name>
+      <pose>101.38 87.56 0.00 0 0 1.83</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_341</name>
+      <pose>101.11 92.56 0.00 0 0 5.89</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+
+    <include>
+      <name>pine_tree_341</name>
+      <pose>-2.23 56.04 0.00 0 0 2.31</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_342</name>
+      <pose>-2.74 60.64 0.00 0 0 5.00</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_343</name>
+      <pose>-2.25 65.05 0.00 0 0 3.52</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_344</name>
+      <pose>-2.07 69.87 0.00 0 0 2.06</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_345</name>
+      <pose>-2.14 73.87 0.00 0 0 0.59</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_346</name>
+      <pose>-2.56 78.86 0.00 0 0 3.48</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_347</name>
+      <pose>-2.49 83.47 0.00 0 0 1.15</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_348</name>
+      <pose>-2.39 87.60 0.00 0 0 4.14</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_349</name>
+      <pose>-2.21 92.61 0.00 0 0 2.53</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_350</name>
+      <pose>1.58 56.00 0.00 0 0 2.63</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_351</name>
+      <pose>2.08 60.70 0.00 0 0 5.20</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_352</name>
+      <pose>1.77 65.54 0.00 0 0 5.09</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_353</name>
+      <pose>1.81 70.06 0.00 0 0 2.14</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_354</name>
+      <pose>1.55 74.42 0.00 0 0 3.44</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_355</name>
+      <pose>2.17 78.90 0.00 0 0 0.00</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_356</name>
+      <pose>2.23 83.69 0.00 0 0 0.60</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_357</name>
+      <pose>2.29 87.33 0.00 0 0 2.24</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_358</name>
+      <pose>1.86 92.46 0.00 0 0 2.70</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_359</name>
+      <pose>6.14 56.25 0.00 0 0 5.38</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_360</name>
+      <pose>6.72 61.39 0.00 0 0 2.52</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_361</name>
+      <pose>6.73 64.94 0.00 0 0 4.45</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_362</name>
+      <pose>6.34 69.52 0.00 0 0 3.60</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_363</name>
+      <pose>6.47 74.48 0.00 0 0 3.17</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_364</name>
+      <pose>6.90 78.73 0.00 0 0 6.12</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_365</name>
+      <pose>6.11 82.96 0.00 0 0 2.27</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_366</name>
+      <pose>6.50 88.16 0.00 0 0 3.54</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_367</name>
+      <pose>6.05 92.35 0.00 0 0 5.15</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_368</name>
+      <pose>10.42 56.58 0.00 0 0 3.73</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_369</name>
+      <pose>10.39 60.48 0.00 0 0 2.43</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_370</name>
+      <pose>10.66 65.19 0.00 0 0 2.66</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_371</name>
+      <pose>10.57 69.79 0.00 0 0 6.28</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_372</name>
+      <pose>10.89 74.59 0.00 0 0 0.04</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_373</name>
+      <pose>10.61 78.45 0.00 0 0 3.70</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_374</name>
+      <pose>10.54 83.35 0.00 0 0 1.21</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_375</name>
+      <pose>11.20 88.17 0.00 0 0 3.41</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_376</name>
+      <pose>10.85 92.24 0.00 0 0 5.84</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_377</name>
+      <pose>15.26 56.77 0.00 0 0 1.49</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_378</name>
+      <pose>14.94 60.59 0.00 0 0 4.62</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_379</name>
+      <pose>15.23 65.88 0.00 0 0 5.62</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_380</name>
+      <pose>15.72 69.71 0.00 0 0 1.23</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_381</name>
+      <pose>15.23 73.98 0.00 0 0 2.54</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_382</name>
+      <pose>15.38 78.37 0.00 0 0 5.45</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_383</name>
+      <pose>15.39 83.23 0.00 0 0 0.85</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_384</name>
+      <pose>15.70 88.21 0.00 0 0 1.46</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_385</name>
+      <pose>15.32 92.04 0.00 0 0 2.99</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_386</name>
+      <pose>19.38 56.38 0.00 0 0 0.26</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_387</name>
+      <pose>19.83 61.40 0.00 0 0 1.65</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_388</name>
+      <pose>19.87 65.08 0.00 0 0 0.19</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_389</name>
+      <pose>20.12 69.79 0.00 0 0 2.53</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_390</name>
+      <pose>19.41 74.84 0.00 0 0 5.99</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_391</name>
+      <pose>19.48 78.85 0.00 0 0 0.13</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_392</name>
+      <pose>19.95 82.98 0.00 0 0 0.66</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_393</name>
+      <pose>20.13 87.85 0.00 0 0 2.05</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_394</name>
+      <pose>19.54 92.68 0.00 0 0 4.40</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_395</name>
+      <pose>24.76 56.91 0.00 0 0 3.28</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_396</name>
+      <pose>24.12 60.98 0.00 0 0 3.61</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_397</name>
+      <pose>24.07 65.15 0.00 0 0 5.53</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_398</name>
+      <pose>24.74 69.58 0.00 0 0 0.25</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_399</name>
+      <pose>24.47 74.20 0.00 0 0 4.40</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_400</name>
+      <pose>24.41 78.77 0.00 0 0 0.76</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_401</name>
+      <pose>24.78 82.94 0.00 0 0 5.02</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_402</name>
+      <pose>24.08 88.04 0.00 0 0 5.32</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_403</name>
+      <pose>24.70 92.63 0.00 0 0 1.41</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_404</name>
+      <pose>28.39 56.37 0.00 0 0 3.07</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_405</name>
+      <pose>29.18 61.12 0.00 0 0 3.17</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_406</name>
+      <pose>28.80 65.76 0.00 0 0 5.54</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_407</name>
+      <pose>29.01 70.09 0.00 0 0 5.24</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_408</name>
+      <pose>29.21 73.95 0.00 0 0 5.22</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_409</name>
+      <pose>28.63 78.94 0.00 0 0 4.83</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_410</name>
+      <pose>28.46 83.76 0.00 0 0 1.90</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_411</name>
+      <pose>28.68 87.28 0.00 0 0 3.09</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_412</name>
+      <pose>28.86 92.58 0.00 0 0 1.02</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_413</name>
+      <pose>32.86 56.71 0.00 0 0 1.67</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_414</name>
+      <pose>33.61 61.08 0.00 0 0 0.75</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_415</name>
+      <pose>33.65 65.36 0.00 0 0 6.05</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_416</name>
+      <pose>33.34 69.67 0.00 0 0 0.10</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_417</name>
+      <pose>33.55 74.45 0.00 0 0 4.98</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_418</name>
+      <pose>33.29 79.08 0.00 0 0 5.86</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>oak_tree_419</name>
+      <pose>33.38 83.29 0.00 0 0 1.26</pose>
+      <uri>model://oak_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_420</name>
+      <pose>33.32 88.06 0.00 0 0 5.82</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_421</name>
+      <pose>32.79 92.64 0.00 0 0 0.70</pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+    <!-- Block 2 2 -->
+
+    <include>
+      <name>salon_154</name>
+      <pose>
+        -27.65
+        -9.35
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://salon</uri>
+    </include>
+
+    <include>
+      <name>law_office_155</name>
+      <pose>
+        -34.886
+        -9.408
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://law_office</uri>
+    </include>
+
+    <include>
+      <name>house_3_156</name>
+      <pose>
+        -33.39
+        -21.3
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://house_3</uri>
+    </include>
+
+    <include>
+      <name>house_3_157</name>
+      <pose>
+        -28.126
+        -32.93
+        0.0
+        0
+        0
+        0.0
+      </pose>
+      <uri>model://house_3</uri>
+    </include>
+
+    <include>
+      <name>house_3_158</name>
+      <pose>
+        -25.739
+        -19.38
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://house_3</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_159</name>
+      <pose>
+        -37.48
+        -13.67
+        0.0
+        0
+        0
+        2.996942448080117
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_160</name>
+      <pose>
+        -22.26
+        -7.39
+        0.0
+        0
+        0
+        0.002425784515918483
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_161</name>
+      <pose>
+        -22.26
+        -10.46
+        0.0
+        0
+        0
+        0.6464687916884224
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_162</name>
+      <pose>
+        -35.045
+        -28.058
+        0.0
+        0
+        0
+        2.267804354475107
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_163</name>
+      <pose>
+        -37.48
+        -36.76
+        0.0
+        0
+        0
+        1.6775168799118385
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_164</name>
+      <pose>
+        -33.06
+        -37.17
+        0.0
+        0
+        0
+        0.5843092123701105
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+    <include>
+      <name>pine_tree_165</name>
+      <pose>
+        -25.34
+        -29.166
+        0.0
+        0
+        0
+        2.403768753196416
+      </pose>
+      <uri>model://pine_tree</uri>
+    </include>
+
+
+
+    <include>
+      <name>fire_hydrant_166</name>
+      <pose>
+        -20.34
+        -4.38
+        0.15
+        0
+        0
+        0
+      </pose>
+      <uri>model://fire_hydrant</uri>
+    </include>
+
+
+    <!-- Block 2 3 -->
+
+    <!-- West block -->
+
+    <!-- East block -->
+
+
+    <!-- Construction zone -->
+
+    <!-- South island -->
+
+    <include>
+      <name>truss_bridge_167</name>
+      <pose>
+        -56.37
+        -45
+        -0.29
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://truss_bridge</uri>
+    </include>
+
+    <include>
+      <name>truss_bridge_168</name>
+      <pose>
+        -56.37
+        0
+        -0.29
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://truss_bridge</uri>
+    </include>
+
+
+    <road name="sandy_path">
+      <width>17.9</width>
+      <point>-73 -47.96 0.01</point>
+      <point>-73 2.9600000000000004 0.01</point>
+
+      <material>
+        <script>
+          <uri>file://media/materials/scripts/gazebo.material</uri>
+          <name>Gazebo/Residential</name>
+        </script>
+      </material>
+    </road>
+
+    <!-- Stop lights -->
+
+    <include>
+      <name>stop_light_post_169</name>
+      <pose>
+        -41.3
+        -3.7
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_170</name>
+      <pose>
+        -41.3
+        -3.7
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_171</name>
+      <pose>
+        -11.3
+        -3.7
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_172</name>
+      <pose>
+        48.7
+        -3.7
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_173</name>
+      <pose>
+        123.7
+        -3.7
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_174</name>
+      <pose>
+        -48.7
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_175</name>
+      <pose>
+        -18.7
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_176</name>
+      <pose>
+        41.3
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_177</name>
+      <pose>
+        -41.3
+        3.7
+        0.0
+        0
+        0
+        0.0
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_178</name>
+      <pose>
+        -11.3
+        3.7
+        0.0
+        0
+        0
+        0.0
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_179</name>
+      <pose>
+        123.7
+        3.7
+        0.0
+        0
+        0
+        0.0
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_180</name>
+      <pose>
+        -48.7
+        -3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_181</name>
+      <pose>
+        41.3
+        -3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+    <include>
+      <name>stop_light_post_182</name>
+      <pose>
+        106.3
+        -3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://stop_light_post</uri>
+    </include>
+
+
+    <!-- Stop signs -->
+
+    <include>
+      <name>stop_sign_183</name>
+      <pose>
+        -11.3
+        -3.7
+        0.0
+        0
+        0
+        0.0
+      </pose>
+      <uri>model://stop_sign</uri>
+    </include>
+
+    <include>
+      <name>stop_sign_184</name>
+      <pose>
+        41.3
+        -41.3
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://stop_sign</uri>
+    </include>
+
+    <include>
+      <name>stop_sign_185</name>
+      <pose>
+        41.3
+        3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://stop_sign</uri>
+    </include>
+
+    <include>
+      <name>stop_sign_186</name>
+      <pose>
+        -18.7
+        -3.7
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://stop_sign</uri>
+    </include>
+
+    <include>
+      <name>stop_sign_187</name>
+      <pose>
+        41.3
+        -3.7
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://stop_sign</uri>
+    </include>
+
+    <include>
+      <name>stop_sign_188</name>
+      <pose>
+        106.3
+        -3.7
+        0.0
+        0
+        0
+        -1.57
+      </pose>
+      <uri>model://stop_sign</uri>
+    </include>
+
+
+    <!-- Street lights -->
+
+
+    <include>
+      <name>lamp_post_189</name>
+      <pose>
+        -35.1
+        -3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+    <include>
+      <name>lamp_post_190</name>
+      <pose>
+        -25.2
+        3.7
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+
+    <include>
+      <name>lamp_post_191</name>
+      <pose>
+        -3.0
+        -3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+    <include>
+      <name>lamp_post_192</name>
+      <pose>
+        9.0
+        3.7
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+    <include>
+      <name>lamp_post_193</name>
+      <pose>
+        21.0
+        -3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+    <include>
+      <name>lamp_post_194</name>
+      <pose>
+        27.0
+        3.7
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+
+    <include>
+      <name>lamp_post_195</name>
+      <pose>
+        58.0
+        -3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+    <include>
+      <name>lamp_post_196</name>
+      <pose>
+        71.0
+        3.7
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+    <include>
+      <name>lamp_post_197</name>
+      <pose>
+        84.0
+        -3.7
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+    <include>
+      <name>lamp_post_198</name>
+      <pose>
+        90.5
+        3.7
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://lamp_post</uri>
+    </include>
+
+
+    <!-- Telephone poles -->
+
+
+    <include>
+      <name>telephone_pole_199</name>
+      <pose>
+        -41.3
+        -30.15
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_200</name>
+      <pose>
+        -41.3
+        -15.299999999999997
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_201</name>
+      <pose>
+        -11.3
+        -30.15
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_202</name>
+      <pose>
+        -11.3
+        -15.299999999999997
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_203</name>
+      <pose>
+        -18.7
+        -30.15
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_204</name>
+      <pose>
+        -18.7
+        -15.299999999999997
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_205</name>
+      <pose>
+        48.7
+        -30.15
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_206</name>
+      <pose>
+        48.7
+        -15.299999999999997
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_207</name>
+      <pose>
+        41.3
+        -30.15
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_208</name>
+      <pose>
+        41.3
+        -15.299999999999997
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_209</name>
+      <pose>
+        106.3
+        -30.15
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_210</name>
+      <pose>
+        106.3
+        -15.299999999999997
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_211</name>
+      <pose>
+        -41.3
+        14.850000000000001
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_212</name>
+      <pose>
+        -41.3
+        29.700000000000003
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_213</name>
+      <pose>
+        -11.3
+        14.850000000000001
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_214</name>
+      <pose>
+        -11.3
+        29.700000000000003
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_215</name>
+      <pose>
+        -18.7
+        14.850000000000001
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_216</name>
+      <pose>
+        -18.7
+        29.700000000000003
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_217</name>
+      <pose>
+        48.7
+        14.850000000000001
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_218</name>
+      <pose>
+        48.7
+        29.700000000000003
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_219</name>
+      <pose>
+        41.3
+        14.850000000000001
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_220</name>
+      <pose>
+        41.3
+        29.700000000000003
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_221</name>
+      <pose>
+        106.3
+        14.850000000000001
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_222</name>
+      <pose>
+        106.3
+        29.700000000000003
+        0.0
+        0
+        0
+        3.14
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_223</name>
+      <pose>
+        -35.1
+        -41.3
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_224</name>
+      <pose>
+        -25.2
+        -41.3
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_225</name>
+      <pose>
+        -35.1
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_226</name>
+      <pose>
+        -25.2
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_227</name>
+      <pose>
+        -35.1
+        -3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_228</name>
+      <pose>
+        -25.2
+        -3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_229</name>
+      <pose>
+        4.800000000000001
+        -41.3
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_230</name>
+      <pose>
+        24.6
+        -41.3
+        0.0
+        0
+        0
+        1.57
+      </pose>247
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_231</name>
+      <pose>
+        4.800000000000001
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_232</name>
+      <pose>
+        24.6
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_233</name>
+      <pose>
+        4.800000000000001
+        -3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_234</name>
+      <pose>
+        24.6
+        -3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_235</name>
+      <pose>
+        66.45
+        -41.3
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_236</name>
+      <pose>
+        87.9
+        -41.3
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_237</name>
+      <pose>
+        66.45
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_238</name>
+      <pose>
+        87.9
+        3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <include>
+      <name>telephone_pole_239</name>
+      <pose>
+        66.45
+        -3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+    <include>
+      <name>telephone_pole_240</name>
+      <pose>
+        87.9
+        -3.7
+        0.0
+        0
+        0
+        1.57
+      </pose>
+      <uri>model://telephone_pole</uri>
+    </include>
+
+
+    <!-- Parallel-parked cars -->
+
+
+    <include>
+      <name>hatchback_blue_241</name>
+      <pose>
+        -17.55
+        -32.5226077364148
+        0.0
+        0
+        0
+        1.5707963267948966
+      </pose>
+      <uri>model://hatchback_blue</uri>
+    </include>
+
+    <include>
+      <name>pickup_242</name>
+      <pose>
+        -12.450000000000001
+        -20.895284503516816
+        0.0
+        0
+        0
+        1.5707963267948966
+      </pose>
+      <uri>model://pickup</uri>
+    </include>
+
+
+    <include>
+      <name>suv_243</name>
+      <pose>
+        42.449999999999996
+        -34.740594758017295
+        0.0
+        0
+        0
+        -1.5707963267948966
+      </pose>
+      <uri>model://suv</uri>
+    </include>
+
+    <include>
+      <name>pickup_244</name>
+      <pose>
+        47.550000000000004
+        -27.542267791140933
+        0.0
+        0
+        0
+        -1.5707963267948966
+      </pose>
+      <uri>model://pickup</uri>
+    </include>
+
+
+    <include>
+      <name>hatchback_blue_245</name>
+      <pose>
+        -17.55
+        32.93096512811481
+        0.0
+        0
+        0
+        1.5707963267948966
+      </pose>
+      <uri>model://hatchback_blue</uri>
+    </include>
+
+    <include>
+      <name>pickup_246</name>
+      <pose>
+        -12.450000000000001
+        30.68746326605413
+        0.0
+        0
+        0
+        1.5707963267948966
+      </pose>
+      <uri>model://pickup</uri>
+    </include>
+
+
+    <include>
+      <name>hatchback_247</name>
+      <pose>
+        42.449999999999996
+        28.0591330819157
+        0.0
+        0
+        0
+        -1.5707963267948966
+      </pose>
+      <uri>model://hatchback</uri>
+    </include>
+
+    <include>
+      <name>pickup_248</name>
+      <pose>
+        47.550000000000004
+        13.81490462229628
+        0.0
+        0
+        0
+        -1.5707963267948966
+      </pose>
+      <uri>model://pickup</uri>
+    </include>
+
+
+    <include>
+      <name>pickup_249</name>
+      <pose>
+        -24.995741773170444
+        -2.5500000000000003
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://pickup</uri>
+    </include>
+
+    <include>
+      <name>hatchback_250</name>
+      <pose>
+        -21.605234819116983
+        2.5500000000000003
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://hatchback</uri>
+    </include>
+
+
+    <include>
+      <name>suv_251</name>
+      <pose>
+        15.0
+        -2.5500000000000003
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://suv</uri>
+    </include>
+
+    <include>
+      <name>hatchback_blue_252</name>
+      <pose>
+        9.0
+        -2.5500000000000003
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://hatchback_blue</uri>
+    </include>
+
+
+    <include>
+      <name>pickup_253</name>
+      <pose>
+        81.52668900386297
+        -2.5500000000000003
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://pickup</uri>
+    </include>
+
+    <include>
+      <name>suv_254</name>
+      <pose>
+        91.14288982830527
+        2.5500000000000003
+        0.0
+        0
+        0
+        0
+      </pose>
+      <uri>model://suv</uri>
+    </include>
+
+  </world>
+</sdf>
