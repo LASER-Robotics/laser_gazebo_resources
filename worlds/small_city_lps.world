@@ -84,7 +84,7 @@
     </model>
     <gui fullscreen='0'>
       <camera name='camera'>
-        <pose>-25.1718 2.86692 29.819 0 0.887955 0.000406</pose>
+        <pose>-15.0 0.0 15.0 0.0 0.785398 0.0</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -32617,7 +32617,7 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose>0.528506 -7.50781 0 0 -0 0</pose>
+      <pose>0.0 0.0 0.02 0 -0 0</pose>
     </model>
     <state world_name='default'>
       <sim_time>1691 212000000</sim_time>
@@ -38006,7 +38006,7 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose>1.52894 -7.51738 0 0 -0 0</pose>
+      <pose>115.0 100.0 0.02 0 -0 0</pose>
     </model>
     <model name='landing_platform_green'>
       <link name='link_landing_platform_green'>
@@ -38108,7 +38108,7 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose>1.53632 -8.53167 0 0 -0 0</pose>
+      <pose>45.0 -10.0 0.01 0 -0 0</pose>
     </model>
     <model name='landing_platform_red'>
       <link name='link_landing_platform_red'>
@@ -38210,7 +38210,7 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose>0.514831 -8.52174 0 0 -0 0</pose>
+      <pose>-70.0 -20.0 0.02 0 -0 0</pose>
     </model>
     <model name='landing_platform_white'>
       <link name='link_landing_platform_white'>
@@ -38312,7 +38312,7 @@
       </link>
       <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose>-0.511734 -7.51205 0 0 -0 0</pose>
+      <pose>-30.0 70.0 0.01 0 -0 0</pose>
     </model>
   </world>
 </sdf>
