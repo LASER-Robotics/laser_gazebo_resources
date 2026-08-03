@@ -32620,10 +32620,6 @@
       <pose>0.0 0.0 0.02 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>1691 212000000</sim_time>
-      <real_time>1421 823663398</real_time>
-      <wall_time>1784223234 129593097</wall_time>
-      <iterations>1376738</iterations>
       <model name='ambulance_72'>
         <pose>63.99 7.06 0 0 0 -2.14</pose>
         <scale>1 1 1</scale>
