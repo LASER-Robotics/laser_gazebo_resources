@@ -1,34 +1,54 @@
 /*
  * Copyright 2015 Fadri Furrer, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Michael Burri, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Mina Kamel, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Janosch Nikolic, ASL, ETH Zurich, Switzerland
- * Copyright 2015 Markus Achtelik, ASL, ETH Zurich, Switzerland
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Modifications: classical quasi-steady blade-element-momentum rotor model
+ * with rigid blades and uniform induced velocity across the rotor disk.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
-
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Apache License, Version 2.0.
  */
 
+#include "laser_gazebo_resources/gazebo_motor_model.hpp"
 
-#include "laser_gazebo_resources/gazebo_motor_model.h"
-#include <ignition/math.hh>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <sstream>
+#include <string>
+#include <vector>
 
-using namespace boost::placeholders;
+#include <boost/bind/bind.hpp>
 
 namespace gazebo
 {
+namespace
+{
+
+constexpr double kPi                  = 3.14159265358979323846;
+constexpr double kEpsilon             = 1.0e-8;
+constexpr double kMinimumOmegaForBem  = 1.0e-3;
+constexpr int    kNewtonIterations    = 8;
+constexpr int    kBisectionIterations = 45;
+
+// These parameters define the BEM physics or numerical quadrature. They must
+// be explicitly provided when useBem is true; no physical defaults are used.
+constexpr std::array<const char *, 12> kRequiredBemParameters{
+    "commandMode", "bemRho", "propDiameterInches", "propPitchInches",   "propChordM",         "propNb",
+    "bemA",        "bemCd0", "bemXRoot",           "bemRadialStations", "bemAzimuthStations", "bemCorrectPitchInterpolation",
+};
+
+bool is_finite_positive(double value) {
+  return std::isfinite(value) && value > 0.0;
+}
+
+}  // namespace
 
 GazeboMotorModel::~GazeboMotorModel() {
-  updateConnection_->~Connection();
+  update_connection_.reset();
+  command_sub_.reset();
+  motor_failure_sub_.reset();
+  wind_sub_.reset();
+  motor_velocity_pub_.reset();
+  rotor_velocity_filter_.reset();
   use_pid_ = false;
 }
 
@@ -36,279 +56,660 @@ void GazeboMotorModel::InitializeParams() {
 }
 
 void GazeboMotorModel::Publish() {
-  turning_velocity_msg_.set_data(joint_->GetVelocity(0));
-  // FIXME: Commented out to prevent warnings about queue limit reached.
-  // motor_velocity_pub_->Publish(turning_velocity_msg_);
+  const double signed_omega = static_cast<double>(turning_direction_) * actual_motor_omega_;
+  turning_velocity_message_.set_data(signed_omega);
+
+  // The publisher is intentionally disabled to avoid queue-overflow warnings.
+  // motor_velocity_pub_->Publish(turning_velocity_message_);
 }
 
-void GazeboMotorModel::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
-  model_ = _model;
+void GazeboMotorModel::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
+  if (!model || !sdf) {
+    gzthrow("[gazebo_motor_model] Invalid model or SDF pointer.");
+  }
 
+  model_ = model;
   namespace_.clear();
 
-  if (_sdf->HasElement("robotNamespace"))
-    namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>();
-  else
-    gzerr << "[gazebo_motor_model] Please specify a robotNamespace.\n";
-  node_handle_ = transport::NodePtr(new transport::Node());
+  if (sdf->HasElement("robotNamespace")) {
+    namespace_ = sdf->GetElement("robotNamespace")->Get<std::string>();
+  } else {
+    gzerr << "[gazebo_motor_model] robotNamespace was not provided; "
+          << "using an empty namespace.\n";
+  }
+
+  node_handle_.reset(new transport::Node());
   node_handle_->Init(namespace_);
 
-  if (_sdf->HasElement("jointName"))
-    joint_name_ = _sdf->GetElement("jointName")->Get<std::string>();
-  else
-    gzerr << "[gazebo_motor_model] Please specify a jointName, where the rotor is attached.\n";
-  // Get the pointer to the joint.
-  joint_ = model_->GetJoint(joint_name_);
-  if (joint_ == NULL)
-    gzthrow("[gazebo_motor_model] Couldn't find specified joint \"" << joint_name_ << "\".");
+  if (!sdf->HasElement("jointName")) {
+    gzthrow("[gazebo_motor_model] Missing required parameter <jointName>.");
+  }
+  joint_name_ = sdf->GetElement("jointName")->Get<std::string>();
+  joint_      = model_->GetJoint(joint_name_);
+  if (!joint_) {
+    gzthrow("[gazebo_motor_model] Could not find joint '" << joint_name_ << "'.");
+  }
 
-  // setup joint control pid to control joint
-  if (_sdf->HasElement("joint_control_pid")) {
-    sdf::ElementPtr pid = _sdf->GetElement("joint_control_pid");
-    double          p   = 0.1;
-    if (pid->HasElement("p"))
-      p = pid->Get<double>("p");
-    double i = 0;
-    if (pid->HasElement("i"))
-      i = pid->Get<double>("i");
-    double d = 0;
-    if (pid->HasElement("d"))
-      d = pid->Get<double>("d");
-    double iMax = 0;
-    if (pid->HasElement("iMax"))
-      iMax = pid->Get<double>("iMax");
-    double iMin = 0;
-    if (pid->HasElement("iMin"))
-      iMin = pid->Get<double>("iMin");
-    double cmdMax = 3;
-    if (pid->HasElement("cmdMax"))
-      cmdMax = pid->Get<double>("cmdMax");
-    double cmdMin = -3;
-    if (pid->HasElement("cmdMin"))
-      cmdMin = pid->Get<double>("cmdMin");
-    pid_.Init(p, i, d, iMax, iMin, cmdMax, cmdMin);
+  if (sdf->HasElement("joint_control_pid")) {
+    const sdf::ElementPtr pid     = sdf->GetElement("joint_control_pid");
+    const double          p       = pid->HasElement("p") ? pid->Get<double>("p") : 0.1;
+    const double          i       = pid->HasElement("i") ? pid->Get<double>("i") : 0.0;
+    const double          d       = pid->HasElement("d") ? pid->Get<double>("d") : 0.0;
+    const double          i_max   = pid->HasElement("iMax") ? pid->Get<double>("iMax") : 0.0;
+    const double          i_min   = pid->HasElement("iMin") ? pid->Get<double>("iMin") : 0.0;
+    const double          cmd_max = pid->HasElement("cmdMax") ? pid->Get<double>("cmdMax") : 3.0;
+    const double          cmd_min = pid->HasElement("cmdMin") ? pid->Get<double>("cmdMin") : -3.0;
+    pid_.Init(p, i, d, i_max, i_min, cmd_max, cmd_min);
     use_pid_ = true;
+  }
+
+  if (!sdf->HasElement("linkName")) {
+    gzthrow("[gazebo_motor_model] Missing required parameter <linkName>.");
+  }
+  link_name_ = sdf->GetElement("linkName")->Get<std::string>();
+  link_      = model_->GetLink(link_name_);
+  if (!link_) {
+    gzthrow("[gazebo_motor_model] Could not find link '" << link_name_ << "'.");
+  }
+
+  if (!sdf->HasElement("motorNumber")) {
+    gzthrow("[gazebo_motor_model] Missing required parameter <motorNumber>.");
+  }
+  motor_number_ = sdf->GetElement("motorNumber")->Get<int>();
+
+  if (!sdf->HasElement("turningDirection")) {
+    gzthrow("[gazebo_motor_model] Missing required parameter <turningDirection>.");
+  }
+  const std::string direction = sdf->GetElement("turningDirection")->Get<std::string>();
+  if (direction == "cw") {
+    turning_direction_ = turning_direction::kClockwise;
+  } else if (direction == "ccw") {
+    turning_direction_ = turning_direction::kCounterClockwise;
   } else {
-    use_pid_ = false;
+    gzthrow("[gazebo_motor_model] turningDirection must be 'cw' or 'ccw'.");
   }
 
-  if (_sdf->HasElement("linkName"))
-    link_name_ = _sdf->GetElement("linkName")->Get<std::string>();
-  else
-    gzerr << "[gazebo_motor_model] Please specify a linkName of the rotor.\n";
-  link_ = model_->GetLink(link_name_);
-  if (link_ == NULL)
-    gzthrow("[gazebo_motor_model] Couldn't find specified link \"" << link_name_ << "\".");
-
-
-  if (_sdf->HasElement("motorNumber"))
-    motor_number_ = _sdf->GetElement("motorNumber")->Get<int>();
-  else
-    gzerr << "[gazebo_motor_model] Please specify a motorNumber.\n";
-
-  if (_sdf->HasElement("turningDirection")) {
-    std::string turning_direction = _sdf->GetElement("turningDirection")->Get<std::string>();
-    if (turning_direction == "cw")
-      turning_direction_ = turning_direction::CW;
-    else if (turning_direction == "ccw")
-      turning_direction_ = turning_direction::CCW;
-    else
-      gzerr << "[gazebo_motor_model] Please only use 'cw' or 'ccw' as turningDirection.\n";
-  } else
-    gzerr << "[gazebo_motor_model] Please specify a turning direction ('cw' or 'ccw').\n";
-
-  if (_sdf->HasElement("reversible")) {
-    reversible_ = _sdf->GetElement("reversible")->Get<bool>();
+  if (sdf->HasElement("reversible")) {
+    reversible_ = sdf->GetElement("reversible")->Get<bool>();
   }
 
-  getSdfParam<std::string>(_sdf, "commandSubTopic", command_sub_topic_, command_sub_topic_);
-  getSdfParam<std::string>(_sdf, "motorSpeedPubTopic", motor_speed_pub_topic_, motor_speed_pub_topic_);
+  getSdfParam<std::string>(sdf, "commandSubTopic", command_sub_topic_, command_sub_topic_);
+  getSdfParam<std::string>(sdf, "motorSpeedPubTopic", motor_speed_pub_topic_, motor_speed_pub_topic_);
+  getSdfParam<std::string>(sdf, "windSubTopic", wind_sub_topic_, wind_sub_topic_);
 
-  getSdfParam<double>(_sdf, "rotorDragCoefficient", rotor_drag_coefficient_, rotor_drag_coefficient_);
-  getSdfParam<double>(_sdf, "rollingMomentCoefficient", rolling_moment_coefficient_, rolling_moment_coefficient_);
-  getSdfParam<double>(_sdf, "maxRotVelocity", max_rot_velocity_, max_rot_velocity_);
-  getSdfParam<double>(_sdf, "motorConstant", motor_constant_, motor_constant_);
-  getSdfParam<double>(_sdf, "momentConstant", moment_constant_, moment_constant_);
+  getSdfParam<double>(sdf, "rotorDragCoefficient", rotor_drag_coefficient_, rotor_drag_coefficient_);
+  getSdfParam<double>(sdf, "rollingMomentCoefficient", rolling_moment_coefficient_, rolling_moment_coefficient_);
+  getSdfParam<double>(sdf, "maxRotVelocity", max_rot_velocity_, max_rot_velocity_);
+  getSdfParam<double>(sdf, "motorConstant", motor_constant_, motor_constant_);
+  getSdfParam<double>(sdf, "momentConstant", moment_constant_, moment_constant_);
+  getSdfParam<double>(sdf, "timeConstantUp", time_constant_up_, time_constant_up_);
+  getSdfParam<double>(sdf, "timeConstantDown", time_constant_down_, time_constant_down_);
+  getSdfParam<double>(sdf, "rotorVelocitySlowdownSim", rotor_velocity_slowdown_sim_, rotor_velocity_slowdown_sim_);
+  getSdfParam<double>(sdf, "motorQuadraticA", motor_quadratic_a_, motor_quadratic_a_);
+  getSdfParam<double>(sdf, "motorQuadraticB", motor_quadratic_b_, motor_quadratic_b_);
 
-  getSdfParam<double>(_sdf, "timeConstantUp", time_constant_up_, time_constant_up_);
-  getSdfParam<double>(_sdf, "timeConstantDown", time_constant_down_, time_constant_down_);
-  getSdfParam<double>(_sdf, "rotorVelocitySlowdownSim", rotor_velocity_slowdown_sim_, 10);
-  getSdfParam<double>(_sdf, "motorQuadraticA", motor_quadratic_a_, motor_quadratic_a_);
-  getSdfParam<double>(_sdf, "motorQuadraticB", motor_quadratic_b_, motor_quadratic_b_);
+  getSdfParam<bool>(sdf, "useBem", use_bem_, use_bem_);
+  getSdfParam<double>(sdf, "commandDeadband", command_deadband_, command_deadband_);
+  getSdfParam<double>(sdf, "commandMax", command_max_, command_max_);
 
-  std::cout << "Load A Parameter for Quadratic Motor Model: " << motor_quadratic_a_ << std::endl;
-  std::cout << "Load B Parameter for Quadratic Motor Model: " << motor_quadratic_b_ << std::endl;
-  /*
-  std::cout << "Subscribing to: " << motor_test_sub_topic_ << std::endl;
-  motor_sub_ = node_handle_->Subscribe<mav_msgs::msgs::MotorSpeed>("~/" + model_->GetName() + motor_test_sub_topic_, &GazeboMotorModel::testProto, this);
-  */
+  if (!is_finite_positive(rotor_velocity_slowdown_sim_)) {
+    gzthrow("[gazebo_motor_model] rotorVelocitySlowdownSim must be positive.");
+  }
+  if (!is_finite_positive(time_constant_up_) || !is_finite_positive(time_constant_down_)) {
+    gzthrow("[gazebo_motor_model] Motor time constants must be positive.");
+  }
+  if (!is_finite_positive(max_rot_velocity_)) {
+    gzthrow("[gazebo_motor_model] maxRotVelocity must be positive.");
+  }
 
-  // Set the maximumForce on the joint. This is deprecated from V5 on, and the joint won't move.
+  // Validate and load the complete BEM configuration before registering any
+  // callbacks. Throwing here prevents this plugin instance from starting.
+  if (use_bem_) {
+    validate_required_bem_parameters(sdf);
+    load_required_bem_parameters(sdf);
+    initialize_bem_model();
+  }
+
 #if GAZEBO_MAJOR_VERSION < 5
   joint_->SetMaxForce(0, max_force_);
 #endif
-  // Listen to the update event. This event is broadcast every
-  // simulation iteration.
-  updateConnection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboMotorModel::OnUpdate, this, _1));
+
+  rotor_velocity_filter_ = std::make_unique<FirstOrderFilter<double>>(time_constant_up_, time_constant_down_, 0.0);
+
+  update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboMotorModel::on_update, this, boost::placeholders::_1));
 
   command_sub_ =
-      node_handle_->Subscribe<mav_msgs::msgs::CommandMotorSpeed>("~/" + model_->GetName() + command_sub_topic_, &GazeboMotorModel::VelocityCallback, this);
-  // std::cout << "[gazebo_motor_model]: Subscribe to gz topic: "<< motor_failure_sub_topic_ << std::endl;
-  motor_failure_sub_ = node_handle_->Subscribe<msgs::Int>(motor_failure_sub_topic_, &GazeboMotorModel::MotorFailureCallback, this);
-  // FIXME: Commented out to prevent warnings about queue limit reached.
-  // motor_velocity_pub_ = node_handle_->Advertise<std_msgs::msgs::Float>("~/" + model_->GetName() + motor_speed_pub_topic_, 1);
-  wind_sub_ = node_handle_->Subscribe("~/" + wind_sub_topic_, &GazeboMotorModel::WindVelocityCallback, this);
+      node_handle_->Subscribe<mav_msgs::msgs::CommandMotorSpeed>("~/" + model_->GetName() + command_sub_topic_, &GazeboMotorModel::velocity_callback, this);
 
-  // Create the first order filter.
-  rotor_velocity_filter_.reset(new FirstOrderFilter<double>(time_constant_up_, time_constant_down_, ref_motor_rot_vel_));
-}
+  motor_failure_sub_ = node_handle_->Subscribe<msgs::Int>(motor_failure_sub_topic_, &GazeboMotorModel::motor_failure_callback, this);
 
-// Protobuf test
-/*
-void GazeboMotorModel::testProto(MotorSpeedPtr &msg) {
-  std::cout << "Received message" << std::endl;
-  std::cout << msg->motor_speed_size()<< std::endl;
-  for(int i; i < msg->motor_speed_size(); i++){
-    std::cout << msg->motor_speed(i) <<" ";
+  wind_sub_ = node_handle_->Subscribe("~/" + wind_sub_topic_, &GazeboMotorModel::wind_velocity_callback, this);
+
+  gzmsg << "[gazebo_motor_model] motor=" << motor_number_ << " model=" << (use_bem_ ? "BEM" : "quadratic")
+        << " commandMode=" << (use_bem_ ? command_mode_ : "legacy") << " maxOmega=" << max_rot_velocity_ << " rad/s\n";
+
+  if (use_bem_) {
+    gzmsg << "[gazebo_motor_model] BEM motor=" << motor_number_ << " R=" << bem_radius_ << " A=" << bem_area_ << " sigma=" << bem_sigma_
+          << " kT_static=" << bem_static_thrust_coefficient_ << " vi/omega=" << bem_static_induced_velocity_ratio_ << " quadrature=" << bem_radial_stations_
+          << "x" << bem_azimuth_stations_ << "\n";
   }
-  std::cout << std::endl;
 }
-*/
 
-// This gets called by the world update start event.
-void GazeboMotorModel::OnUpdate(const common::UpdateInfo& _info) {
-  sampling_time_ = _info.simTime.Double() - prev_sim_time_;
-  prev_sim_time_ = _info.simTime.Double();
+void GazeboMotorModel::validate_required_bem_parameters(const sdf::ElementPtr &sdf) const {
+  std::vector<std::string> missing_parameters;
+
+  for (const char *parameter_name : kRequiredBemParameters) {
+    if (!sdf->HasElement(parameter_name)) {
+      missing_parameters.emplace_back(parameter_name);
+    }
+  }
+
+  if (!missing_parameters.empty()) {
+    std::ostringstream message;
+    message << "[gazebo_motor_model] useBem=true, but required BEM SDF "
+            << "parameters are missing:";
+    for (const std::string &parameter_name : missing_parameters) {
+      message << " <" << parameter_name << ">";
+    }
+    message << ". The BEM plugin instance will not start.";
+    gzthrow(message.str());
+  }
+
+  const std::string command_mode = sdf->GetElement("commandMode")->Get<std::string>();
+  if (command_mode == "throttle") {
+    std::vector<std::string> missing_throttle_parameters;
+    if (!sdf->HasElement("motorQuadraticA")) {
+      missing_throttle_parameters.emplace_back("motorQuadraticA");
+    }
+    if (!sdf->HasElement("motorQuadraticB")) {
+      missing_throttle_parameters.emplace_back("motorQuadraticB");
+    }
+
+    if (!missing_throttle_parameters.empty()) {
+      std::ostringstream message;
+      message << "[gazebo_motor_model] commandMode=throttle requires:";
+      for (const std::string &parameter_name : missing_throttle_parameters) {
+        message << " <" << parameter_name << ">";
+      }
+      message << ". The BEM plugin instance will not start.";
+      gzthrow(message.str());
+    }
+  }
+}
+
+void GazeboMotorModel::load_required_bem_parameters(const sdf::ElementPtr &sdf) {
+  command_mode_                    = sdf->GetElement("commandMode")->Get<std::string>();
+  bem_rho_                         = sdf->GetElement("bemRho")->Get<double>();
+  bem_prop_diameter_inches_        = sdf->GetElement("propDiameterInches")->Get<double>();
+  bem_prop_pitch_inches_           = sdf->GetElement("propPitchInches")->Get<double>();
+  bem_prop_chord_m_                = sdf->GetElement("propChordM")->Get<double>();
+  bem_prop_nb_                     = sdf->GetElement("propNb")->Get<int>();
+  bem_cl0_                         = sdf->GetElement("bemA")->Get<double>();
+  bem_cd0_                         = sdf->GetElement("bemCd0")->Get<double>();
+  bem_x_root_                      = sdf->GetElement("bemXRoot")->Get<double>();
+  bem_radial_stations_             = sdf->GetElement("bemRadialStations")->Get<int>();
+  bem_azimuth_stations_            = sdf->GetElement("bemAzimuthStations")->Get<int>();
+  bem_correct_pitch_interpolation_ = sdf->GetElement("bemCorrectPitchInterpolation")->Get<bool>();
+}
+
+void GazeboMotorModel::initialize_bem_model() {
+  if (command_mode_ != "throttle" && command_mode_ != "omega" && command_mode_ != "thrust") {
+    gzthrow("[gazebo_motor_model] commandMode must be throttle, omega, or thrust.");
+  }
+
+  if (!is_finite_positive(bem_rho_) || !is_finite_positive(bem_prop_diameter_inches_) || !is_finite_positive(bem_prop_pitch_inches_) ||
+      !is_finite_positive(bem_prop_chord_m_) || bem_prop_nb_ <= 0 || !is_finite_positive(bem_cl0_) || !std::isfinite(bem_cd0_) || bem_cd0_ < 0.0) {
+    gzthrow("[gazebo_motor_model] One or more BEM parameters are invalid.");
+  }
+
+  if (!std::isfinite(bem_x_root_) || bem_x_root_ < 0.0 || bem_x_root_ >= 1.0) {
+    gzthrow("[gazebo_motor_model] bemXRoot must be in [0, 1).");
+  }
+  if (bem_radial_stations_ < 1 || bem_azimuth_stations_ < 4) {
+    gzthrow("[gazebo_motor_model] Invalid BEM quadrature size.");
+  }
+  if (command_mode_ == "throttle" && (!std::isfinite(motor_quadratic_a_) || std::abs(motor_quadratic_a_) < kEpsilon || !std::isfinite(motor_quadratic_b_))) {
+    gzthrow(
+        "[gazebo_motor_model] Invalid motor quadratic parameters for throttle "
+        "mode.");
+  }
+
+  bem_radius_ = 0.5 * bem_prop_diameter_inches_ * 0.0254;
+  bem_area_   = kPi * bem_radius_ * bem_radius_;
+  bem_sigma_  = static_cast<double>(bem_prop_nb_) * bem_prop_chord_m_ / (kPi * bem_radius_);
+
+  const double pitch_m   = bem_prop_pitch_inches_ * 0.0254;
+  const double theta_tip = std::atan2(pitch_m, 2.0 * kPi * bem_radius_);
+  bem_theta_root_        = std::atan2(pitch_m, 2.0 * kPi * bem_x_root_ * bem_radius_);
+  bem_theta_twist_       = theta_tip - bem_theta_root_;
+
+  const double reference_omega            = std::clamp(0.60 * max_rot_velocity_, kMinimumOmegaForBem, max_rot_velocity_);
+  bool         converged                  = false;
+  const double reference_induced_velocity = solve_induced_velocity_bisection(reference_omega, 0.0, 0.0, &converged);
+  if (!converged || !std::isfinite(reference_induced_velocity)) {
+    gzthrow("[gazebo_motor_model] Could not initialize static BEM inflow.");
+  }
+
+  const BemLoads reference_loads     = compute_blade_element_loads(reference_omega, 0.0, 0.0, reference_induced_velocity);
+  bem_static_thrust_coefficient_     = reference_loads.thrust / (reference_omega * reference_omega);
+  bem_static_induced_velocity_ratio_ = reference_induced_velocity / reference_omega;
+  induced_velocity_                  = 0.0;
+
+  if (!is_finite_positive(bem_static_thrust_coefficient_)) {
+    gzthrow("[gazebo_motor_model] Invalid static BEM thrust coefficient.");
+  }
+}
+
+void GazeboMotorModel::on_update(const common::UpdateInfo &info) {
+  sampling_time_ = info.simTime.Double() - prev_sim_time_;
+  prev_sim_time_ = info.simTime.Double();
+
+  if (!std::isfinite(sampling_time_) || sampling_time_ <= 0.0) {
+    return;
+  }
+
+  update_motor_failure();
   UpdateForcesAndMoments();
-  UpdateMotorFail();
   Publish();
 }
 
-void GazeboMotorModel::VelocityCallback(CommandMotorSpeedPtr& rot_velocities) {
-  if (rot_velocities->motor_speed_size() < motor_number_) {
-    std::cout << "You tried to access index " << motor_number_ << " of the MotorSpeed message array which is of size " << rot_velocities->motor_speed_size()
-              << "." << std::endl;
-  } else
-    ref_motor_rot_vel_ = std::min(static_cast<double>(rot_velocities->motor_speed(motor_number_)), static_cast<double>(max_rot_velocity_));
+void GazeboMotorModel::velocity_callback(const CommandMotorSpeedPtr &motor_speeds) {
+  if (!motor_speeds || motor_speeds->motor_speed_size() <= motor_number_) {
+    const int message_size = motor_speeds ? motor_speeds->motor_speed_size() : 0;
+    gzerr << "[gazebo_motor_model] Invalid motor index " << motor_number_ << " for message size " << message_size << ".\n";
+    return;
+  }
+
+  const double command = motor_speeds->motor_speed(motor_number_);
+
+  if (use_bem_ && command_mode_ == "throttle") {
+    ref_motor_rot_vel_ = std::clamp(command, 0.0, command_max_);
+  } else if (use_bem_ && command_mode_ == "thrust") {
+    ref_motor_rot_vel_ = std::max(command, 0.0);
+  } else {
+    const double lower_bound = reversible_ ? -max_rot_velocity_ : 0.0;
+    ref_motor_rot_vel_       = std::clamp(command, lower_bound, max_rot_velocity_);
+  }
 }
 
-void GazeboMotorModel::MotorFailureCallback(const boost::shared_ptr<const msgs::Int>& fail_msg) {
-  motor_Failure_Number_ = fail_msg->data();
+void GazeboMotorModel::motor_failure_callback(const boost::shared_ptr<const msgs::Int> &failure_message) {
+  if (failure_message) {
+    motor_failure_number_ = failure_message->data();
+  }
+}
+
+void GazeboMotorModel::wind_velocity_callback(const WindPtr &wind_message) {
+  if (!wind_message) {
+    return;
+  }
+
+  wind_velocity_ = ignition::math::Vector3d(wind_message->velocity().x(), wind_message->velocity().y(), wind_message->velocity().z());
 }
 
 void GazeboMotorModel::UpdateForcesAndMoments() {
-  motor_rot_vel_ = joint_->GetVelocity(0);
-  if (motor_rot_vel_ / (2 * M_PI) > 1 / (2 * sampling_time_)) {
-    gzerr << "Aliasing on motor [" << motor_number_
-          << "] might occur. Consider making smaller simulation time steps or raising the rotor_velocity_slowdown_sim_ param.\n";
+  if (use_bem_) {
+    update_bem_forces_and_moments();
+  } else {
+    update_legacy_forces_and_moments();
   }
-  /* double real_motor_velocity = motor_rot_vel_ * rotor_velocity_slowdown_sim_; */
-  double real_motor_velocity = motor_rot_vel_;
-  double force               = real_motor_velocity * std::abs(real_motor_velocity) * motor_constant_;
+}
+
+double GazeboMotorModel::command_to_desired_static_thrust(double command) const {
+  if (command <= command_deadband_) {
+    return 0.0;
+  }
+
+  const double root = (command - motor_quadratic_b_) / motor_quadratic_a_;
+  if (!std::isfinite(root) || root <= 0.0) {
+    return 0.0;
+  }
+  return root * root;
+}
+
+double GazeboMotorModel::command_to_target_omega(double command) const {
+  double target_omega = 0.0;
+
+  if (command_mode_ == "omega") {
+    target_omega = std::abs(command);
+  } else if (command_mode_ == "thrust") {
+    const double desired_thrust = std::max(command, 0.0);
+    target_omega                = std::sqrt(desired_thrust / std::max(bem_static_thrust_coefficient_, kEpsilon));
+  } else {
+    const double desired_thrust = command_to_desired_static_thrust(command);
+    target_omega                = std::sqrt(desired_thrust / std::max(bem_static_thrust_coefficient_, kEpsilon));
+  }
+
+  return std::clamp(target_omega, 0.0, max_rot_velocity_);
+}
+
+ignition::math::Vector3d GazeboMotorModel::relative_air_velocity_rotor_frame() const {
+#if GAZEBO_MAJOR_VERSION >= 9
+  const ignition::math::Vector3d velocity_world = link_->WorldLinearVel();
+  const ignition::math::Pose3d   pose_world     = link_->WorldCoGPose();
+#else
+  const ignition::math::Vector3d velocity_world  = ignitionFromGazeboMath(link_->GetWorldLinearVel());
+  const ignition::math::Pose3d   pose_world      = ignitionFromGazeboMath(link_->GetWorldCoGPose());
+#endif
+
+  const ignition::math::Vector3d relative_velocity_world = velocity_world - wind_velocity_;
+  return pose_world.Rot().Inverse().RotateVector(relative_velocity_world);
+}
+
+GazeboMotorModel::BemLoads GazeboMotorModel::compute_blade_element_loads(double omega, double horizontal_velocity, double vertical_velocity,
+                                                                         double induced_velocity) const {
+  BemLoads loads;
+  if (omega <= kMinimumOmegaForBem) {
+    return loads;
+  }
+
+  const double radial_step    = bem_radius_ * (1.0 - bem_x_root_) / static_cast<double>(bem_radial_stations_);
+  const double azimuth_step   = 2.0 * kPi / static_cast<double>(bem_azimuth_stations_);
+  const double prefactor      = bem_rho_ * bem_sigma_ * bem_radius_ / 4.0;
+  const double axial_velocity = vertical_velocity - induced_velocity;
+
+  double thrust_sum           = 0.0;
+  double horizontal_force_sum = 0.0;
+  double torque_sum           = 0.0;
+
+  for (int radial_index = 0; radial_index < bem_radial_stations_; ++radial_index) {
+    const double normalized_radius = bem_x_root_ + (static_cast<double>(radial_index) + 0.5) * (1.0 - bem_x_root_) / static_cast<double>(bem_radial_stations_);
+    const double local_radius      = normalized_radius * bem_radius_;
+
+    double local_pitch = 0.0;
+    if (bem_correct_pitch_interpolation_) {
+      local_pitch = bem_theta_root_ + ((normalized_radius - bem_x_root_) / (1.0 - bem_x_root_)) * bem_theta_twist_;
+    } else {
+      local_pitch = bem_theta_root_ + normalized_radius * bem_theta_twist_;
+    }
+
+    for (int azimuth_index = 0; azimuth_index < bem_azimuth_stations_; ++azimuth_index) {
+      const double azimuth      = (static_cast<double>(azimuth_index) + 0.5) * azimuth_step;
+      const double azimuth_sine = std::sin(azimuth);
+
+      const double tangential_velocity = omega * local_radius + horizontal_velocity * azimuth_sine;
+      const double inflow_angle        = std::atan2(axial_velocity, tangential_velocity);
+      const double angle_of_attack     = local_pitch + inflow_angle;
+      const double speed_squared       = tangential_velocity * tangential_velocity + axial_velocity * axial_velocity;
+
+      const double angle_sine       = std::sin(angle_of_attack);
+      const double angle_cosine     = std::cos(angle_of_attack);
+      const double lift_coefficient = bem_cl0_ * angle_sine * angle_cosine;
+      const double drag_coefficient = bem_cd0_ * angle_sine * angle_sine;
+
+      const double lift           = lift_coefficient * speed_squared;
+      const double drag           = drag_coefficient * speed_squared;
+      const double normal_force   = lift * std::cos(inflow_angle) + drag * std::sin(inflow_angle);
+      const double in_plane_force = -lift * std::sin(inflow_angle) + drag * std::cos(inflow_angle);
+
+      thrust_sum += normal_force;
+      horizontal_force_sum += in_plane_force * azimuth_sine;
+      torque_sum += in_plane_force * local_radius;
+    }
+  }
+
+  const double integration_scale = prefactor * radial_step * azimuth_step;
+  loads.thrust                   = integration_scale * thrust_sum;
+  loads.horizontal_force         = integration_scale * horizontal_force_sum;
+  loads.drag_torque              = integration_scale * torque_sum;
+  return loads;
+}
+
+double GazeboMotorModel::bem_residual(double omega, double horizontal_velocity, double vertical_velocity, double induced_velocity) const {
+  const BemLoads loads           = compute_blade_element_loads(omega, horizontal_velocity, vertical_velocity, induced_velocity);
+  const double   momentum_speed  = std::sqrt(horizontal_velocity * horizontal_velocity +
+                                             (vertical_velocity - induced_velocity) * (vertical_velocity - induced_velocity) + kEpsilon * kEpsilon);
+  const double   momentum_thrust = 2.0 * bem_rho_ * bem_area_ * induced_velocity * momentum_speed;
+  return loads.thrust - momentum_thrust;
+}
+
+double GazeboMotorModel::solve_induced_velocity(double omega, double horizontal_velocity, double vertical_velocity, double initial_guess,
+                                                bool *converged) const {
+  if (converged) {
+    *converged = false;
+  }
+  if (omega <= kMinimumOmegaForBem) {
+    if (converged) {
+      *converged = true;
+    }
+    return 0.0;
+  }
+
+  const double upper_bound = std::max(2.0 * omega * bem_radius_ + std::abs(vertical_velocity) + horizontal_velocity + 5.0, 10.0);
+
+  double induced_velocity = initial_guess;
+  if (!std::isfinite(induced_velocity) || induced_velocity <= 0.0) {
+    induced_velocity = bem_static_induced_velocity_ratio_ * omega;
+  }
+  induced_velocity = std::clamp(induced_velocity, 0.0, upper_bound);
+
+  for (int iteration = 0; iteration < kNewtonIterations; ++iteration) {
+    const double residual = bem_residual(omega, horizontal_velocity, vertical_velocity, induced_velocity);
+    const double scale    = 1.0 + std::abs(compute_blade_element_loads(omega, horizontal_velocity, vertical_velocity, induced_velocity).thrust);
+
+    if (std::abs(residual) <= 1.0e-7 * scale) {
+      if (converged) {
+        *converged = true;
+      }
+      return induced_velocity;
+    }
+
+    const double step_size       = std::max(1.0e-4, 1.0e-3 * std::max(1.0, induced_velocity));
+    const double lower_sample    = std::clamp(induced_velocity - step_size, 0.0, upper_bound);
+    const double upper_sample    = std::clamp(induced_velocity + step_size, 0.0, upper_bound);
+    const double sample_distance = upper_sample - lower_sample;
+    if (sample_distance <= kEpsilon) {
+      break;
+    }
+
+    const double derivative = (bem_residual(omega, horizontal_velocity, vertical_velocity, upper_sample) -
+                               bem_residual(omega, horizontal_velocity, vertical_velocity, lower_sample)) /
+                              sample_distance;
+    if (!std::isfinite(derivative) || std::abs(derivative) < 1.0e-9) {
+      break;
+    }
+
+    double       newton_step  = -residual / derivative;
+    const double maximum_step = 0.5 * std::max(1.0, induced_velocity);
+    newton_step               = std::clamp(newton_step, -maximum_step, maximum_step);
+
+    double       candidate          = std::clamp(induced_velocity + newton_step, 0.0, upper_bound);
+    const double candidate_residual = bem_residual(omega, horizontal_velocity, vertical_velocity, candidate);
+    if (std::abs(candidate_residual) > std::abs(residual)) {
+      candidate = std::clamp(induced_velocity + 0.5 * newton_step, 0.0, upper_bound);
+    }
+    induced_velocity = candidate;
+  }
+
+  return solve_induced_velocity_bisection(omega, horizontal_velocity, vertical_velocity, converged);
+}
+
+double GazeboMotorModel::solve_induced_velocity_bisection(double omega, double horizontal_velocity, double vertical_velocity, bool *converged) const {
+  if (converged) {
+    *converged = false;
+  }
+  if (omega <= kMinimumOmegaForBem) {
+    if (converged) {
+      *converged = true;
+    }
+    return 0.0;
+  }
+
+  double lower_bound    = 0.0;
+  double upper_bound    = std::max(2.0 * omega * bem_radius_ + std::abs(vertical_velocity) + horizontal_velocity + 5.0, 10.0);
+  double lower_residual = bem_residual(omega, horizontal_velocity, vertical_velocity, lower_bound);
+  double upper_residual = bem_residual(omega, horizontal_velocity, vertical_velocity, upper_bound);
+
+  for (int expansion = 0; expansion < 8 && lower_residual * upper_residual > 0.0; ++expansion) {
+    upper_bound *= 2.0;
+    upper_residual = bem_residual(omega, horizontal_velocity, vertical_velocity, upper_bound);
+  }
+
+  if (!std::isfinite(lower_residual) || !std::isfinite(upper_residual) || lower_residual * upper_residual > 0.0) {
+    return std::clamp(bem_static_induced_velocity_ratio_ * omega, 0.0, upper_bound);
+  }
+
+  for (int iteration = 0; iteration < kBisectionIterations; ++iteration) {
+    const double middle          = 0.5 * (lower_bound + upper_bound);
+    const double middle_residual = bem_residual(omega, horizontal_velocity, vertical_velocity, middle);
+    if (lower_residual * middle_residual <= 0.0) {
+      upper_bound    = middle;
+      upper_residual = middle_residual;
+    } else {
+      lower_bound    = middle;
+      lower_residual = middle_residual;
+    }
+  }
+
+  if (converged) {
+    *converged = true;
+  }
+  return 0.5 * (lower_bound + upper_bound);
+}
+
+void GazeboMotorModel::update_bem_forces_and_moments() {
+  const double target_omega = motor_failed_ ? 0.0 : command_to_target_omega(ref_motor_rot_vel_);
+
+  if (motor_failed_) {
+    actual_motor_omega_ = 0.0;
+  } else {
+    actual_motor_omega_ = rotor_velocity_filter_->updateFilter(target_omega, sampling_time_);
+  }
+  actual_motor_omega_ = std::clamp(actual_motor_omega_, 0.0, max_rot_velocity_);
+
+  const double signed_joint_velocity = static_cast<double>(turning_direction_) * actual_motor_omega_ / rotor_velocity_slowdown_sim_;
+  joint_->SetVelocity(0, signed_joint_velocity);
+  motor_rot_vel_ = static_cast<double>(turning_direction_) * actual_motor_omega_;
+
+  if (actual_motor_omega_ <= kMinimumOmegaForBem) {
+    induced_velocity_ = 0.0;
+    return;
+  }
+
+  // The rotor-link velocity already includes the local omega x r contribution.
+  const ignition::math::Vector3d velocity_rotor      = relative_air_velocity_rotor_frame();
+  const double                   velocity_x          = velocity_rotor.X();
+  const double                   velocity_y          = velocity_rotor.Y();
+  const double                   horizontal_velocity = std::hypot(velocity_x, velocity_y);
+  const double                   vertical_velocity   = -velocity_rotor.Z();
+
+  bool         converged               = false;
+  const double solved_induced_velocity = solve_induced_velocity(actual_motor_omega_, horizontal_velocity, vertical_velocity, induced_velocity_, &converged);
+
+  if (converged && std::isfinite(solved_induced_velocity) && solved_induced_velocity >= 0.0) {
+    induced_velocity_ = solved_induced_velocity;
+  } else {
+    induced_velocity_ = std::max(0.0, bem_static_induced_velocity_ratio_ * actual_motor_omega_);
+    ++bem_solver_failure_count_;
+    if (bem_solver_failure_count_ % 1000U == 1U) {
+      gzerr << "[gazebo_motor_model] BEM inflow solver fallback, motor " << motor_number_ << ", failures=" << bem_solver_failure_count_ << ".\n";
+    }
+  }
+
+  BemLoads loads = compute_blade_element_loads(actual_motor_omega_, horizontal_velocity, vertical_velocity, induced_velocity_);
+
+  if (!std::isfinite(loads.thrust) || !std::isfinite(loads.horizontal_force) || !std::isfinite(loads.drag_torque)) {
+    gzerr << "[gazebo_motor_model] Non-finite BEM load on motor " << motor_number_ << ". Force skipped.\n";
+    return;
+  }
+
   if (!reversible_) {
-    // Not allowed to have negative thrust.
+    loads.thrust = std::max(0.0, loads.thrust);
+  }
+
+  // Apply axial thrust and in-plane BEM force in the rotor-local frame.
+  ignition::math::Vector3d force_rotor(0.0, 0.0, loads.thrust);
+  if (horizontal_velocity > 1.0e-6) {
+    force_rotor.X(-loads.horizontal_force * velocity_x / horizontal_velocity);
+    force_rotor.Y(-loads.horizontal_force * velocity_y / horizontal_velocity);
+  }
+  link_->AddRelativeForce(force_rotor);
+
+  // Rotor reaction torque is opposite to the configured rotation direction.
+  const double reaction_torque_z = -static_cast<double>(turning_direction_) * loads.drag_torque;
+  apply_reaction_torque(reaction_torque_z);
+}
+
+void GazeboMotorModel::apply_reaction_torque(double torque_z_rotor_frame) {
+  const physics::Link_V parent_links = link_->GetParentJointsLinks();
+  if (parent_links.empty() || !parent_links.front()) {
+    gzerr << "[gazebo_motor_model] Rotor link has no parent link.\n";
+    return;
+  }
+
+#if GAZEBO_MAJOR_VERSION >= 9
+  const ignition::math::Pose3d pose_difference = link_->WorldCoGPose() - parent_links.front()->WorldCoGPose();
+#else
+  const ignition::math::Pose3d   pose_difference = ignitionFromGazeboMath(link_->GetWorldCoGPose() - parent_links.front()->GetWorldCoGPose());
+#endif
+
+  const ignition::math::Vector3d torque_rotor(0.0, 0.0, torque_z_rotor_frame);
+  const ignition::math::Vector3d torque_parent = pose_difference.Rot().RotateVector(torque_rotor);
+  parent_links.front()->AddRelativeTorque(torque_parent);
+}
+
+void GazeboMotorModel::update_legacy_forces_and_moments() {
+  const double filtered_command = motor_failed_ ? 0.0 : rotor_velocity_filter_->updateFilter(ref_motor_rot_vel_, sampling_time_);
+
+  const double reference_thrust = filtered_command > command_deadband_ ? std::pow((filtered_command - motor_quadratic_b_) / motor_quadratic_a_, 2.0) : 0.0;
+
+  const double target_omega = motor_constant_ > kEpsilon ? std::sqrt(std::max(0.0, reference_thrust) / motor_constant_) : 0.0;
+
+  actual_motor_omega_                = std::clamp(target_omega, 0.0, max_rot_velocity_);
+  const double signed_joint_velocity = static_cast<double>(turning_direction_) * actual_motor_omega_ / rotor_velocity_slowdown_sim_;
+  joint_->SetVelocity(0, signed_joint_velocity);
+  motor_rot_vel_ = static_cast<double>(turning_direction_) * actual_motor_omega_;
+
+  double force = actual_motor_omega_ * actual_motor_omega_ * motor_constant_;
+  if (!reversible_) {
     force = std::abs(force);
   }
-  /* std::cout << "motor force: " << force << std::endl; */
+  link_->AddRelativeForce(ignition::math::Vector3d(0.0, 0.0, force));
 
-  // scale down force linearly with forward speed
-  // XXX this has to be modelled better
-  //
 #if GAZEBO_MAJOR_VERSION >= 9
-  ignition::math::Vector3d body_velocity = link_->WorldLinearVel();
-  ignition::math::Vector3d joint_axis    = joint_->GlobalAxis(0);
+  const ignition::math::Vector3d velocity_world = link_->WorldLinearVel();
+  const ignition::math::Vector3d joint_axis     = joint_->GlobalAxis(0);
 #else
-  ignition::math::Vector3d body_velocity   = ignitionFromGazeboMath(link_->GetWorldLinearVel());
-  ignition::math::Vector3d joint_axis      = ignitionFromGazeboMath(joint_->GetGlobalAxis(0));
+  const ignition::math::Vector3d velocity_world  = ignitionFromGazeboMath(link_->GetWorldLinearVel());
+  const ignition::math::Vector3d joint_axis      = ignitionFromGazeboMath(joint_->GetGlobalAxis(0));
 #endif
 
-  ignition::math::Vector3d relative_wind_velocity          = body_velocity - wind_vel_;
-  ignition::math::Vector3d velocity_parallel_to_rotor_axis = (relative_wind_velocity.Dot(joint_axis)) * joint_axis;
-  double                   vel                             = velocity_parallel_to_rotor_axis.Length();
-  double                   scalar                          = 1 - vel / 25.0;  // at 25 m/s the rotor will not produce any force anymore
-  scalar                                                   = ignition::math::clamp(scalar, 0.0, 1.0);
-  // Apply a force to the link.
-  link_->AddRelativeForce(ignition::math::Vector3d(0, 0, force));
+  const ignition::math::Vector3d relative_velocity      = velocity_world - wind_velocity_;
+  const ignition::math::Vector3d velocity_perpendicular = relative_velocity - relative_velocity.Dot(joint_axis) * joint_axis;
 
-  // Forces from Philppe Martin's and Erwan Salaün's
-  // 2010 IEEE Conference on Robotics and Automation paper
-  // The True Role of Accelerometer Feedback in Quadrotor Control
-  // - \omega * \lambda_1 * V_A^{\perp}
-  ignition::math::Vector3d velocity_perpendicular_to_rotor_axis = relative_wind_velocity - (relative_wind_velocity.Dot(joint_axis)) * joint_axis;
-  ignition::math::Vector3d air_drag = -std::abs(real_motor_velocity) * rotor_drag_coefficient_ * velocity_perpendicular_to_rotor_axis;
-  // Apply air_drag to link.
+  const ignition::math::Vector3d air_drag = -std::abs(actual_motor_omega_) * rotor_drag_coefficient_ * velocity_perpendicular;
   link_->AddForce(air_drag);
-  // Moments
-  // Getting the parent link, such that the resulting torques can be applied to it.
-  physics::Link_V parent_links = link_->GetParentJointsLinks();
-  // The tansformation from the parent_link to the link_.
-#if GAZEBO_MAJOR_VERSION >= 9
-  ignition::math::Pose3d pose_difference = link_->WorldCoGPose() - parent_links.at(0)->WorldCoGPose();
-#else
-  ignition::math::Pose3d   pose_difference = ignitionFromGazeboMath(link_->GetWorldCoGPose() - parent_links.at(0)->GetWorldCoGPose());
-#endif
-  ignition::math::Vector3d drag_torque(0, 0, -turning_direction_ * force * moment_constant_);
-  // Transforming the drag torque into the parent frame to handle arbitrary rotor orientations.
-  ignition::math::Vector3d drag_torque_parent_frame = pose_difference.Rot().RotateVector(drag_torque);
-  parent_links.at(0)->AddRelativeTorque(drag_torque_parent_frame);
 
-  ignition::math::Vector3d rolling_moment;
-  // - \omega * \mu_1 * V_A^{\perp}
-  rolling_moment = -std::abs(real_motor_velocity) * turning_direction_ * rolling_moment_coefficient_ * velocity_perpendicular_to_rotor_axis;
-  parent_links.at(0)->AddTorque(rolling_moment);
-  // Apply the filter on the motor's velocity.
-  double ref_motor_rot_vel;
-  ref_motor_rot_vel = rotor_velocity_filter_->updateFilter(ref_motor_rot_vel_, sampling_time_);
+  const double reaction_torque_z = -static_cast<double>(turning_direction_) * force * moment_constant_;
+  apply_reaction_torque(reaction_torque_z);
 
-#if 0  // FIXME: disable PID for now, it does not play nice with the PX4 CI system.
-  if (use_pid_)
-  {
-    double err = joint_->GetVelocity(0) - turning_direction_ * ref_motor_rot_vel / rotor_velocity_slowdown_sim_;
-    double rotorForce = pid_.Update(err, sampling_time_);
-    joint_->SetForce(0, rotorForce);
-    // gzerr << "rotor " << joint_->GetName() << " : " << rotorForce << "\n";
-  }
-  else
-  {
-#if GAZEBO_MAJOR_VERSION >= 7
-    // Not desirable to use SetVelocity for parts of a moving model
-    // impact on rest of the dynamic system is non-physical.
-    joint_->SetVelocity(0, turning_direction_ * ref_motor_rot_vel / rotor_velocity_slowdown_sim_);
-#elif GAZEBO_MAJOR_VERSION >= 6
-    // Not ideal as the approach could result in unrealistic impulses, and
-    // is only available in ODE
-    joint_->SetParam("fmax", 0, 2.0);
-    joint_->SetParam("vel", 0, turning_direction_ * ref_motor_rot_vel / rotor_velocity_slowdown_sim_);
-#endif
-  }
-#else
-  auto ref_motor_thrust = pow((ref_motor_rot_vel - motor_quadratic_b_) / motor_quadratic_a_, 2);
-  joint_->SetVelocity(0, turning_direction_ * (ref_motor_rot_vel > 0.001 ? sqrt(ref_motor_thrust / motor_constant_) : 0.0));
-#endif /* if 0 */
-}
+  const ignition::math::Vector3d rolling_moment =
+      -std::abs(actual_motor_omega_) * static_cast<double>(turning_direction_) * rolling_moment_coefficient_ * velocity_perpendicular;
 
-void GazeboMotorModel::UpdateMotorFail() {
-  if (motor_number_ == motor_Failure_Number_ - 1) {
-    // motor_constant_ = 0.0;
-    joint_->SetVelocity(0, 0);
-    if (screen_msg_flag) {
-      std::cout << "Motor number [" << motor_Failure_Number_ << "] failed!  [Motor thrust = 0]" << std::endl;
-      tmp_motor_num = motor_Failure_Number_;
-
-      screen_msg_flag = 0;
-    }
-  } else if (motor_Failure_Number_ == 0 && motor_number_ == tmp_motor_num - 1) {
-    if (!screen_msg_flag) {
-      // motor_constant_ = kDefaultMotorConstant;
-      std::cout << "Motor number [" << tmp_motor_num << "] running! [Motor thrust = (default)]" << std::endl;
-      screen_msg_flag = 1;
-    }
+  const physics::Link_V parent_links = link_->GetParentJointsLinks();
+  if (!parent_links.empty() && parent_links.front()) {
+    parent_links.front()->AddTorque(rolling_moment);
   }
 }
 
-void GazeboMotorModel::WindVelocityCallback(WindPtr& msg) {
-  wind_vel_ = ignition::math::Vector3d(msg->velocity().x(), msg->velocity().y(), msg->velocity().z());
+void GazeboMotorModel::update_motor_failure() {
+  const bool failed_now = motor_number_ == motor_failure_number_ - 1;
+
+  if (failed_now == motor_failed_) {
+    return;
+  }
+
+  motor_failed_          = failed_now;
+  rotor_velocity_filter_ = std::make_unique<FirstOrderFilter<double>>(time_constant_up_, time_constant_down_, 0.0);
+  actual_motor_omega_    = 0.0;
+  induced_velocity_      = 0.0;
+
+  if (motor_failed_) {
+    gzerr << "[gazebo_motor_model] Motor " << motor_number_ << " failed.\n";
+  } else {
+    gzmsg << "[gazebo_motor_model] Motor " << motor_number_ << " recovered.\n";
+  }
 }
 
-GZ_REGISTER_MODEL_PLUGIN(GazeboMotorModel);
+GZ_REGISTER_MODEL_PLUGIN(GazeboMotorModel)
+
 }  // namespace gazebo

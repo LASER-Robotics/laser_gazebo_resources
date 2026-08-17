@@ -117,6 +117,7 @@ static const std::string kDefaultNamespace = "";
 static const std::string kDefaultMotorVelocityReferencePubTopic = "/gazebo/command/motor_speed";
 
 static const std::string kDefaultImuTopic = "/imu";
+static const std::string kDefaultLidarTopic = "/lidar";
 static const std::string kDefaultOpticalFlowTopic = "/px4flow/link/opticalFlow";
 static const std::string kDefaultIRLockTopic = "/camera/link/irlock";
 static const std::string kDefaultTargetGpsTopic = "/land_pad/link/gps_target";
@@ -198,7 +199,8 @@ private:
   void GpsCallback(GpsPtr& gps_msg, const int& id);
   void TargetGpsCallback(GpsPtr& gps_msg);
   void GroundtruthCallback(GtPtr& groundtruth_msg);
-  void LidarCallback(LidarPtr& lidar_msg, const int& id);
+  /* void LidarCallback(LidarPtr& lidar_msg, const int& id); */
+  void LidarCallback(LidarPtr& lidar_msg);
   void SonarCallback(SonarPtr& sonar_msg, const int& id);
   void AirspeedCallback(AirspeedPtr& airspeed_msg, const int& id);
   void OpticalFlowCallback(OpticalFlowPtr& opticalFlow_msg);
@@ -249,6 +251,7 @@ private:
   transport::PublisherPtr joint_control_pub_[n_out_max];
 
   transport::SubscriberPtr imu_sub_{nullptr};
+  transport::SubscriberPtr lidar_sub_{nullptr};
   transport::SubscriberPtr opticalFlow_sub_{nullptr};
   transport::SubscriberPtr irlock_sub_{nullptr};
   transport::SubscriberPtr target_gps_sub_{nullptr};
@@ -262,6 +265,7 @@ private:
   Sensor_M sensor_map_{}; // Map of sensor SubscriberPtr, IDs and orientations
 
   std::string imu_sub_topic_{kDefaultImuTopic};
+  std::string lidar_sub_topic_{kDefaultLidarTopic};
   std::string opticalFlow_sub_topic_{kDefaultOpticalFlowTopic};
   std::string irlock_sub_topic_{kDefaultIRLockTopic};
   std::string target_gps_sub_topic_{kDefaultTargetGpsTopic};
@@ -303,6 +307,5 @@ private:
 
   bool hil_mode_{false};
   bool hil_state_level_{false};
-
 };
 }
