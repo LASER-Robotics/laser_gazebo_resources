@@ -45,6 +45,8 @@ laser_msgs
 image_transport
 camera_info_manager
 TBB
+laser_usv_msgs
+laser_rahcm_simulation
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -68,6 +70,8 @@ if(NOT PROTOBUF_IMPORT_DIRS)
   set(PROTOBUF_IMPORT_DIRS "/usr/include/gazebo-11/gazebo/msgs/proto")
   set(GAZEBO_MSG_INCLUDE_DIRS "/usr/include/gazebo-11/gazebo/msgs")
 endif()
+
+message(STATUS "Gazebo Proto Path: ${PROTOBUF_IMPORT_DIRS}")
 
 pkg_check_modules(PROTOBUF protobuf)
 
@@ -121,13 +125,6 @@ target_link_libraries(proto_msg
   ${GAZEBO_LIBRARIES}
 )
 
-ament_target_dependencies(link_static_tf_publisher rclcpp tf2_ros geometry_msgs)
-target_include_directories(link_static_tf_publisher PUBLIC
-  ${GAZEBO_INCLUDE_DIRS}
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(link_static_tf_publisher ${GAZEBO_LIBRARIES})
 
 macro(add_gazebo_plugin_target target_name)
   cmake_parse_arguments(ARG "" "" "SRCS;DEPENDS;LIBS" ${ARGN})
@@ -157,7 +154,7 @@ add_gazebo_plugin_target(LivoxPluginGazebo
 add_gazebo_plugin_target(MotorPluginGazebo
   SRCS src/gazebo_motor_model.cpp
   DEPENDS ${dependencies}
-  LIBS ${Boost_LIBRARIES} proto_msg
+  LIBS ${Boost_LIBRARIES} proto_msg 
 )
 
 add_gazebo_plugin_target(LidarPluginGazebo
@@ -181,19 +178,19 @@ add_gazebo_plugin_target(ArdupilotPluginGazebo
 add_gazebo_plugin_target(RealsensePluginGazebo
   SRCS src/gazebo_ros_realsense.cpp src/perlin_noise.cpp
   DEPENDS ${dependencies}
-  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
+  LIBS ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
 )
 
 add_gazebo_plugin_target(VelodynePluginGazebo
   SRCS src/gazebo_ros_velodyne_laser.cpp
   DEPENDS ${dependencies}
-  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
+  LIBS ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
 )
 
 add_gazebo_plugin_target(ImuPluginGazebo
   SRCS src/gazebo_ros_imu_sensor.cpp
   DEPENDS ${dependencies}
-  LIBS ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
+  LIBS ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
 )
 
 add_gazebo_plugin_target(P3dPluginGazebo
@@ -207,21 +204,6 @@ ament_target_dependencies(csv_main rclcpp)
 target_include_directories(csv_main PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-)
-
-add_library(MotorPluginGazebo SHARED
-    src/gazebo_motor_model.cpp
-)
-target_include_directories(MotorPluginGazebo PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(MotorPluginGazebo
-    ${Boost_LIBRARIES}
-    ${GAZEBO_LIBRARIES}
-    TBB::tbb
-    proto_msg
 )
 
 add_library(MavlinkPluginGazebo SHARED
@@ -250,7 +232,6 @@ install(TARGETS
   proto_msg
   link_static_tf_publisher
   LivoxPluginGazebo
-  MotorPluginGazebo
   Px4PluginGazebo
   ArdupilotPluginGazebo
   LidarPluginGazebo
@@ -258,6 +239,7 @@ install(TARGETS
   ImuPluginGazebo
   P3dPluginGazebo
   RealsensePluginGazebo
+  MavlinkPluginGazebo
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -280,7 +262,8 @@ ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/laser_gazebo_reso
 
 ament_export_dependencies(
   rosidl_default_runtime rclcpp pcl_conversions tf2 tf2_ros tf2_msgs
-  geometry_msgs std_msgs sensor_msgs gazebo_ros rclcpp laser_rahcm_simulation
+  geometry_msgs std_msgs sensor_msgs gazebo_ros rclcpp laser_rahcm_simulation laser_msgs
+  laser_usv_msgs
 )
 
 ament_package()

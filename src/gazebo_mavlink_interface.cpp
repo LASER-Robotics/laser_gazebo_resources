@@ -201,7 +201,6 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
 
   getSdfParam<std::string>(_sdf, "motorSpeedCommandPubTopic", motor_velocity_reference_pub_topic_, motor_velocity_reference_pub_topic_);
   getSdfParam<std::string>(_sdf, "imuSubTopic", imu_sub_topic_, imu_sub_topic_);
-  getSdfParam<std::string>(_sdf, "lidarSubTopic", lidar_sub_topic_, lidar_sub_topic_);
   getSdfParam<std::string>(_sdf, "visionSubTopic", vision_sub_topic_, vision_sub_topic_);
   getSdfParam<std::string>(_sdf, "opticalFlowSubTopic", opticalFlow_sub_topic_, opticalFlow_sub_topic_);
   getSdfParam<std::string>(_sdf, "irlockSubTopic", irlock_sub_topic_, irlock_sub_topic_);
@@ -221,13 +220,13 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
     pids_[i].Init(0, 0, 0, 0, 0, 0, 0);
     input_reference_[i] = 0;
   }
-	
-	int channels_count = 0;
+
+  int channels_count = 0;
   if (_sdf->HasElement("control_channels")) {
     sdf::ElementPtr control_channels = _sdf->GetElement("control_channels");
     sdf::ElementPtr channel          = control_channels->GetElement("channel");
     while (channel) {
-			channels_count++;
+      channels_count++;
       if (channel->HasElement("input_index")) {
         int index = channel->Get<int>("input_index");
         if (index < n_out_max) {
@@ -303,7 +302,8 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
     }
   }
 
-	gzmsg << "Found " << channels_count << " channels." << "\n";
+  gzmsg << "Found " << channels_count << " channels."
+        << "\n";
 
   if (_sdf->HasElement("hil_mode")) {
     hil_mode_ = _sdf->GetElement("hil_mode")->Get<bool>();
@@ -386,12 +386,11 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
   // simulation iteration.
   updateConnection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboMavlinkInterface::OnUpdate, this, _1));
 
-  // Listen to Ctrl+C / SIGINT
+  // Listen to Ctrl+C / SIGINT.
   sigIntConnection_ = event::Events::ConnectSigInt(boost::bind(&GazeboMavlinkInterface::onSigInt, this));
 
   // Subscribe to messages of other plugins.
   imu_sub_         = node_handle_->Subscribe("~/" + model_->GetName() + imu_sub_topic_, &GazeboMavlinkInterface::ImuCallback, this);
-  lidar_sub_         = node_handle_->Subscribe("~/" + model_->GetName() + lidar_sub_topic_, &GazeboMavlinkInterface::LidarCallback, this);
   opticalFlow_sub_ = node_handle_->Subscribe("~/" + model_->GetName() + opticalFlow_sub_topic_, &GazeboMavlinkInterface::OpticalFlowCallback, this);
   irlock_sub_      = node_handle_->Subscribe("~/" + model_->GetName() + irlock_sub_topic_, &GazeboMavlinkInterface::IRLockCallback, this);
   target_gps_sub_  = node_handle_->Subscribe("~/" + target_gps_sub_topic_, &GazeboMavlinkInterface::TargetGpsCallback, this);
@@ -423,7 +422,7 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
   }
 
   // Create subscriptions to the distance sensors
-  /* CreateSensorSubscription(&GazeboMavlinkInterface::LidarCallback, this, joints, nested_model, kDefaultLidarModelNaming); */
+  CreateSensorSubscription(&GazeboMavlinkInterface::LidarCallback, this, joints, nested_model, kDefaultLidarModelNaming);
   CreateSensorSubscription(&GazeboMavlinkInterface::SonarCallback, this, joints, nested_model, kDefaultSonarModelNaming);
   CreateSensorSubscription(&GazeboMavlinkInterface::GpsCallback, this, joints, nested_model, kDefaultGPSModelNaming);
   CreateSensorSubscription(&GazeboMavlinkInterface::AirspeedCallback, this, joints, nested_model, kDefaultAirspeedModelJointNaming);
@@ -526,20 +525,21 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
 
   mavlink_interface_->Load();
 
-	on_water.resize(channels_count);
+  on_water.resize(channels_count);
 
   node_ = gazebo_ros::Node::Get(_sdf);
   // TODO: Get topics from sdf
-  sub_wheel_status = node_->create_subscription<laser_usv_msgs::msg::WheelStatusArray>("/rahcm/wheel_status", 1, std::bind(&GazeboMavlinkInterface::SubWheelStatus, this, std::placeholders::_1));
+  sub_wheel_status = node_->create_subscription<laser_usv_msgs::msg::WheelStatusArray>(
+      "/rahcm/wheel_status", 1, std::bind(&GazeboMavlinkInterface::SubWheelStatus, this, std::placeholders::_1));
   pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_front_wheel_cmd", 1));
   pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/left_rear_wheel_cmd", 1));
   pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_front_wheel_cmd", 1));
   pub_thrusters_.push_back(node_->create_publisher<std_msgs::msg::Float32>("/thruster/right_rear_wheel_cmd", 1));
 }
 
-void GazeboMavlinkInterface::SubWheelStatus(const laser_usv_msgs::msg::WheelStatusArray & _msg){
-	for (size_t i = 0; i < _msg.wheel.size(); i++)
-		on_water[i] = _msg.wheel[i].on_water;
+void GazeboMavlinkInterface::SubWheelStatus(const laser_usv_msgs::msg::WheelStatusArray& _msg) {
+  for (size_t i = 0; i < _msg.wheel.size(); i++)
+    on_water[i] = _msg.wheel[i].on_water;
 }
 
 // This gets called by the world update start event.
@@ -594,7 +594,7 @@ void GazeboMavlinkInterface::OnUpdate(const common::UpdateInfo& /*_info*/) {
   }
 
   handle_actuator_controls();
- 	handle_control(dt);
+  handle_control(dt);
 
   if (received_first_actuator_) {
     mav_msgs::msgs::CommandMotorSpeed turning_velocities_msg;
@@ -797,16 +797,14 @@ void GazeboMavlinkInterface::GroundtruthCallback(GtPtr& groundtruth_msg) {
   // the FCU
 }
 
-/* void GazeboMavlinkInterface::LidarCallback(LidarPtr& lidar_message, const int& id) { */
-void GazeboMavlinkInterface::LidarCallback(LidarPtr& lidar_message) {
+void GazeboMavlinkInterface::LidarCallback(LidarPtr& lidar_message, const int& id) {
   mavlink_distance_sensor_t sensor_msg;
   sensor_msg.time_boot_ms     = lidar_message->time_usec() / 1e3;           // [ms]
   sensor_msg.min_distance     = lidar_message->min_distance() * 100.0;      // [cm]
   sensor_msg.max_distance     = lidar_message->max_distance() * 100.0;      // [cm]
   sensor_msg.current_distance = lidar_message->current_distance() * 100.0;  // [cm]
   sensor_msg.type             = 0;
-  /* sensor_msg.id               = id; */
-  sensor_msg.id               = 0;
+  sensor_msg.id               = id;
   sensor_msg.covariance       = 0;
   sensor_msg.horizontal_fov   = lidar_message->h_fov();
   sensor_msg.vertical_fov     = lidar_message->v_fov();
@@ -818,7 +816,7 @@ void GazeboMavlinkInterface::LidarCallback(LidarPtr& lidar_message) {
   ignition::math::Quaterniond q_bs;
   for (Sensor_M::iterator it = sensor_map_.begin(); it != sensor_map_.end(); ++it) {
     // check the ID of the sensor on the sensor map and apply the respective rotation
-    if (it->second.first == sensor_msg.id) {
+    if (it->second.first == id) {
       q_bs = (it->second.second * q_ls).Inverse();
     }
   }
@@ -1132,7 +1130,7 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
 #if GAZEBO_MAJOR_VERSION >= 9
   last_actuator_time_ = world_->SimTime();
 #else
-  last_actuator_time_ = world_->GetSimTime();
+  last_actuator_time_                     = world_->GetSimTime();
 #endif
 
   for (unsigned i = 0; i < n_out_max; i++) {
@@ -1142,7 +1140,7 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
   input_reference_.resize(n_out_max);
 
   Eigen::VectorXd actuator_controls = mavlink_interface_->GetActuatorControls();
-	
+
   if (actuator_controls.size() < n_out_max)
     return;  // TODO: Handle this properly
   for (int i = 0; i < input_reference_.size(); i++) {
@@ -1163,9 +1161,9 @@ void GazeboMavlinkInterface::handle_control(double _dt) {
   bool armed = mavlink_interface_->GetArmedState();
 
   for (int i = 0; i < input_reference_.size(); i++) {
-		if (joints_[i] == nullptr){
-			return;
-		}
+    if (joints_[i] == nullptr) {
+      return;
+    }
 
     if (joints_[i] || joint_control_type_[i] == "position_gztopic") {
       double target = input_reference_[i];
@@ -1174,21 +1172,20 @@ void GazeboMavlinkInterface::handle_control(double _dt) {
         double err     = current - target;
         double force   = pids_[i].Update(err, _dt);
 
-				thrust_msg_.data = force;
+        thrust_msg_.data = force;
 
-				if (on_water[i] && armed) {
-					pub_thrusters_[i]->publish(thrust_msg_);
-				}
-			  else {	
-					joints_[i]->SetForce(0, force);
-				}
+        if (on_water[i] && armed) {
+          pub_thrusters_[i]->publish(thrust_msg_);
+        } else {
+          joints_[i]->SetForce(0, force);
+        }
 
       } else if (joint_control_type_[i] == "position") {
 
 #if GAZEBO_MAJOR_VERSION >= 9
         double current = joints_[i]->Position(0);
 #else
-        double current = joints_[i]->GetAngle(0).Radian();
+        double                 current = joints_[i]->GetAngle(0).Radian();
 #endif
 
         double err = current - target;
