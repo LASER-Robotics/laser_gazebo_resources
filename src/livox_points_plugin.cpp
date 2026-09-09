@@ -5,7 +5,16 @@
 namespace gazebo
 {
 
-  LivoxPointsPlugin::LivoxPointsPlugin() {}
+  LivoxPointsPlugin::LivoxPointsPlugin()
+      : currStartIndex(0),
+        maxPointSize(0),
+        samplesStep(0),
+        downSample(1),
+        publishPointCloudType(SENSOR_MSG_POINT_CLOUD2_LIVOXPOINTXYZRTLT),
+        max_range_(0.0),
+        min_range_(0.0)
+  {
+  }
 
   LivoxPointsPlugin::~LivoxPointsPlugin()
   {

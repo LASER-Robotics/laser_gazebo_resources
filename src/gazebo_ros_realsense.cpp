@@ -58,7 +58,7 @@ constexpr char kInfrared2CameraSuffix[]      = "infra2";
 constexpr char kBaseFrameSuffix[]            = "link";
 
 constexpr unsigned int kDepthPublishFrequencyHz     = 60U;
-constexpr unsigned int kColorPublishFrequencyHz     = 30U;
+constexpr unsigned int kColorPublishFrequencyHz     = 60U;
 constexpr unsigned int kInfrared1PublishFrequencyHz = 60U;
 constexpr unsigned int kInfrared2PublishFrequencyHz = 60U;
 
@@ -83,6 +83,11 @@ public:
     const std::string camera_name   = sdf->HasElement("camera_name") ? sdf->Get<std::string>("camera_name") : "rgbd";
     const std::string camera_suffix = sdf->HasElement("camera_suffix") ? sdf->Get<std::string>("camera_suffix") : "";
     const std::string ros_namespace = sdf->HasElement("namespace") ? sdf->Get<std::string>("namespace") : "";
+
+    getSdfParam(sdf, "enable_color", enable_color_, true);
+    getSdfParam(sdf, "enable_depth", enable_depth_, true);
+    getSdfParam(sdf, "enable_infra", enable_infra_, true);
+    getSdfParam(sdf, "enable_pointcloud", enable_pointcloud_, true);
 
     ConfigureSensorNames(ros_namespace, camera_name, camera_suffix);
     if (!ConfigureSensors(sensor_manager)) {
@@ -112,7 +117,8 @@ public:
 
   /// Convert the simulated floating-point depth image to a 16-bit depth image.
   virtual void OnNewDepthFrame(const rendering::CameraPtr camera, const transport::PublisherPtr publisher) {
-    (void)camera;
+    if (!depth_camera_)
+      return;
 
     const unsigned int image_width  = depth_camera_->ImageWidth();
     const unsigned int image_height = depth_camera_->ImageHeight();
@@ -133,7 +139,8 @@ public:
 
   /// Apply the configured sensor artifacts before publishing the depth image.
   virtual void OnNewDepthFrameRealistic(const rendering::CameraPtr camera, const transport::PublisherPtr publisher) {
-    (void)camera;
+    if (!depth_camera_)
+      return;
 
     const unsigned int image_width  = depth_camera_->ImageWidth();
     const unsigned int image_height = depth_camera_->ImageHeight();
@@ -200,6 +207,11 @@ protected:
   std::string infrared_stereo_camera_plugin_name_;
   std::string infrared1_camera_plugin_name_;
   std::string infrared2_camera_plugin_name_;
+
+  bool enable_color_{true};
+  bool enable_depth_{true};
+  bool enable_infra_{true};
+  bool enable_pointcloud_{true};
 
   bool         use_realistic_{false};
   unsigned int scaling_{4U};
@@ -269,25 +281,49 @@ private:
   }
 
   bool ConfigureSensors(sensors::SensorManager *sensor_manager) {
-    const auto depth_sensor    = sensor_manager->GetSensor(depth_camera_plugin_name_);
-    const auto color_sensor    = sensor_manager->GetSensor(color_camera_plugin_name_);
-    const auto infrared_sensor = sensor_manager->GetSensor(infrared_stereo_camera_plugin_name_);
-
-    if (!depth_sensor || !color_sensor || !infrared_sensor) {
-      gzerr << "RealSensePlugin: One or more sensors not found!" << std::endl;
-      return false;
+    // Só tentamos agarrar os ponteiros dos sensores que estão ativos.
+    if (enable_depth_) {
+      const auto depth_sensor = sensor_manager->GetSensor(depth_camera_plugin_name_);
+      if (!depth_sensor) {
+        gzerr << "RealSensePlugin: Depth sensor not found!" << std::endl;
+        return false;
+      }
+      depth_camera_ = std::dynamic_pointer_cast<sensors::DepthCameraSensor>(depth_sensor)->DepthCamera();
     }
 
-    // Keep the original sensor-type assumptions. The SDF configuration must
-    // provide the expected Gazebo sensor types.
-    depth_camera_           = std::dynamic_pointer_cast<sensors::DepthCameraSensor>(depth_sensor)->DepthCamera();
-    infrared_stereo_camera_ = std::dynamic_pointer_cast<sensors::MultiCameraSensor>(infrared_sensor);
-    color_camera_           = std::dynamic_pointer_cast<sensors::CameraSensor>(color_sensor)->Camera();
+    if (enable_color_) {
+      const auto color_sensor = sensor_manager->GetSensor(color_camera_plugin_name_);
+      if (!color_sensor) {
+        gzerr << "RealSensePlugin: Color sensor not found!" << std::endl;
+        return false;
+      }
+      const auto camera_sensor = std::dynamic_pointer_cast<sensors::CameraSensor>(color_sensor);
+      if (!camera_sensor) {
+        gzerr << "RealSensePlugin: Color sensor has an unexpected type!" << std::endl;
+        return false;
+      }
+
+      color_camera_ = camera_sensor->Camera();
+
+      camera_sensor->SetActive(true);
+    }
+
+    if (enable_infra_) {
+      const auto infrared_sensor = sensor_manager->GetSensor(infrared_stereo_camera_plugin_name_);
+      if (!infrared_sensor) {
+        gzerr << "RealSensePlugin: Infrared sensor not found!" << std::endl;
+        return false;
+      }
+      infrared_stereo_camera_ = std::dynamic_pointer_cast<sensors::MultiCameraSensor>(infrared_sensor);
+    }
 
     return true;
   }
 
   void ConfigureRealisticDepth(sdf::ElementPtr sdf) {
+
+    if (!enable_depth_)
+      return;
     getSdfParam(sdf, "useRealistic", use_realistic_, false);
 
     if (use_realistic_) {
@@ -309,6 +345,9 @@ private:
   }
 
   void AllocateDepthBuffers() {
+    if (!enable_depth_ || !depth_camera_)
+      return;
+
     const unsigned int image_width  = depth_camera_->ImageWidth();
     const unsigned int image_height = depth_camera_->ImageHeight();
 
@@ -334,29 +373,36 @@ private:
   }
 
   void ConnectSensorCallbacks() {
-    if (use_realistic_) {
-      new_depth_frame_connection_ =
-          depth_camera_->ConnectNewDepthFrame(std::bind(&RealSensePlugin::OnNewDepthFrameRealistic, this, depth_camera_, depth_publisher_));
-    } else {
-      new_depth_frame_connection_ = depth_camera_->ConnectNewDepthFrame(std::bind(&RealSensePlugin::OnNewDepthFrame, this, depth_camera_, depth_publisher_));
-    }
-
-    for (unsigned int index = 0; index < infrared_stereo_camera_->CameraCount(); ++index) {
-      infrared_cameras_.push_back(infrared_stereo_camera_->Camera(index));
-      const std::string camera_name = infrared_cameras_[index]->Name();
-
-      if (camera_name.find(infrared1_camera_plugin_name_) != std::string::npos) {
-        new_infrared1_frame_connection_ =
-            infrared_cameras_[index]->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, infrared_cameras_[index], infrared1_publisher_));
-      } else if (camera_name.find(infrared2_camera_plugin_name_) != std::string::npos) {
-        new_infrared2_frame_connection_ =
-            infrared_cameras_[index]->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, infrared_cameras_[index], infrared2_publisher_));
+    if (enable_depth_ && depth_camera_) {
+      if (use_realistic_) {
+        new_depth_frame_connection_ =
+            depth_camera_->ConnectNewDepthFrame(std::bind(&RealSensePlugin::OnNewDepthFrameRealistic, this, depth_camera_, depth_publisher_));
+      } else {
+        new_depth_frame_connection_ = depth_camera_->ConnectNewDepthFrame(std::bind(&RealSensePlugin::OnNewDepthFrame, this, depth_camera_, depth_publisher_));
       }
     }
 
-    infrared_stereo_camera_->SetActive(true);
-    new_color_frame_connection_ = color_camera_->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, color_camera_, color_publisher_));
-    update_connection_          = event::Events::ConnectWorldUpdateBegin(std::bind(&RealSensePlugin::OnUpdate, this));
+    if (enable_infra_ && infrared_stereo_camera_) {
+      for (unsigned int index = 0; index < infrared_stereo_camera_->CameraCount(); ++index) {
+        infrared_cameras_.push_back(infrared_stereo_camera_->Camera(index));
+        const std::string camera_name = infrared_cameras_[index]->Name();
+
+        if (camera_name.find(infrared1_camera_plugin_name_) != std::string::npos) {
+          new_infrared1_frame_connection_ =
+              infrared_cameras_[index]->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, infrared_cameras_[index], infrared1_publisher_));
+        } else if (camera_name.find(infrared2_camera_plugin_name_) != std::string::npos) {
+          new_infrared2_frame_connection_ =
+              infrared_cameras_[index]->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, infrared_cameras_[index], infrared2_publisher_));
+        }
+      }
+      infrared_stereo_camera_->SetActive(true);
+    }
+
+    if (enable_color_ && color_camera_) {
+      new_color_frame_connection_ = color_camera_->ConnectNewImageFrame(std::bind(&RealSensePlugin::OnNewFrame, this, color_camera_, color_publisher_));
+    }
+
+    update_connection_ = event::Events::ConnectWorldUpdateBegin(std::bind(&RealSensePlugin::OnUpdate, this));
   }
 
   bool IsDepthInvalid(float depth) const {
@@ -439,23 +485,33 @@ public:
   void OnNewFrame(const rendering::CameraPtr camera, const transport::PublisherPtr publisher) override {
     (void)publisher;
 
-    const rclcpp::Time                current_time    = ros_node_->now();
+    auto start_total = std::chrono::high_resolution_clock::now();
+
+    // ✅ SOLUÇÃO: Usar Gazebo SimTime direto (evita bloqueio de ROS clock)
+    auto                       start_get_time = std::chrono::high_resolution_clock::now();
+    const gazebo::common::Time sim_time       = this->world_->SimTime();
+    const rclcpp::Time         current_time   = rclcpp::Time(static_cast<uint64_t>(sim_time.sec), static_cast<uint32_t>(sim_time.nsec));
+    auto elapsed_get_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_get_time).count();
+
     std::string                       camera_frame_id = camera->Name();
     image_transport::CameraPublisher *image_publisher = nullptr;
 
-    if (camera_frame_id.find(color_camera_plugin_name_) != std::string::npos) {
+    if (enable_color_ && camera_frame_id.find(color_camera_plugin_name_) != std::string::npos) {
       camera_frame_id = color_camera_optical_frame_id_;
       image_publisher = &color_publisher_ros_;
-    } else if (camera_frame_id.find(infrared1_camera_plugin_name_) != std::string::npos) {
+    } else if (enable_infra_ && camera_frame_id.find(infrared1_camera_plugin_name_) != std::string::npos) {
       camera_frame_id = infrared1_camera_optical_frame_id_;
       image_publisher = &infrared1_publisher_ros_;
-    } else if (camera_frame_id.find(infrared2_camera_plugin_name_) != std::string::npos) {
+    } else if (enable_infra_ && camera_frame_id.find(infrared2_camera_plugin_name_) != std::string::npos) {
       camera_frame_id = infrared2_camera_optical_frame_id_;
       image_publisher = &infrared2_publisher_ros_;
-    } else {
+    } else if (enable_depth_) {
       camera_frame_id = depth_camera_optical_frame_id_;
       image_publisher = &depth_publisher_ros_;
     }
+
+    if (!image_publisher)
+      return;
 
     sensor_msgs::msg::Image image;
     image.header.frame_id = camera_frame_id;
@@ -478,13 +534,27 @@ public:
   }
 
   void OnNewDepthFrame(const rendering::CameraPtr camera, const transport::PublisherPtr publisher) override {
-    const rclcpp::Time current_time = ros_node_->now();
+    if (!enable_depth_)
+      return;
+
+    auto                       start_get_time = std::chrono::high_resolution_clock::now();
+    const gazebo::common::Time sim_time       = this->world_->SimTime();
+    const rclcpp::Time         current_time   = rclcpp::Time(static_cast<uint64_t>(sim_time.sec), static_cast<uint32_t>(sim_time.nsec));
+    auto elapsed_get_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_get_time).count();
+
     RealSensePlugin::OnNewDepthFrame(camera, publisher);
     PublishRosDepthData(current_time, camera);
   }
 
   void OnNewDepthFrameRealistic(const rendering::CameraPtr camera, const transport::PublisherPtr publisher) override {
-    const rclcpp::Time current_time = ros_node_->now();
+    if (!enable_depth_)
+      return;
+
+    auto                       start_get_time = std::chrono::high_resolution_clock::now();
+    const gazebo::common::Time sim_time       = this->world_->SimTime();
+    const rclcpp::Time         current_time   = rclcpp::Time(static_cast<uint64_t>(sim_time.sec), static_cast<uint32_t>(sim_time.nsec));
+    auto elapsed_get_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_get_time).count();
+
     RealSensePlugin::OnNewDepthFrameRealistic(camera, publisher);
     PublishRosDepthData(current_time, camera);
   }
@@ -518,17 +588,21 @@ private:
 
   void ConfigureRosPublishers(const std::string &ros_namespace) {
     camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(ros_node_.get(), ros_namespace + "/" + camera_name_ + camera_suffix_);
+    image_transport_     = std::make_unique<image_transport::ImageTransport>(ros_node_);
 
-    image_transport_ = std::make_unique<image_transport::ImageTransport>(ros_node_);
-
-    color_publisher_ros_     = image_transport_->advertiseCamera(camera_name_ + "/color/image_raw", 2);
-    infrared1_publisher_ros_ = image_transport_->advertiseCamera(camera_name_ + "/infra1/image_raw", 2);
-    infrared2_publisher_ros_ = image_transport_->advertiseCamera(camera_name_ + "/infra2/image_raw", 2);
-    depth_publisher_ros_     = image_transport_->advertiseCamera(camera_name_ + "/aligned_depth_to_color/image_raw", 2);
-
-    // SensorDataQoS keeps the point cloud publisher suitable for high-rate
-    // sensor traffic and preserves the original best-effort behavior.
-    point_cloud_publisher_ = ros_node_->create_publisher<sensor_msgs::msg::PointCloud2>(camera_name_ + "/lidar", rclcpp::SensorDataQoS());
+    if (enable_color_) {
+      color_publisher_ros_ = image_transport_->advertiseCamera(camera_name_ + "/color/image_raw", 10);
+    }
+    if (enable_infra_) {
+      infrared1_publisher_ros_ = image_transport_->advertiseCamera(camera_name_ + "/infra1/image_raw", 10);
+      infrared2_publisher_ros_ = image_transport_->advertiseCamera(camera_name_ + "/infra2/image_raw", 10);
+    }
+    if (enable_depth_) {
+      depth_publisher_ros_ = image_transport_->advertiseCamera(camera_name_ + "/aligned_depth_to_color/image_raw", 10);
+    }
+    if (enable_pointcloud_) {
+      point_cloud_publisher_ = ros_node_->create_publisher<sensor_msgs::msg::PointCloud2>(camera_name_ + "/lidar", rclcpp::SensorDataQoS());
+    }
   }
 
   void CreateStaticTransforms() {
@@ -615,7 +689,9 @@ private:
 
     // The point cloud is generated from the same depth buffer, so the
     // realistic path automatically includes its configured artifacts.
-    PublishPointCloud(current_time, camera_info, depth_map_.data(), depth_image.width, depth_image.height);
+    if (enable_pointcloud_) {
+      PublishPointCloud(current_time, camera_info, depth_map_.data(), depth_image.width, depth_image.height);
+    }
   }
 
   void PublishPointCloud(const rclcpp::Time &current_time, const sensor_msgs::msg::CameraInfo &camera_info, const uint16_t *depth_data, unsigned int width,
