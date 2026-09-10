@@ -21,7 +21,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(laser_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(MAVLink REQUIRED)
 find_package(Protobuf REQUIRED)
@@ -41,7 +40,7 @@ tf2_msgs
 geometry_msgs
 sensor_msgs
 std_msgs
-laser_msgs
+nav_msgs
 image_transport
 camera_info_manager
 TBB
