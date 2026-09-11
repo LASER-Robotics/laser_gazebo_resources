@@ -27,7 +27,6 @@
   <depend>sensor_msgs</depend>
   <depend>gazebo_dev</depend>
   <depend>gazebo_ros</depend>
-  <depend>laser_msgs</depend>
   <depend>image_transport</depend>
   <depend>opencv2</depend>
 
