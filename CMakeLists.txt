@@ -261,7 +261,7 @@ ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/laser_gazebo_reso
 
 ament_export_dependencies(
   rosidl_default_runtime rclcpp pcl_conversions tf2 tf2_ros tf2_msgs
-  geometry_msgs std_msgs sensor_msgs gazebo_ros rclcpp laser_rahcm_simulation laser_msgs
+  geometry_msgs std_msgs sensor_msgs nav_msgs gazebo_ros rclcpp laser_rahcm_simulation
   laser_usv_msgs
 )
 
