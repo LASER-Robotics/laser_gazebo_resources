@@ -1,0 +1,5006 @@
+<sdf version="1.7">
+    <world name="default">
+        <spherical_coordinates>
+            <surface_model>EARTH_WGS84</surface_model>
+            <latitude_deg>47.3977</latitude_deg>
+            <longitude_deg>8.54559</longitude_deg>
+            <elevation>0</elevation>
+            <heading_deg>0</heading_deg>
+        </spherical_coordinates>
+        <physics name="default_physics" default="0" type="ode">
+            <ode>
+                <solver>
+                    <type>quick</type>
+                    <iters>10</iters>
+                    <sor>1.3</sor>
+                    <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+                </solver>
+                <constraints>
+                    <cfm>0</cfm>
+                    <erp>0.2</erp>
+                    <contact_max_correcting_vel>1000</contact_max_correcting_vel>
+                    <contact_surface_layer>0.001</contact_surface_layer>
+                </constraints>
+            </ode>
+            <max_step_size>0.004</max_step_size>
+            <real_time_factor>1</real_time_factor>
+            <real_time_update_rate>250</real_time_update_rate>
+        </physics>
+        <scene>
+            <shadows>0</shadows>
+            <ambient>0.4 0.4 0.4 1</ambient>
+            <background>0.7 0.7 0.7 1</background>
+        </scene>
+        <light name="sun" type="directional">
+            <pose>0 0 1000 0.4 0.2 0</pose>
+            <diffuse>1 1 1 1</diffuse>
+            <specular>0.6 0.6 0.6 1</specular>
+            <direction>0.1 0.1 -0.9</direction>
+            <attenuation>
+                <range>20</range>
+                <constant>0.5</constant>
+                <linear>0.01</linear>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <cast_shadows>1</cast_shadows>
+            <spot>
+                <inner_angle>0</inner_angle>
+                <outer_angle>0</outer_angle>
+                <falloff>0</falloff>
+            </spot>
+        </light>
+        <model name="ground_plane">
+            <static>1</static>
+            <link name="link">
+                <collision name="collision">
+                    <pose>20.0 0 0 0 -0 0</pose>
+                    <geometry>
+                        <plane>
+                            <normal>0 0 1</normal>
+                            <size>40 40</size>
+                        </plane>
+                    </geometry>
+                    <surface>
+                        <contact>
+                            <ode>
+                                <min_depth>0.01</min_depth>
+                                <max_vel>0</max_vel>
+                            </ode>
+                        </contact>
+                        <friction>
+                            <ode/>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                        </friction>
+                        <bounce/>
+                    </surface>
+                    <max_contacts>10</max_contacts>
+                </collision>
+                <visual name="grass">
+                    <pose>20.0 0 0 0 -0 0</pose>
+                    <cast_shadows>0</cast_shadows>
+                    <geometry>
+                        <mesh>
+                            <scale>0.22052631578947368 0.22621621621621624 0.1</scale>
+                            <uri>model://grass_plane/meshes/grass_plane.dae</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="the_void">
+            <static>1</static>
+            <link name="link">
+                <pose>0 0 0.1 0 -0 0</pose>
+                <visual name="the_void">
+                    <pose>0 0 2 0 -0 0</pose>
+                    <geometry>
+                        <sphere>
+                            <radius>0.25</radius>
+                        </sphere>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/Gazebo.material</uri>
+                            <name>Gazebo/Black</name>
+                        </script>
+                    </material>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+            <pose>-1000 -1000 0 0 -0 0</pose>
+        </model>
+        <gui fullscreen="0">
+            <camera name="camera">
+                <pose>35.1577 98.6044 40.0204 0 0.407996 -1.99761</pose>
+                <view_controller>orbit</view_controller>
+                <projection_type>perspective</projection_type>
+            </camera>
+        </gui>
+        <gravity>0 0 -9.8066</gravity>
+        <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+        <atmosphere type="adiabatic"/>
+        <wind/>
+        <model name="Tree 2">
+            <static>1</static>
+            <pose>34.60442979063412 15.636615383582757 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 3">
+            <static>1</static>
+            <pose>11.479429790634121 -11.03005128308391 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 4">
+            <static>1</static>
+            <pose>29.97942979063412 2.303282050249422 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 5">
+            <static>1</static>
+            <pose>20.72942979063412 -19.918940171972803 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 6">
+            <static>1</static>
+            <pose>39.22942979063412 -6.585606838639464 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 7">
+            <static>1</static>
+            <pose>9.166929790634121 6.747726494693865 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 8">
+            <static>1</static>
+            <pose>27.66692979063412 12.673652420619788 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 10">
+            <static>1</static>
+            <pose>36.91692979063412 -0.6596809127135401 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 11">
+            <static>1</static>
+            <pose>13.791929790634121 17.11809686506424 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 12">
+            <static>1</static>
+            <pose>32.29192979063412 -9.548569801602431 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 13">
+            <static>1</static>
+            <pose>23.04192979063412 3.784763531730899 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 15">
+            <static>1</static>
+            <pose>8.010679790634121 -5.104125357157985 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 17">
+            <static>1</static>
+            <pose>17.26067979063412 14.155133902101277 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 18">
+            <static>1</static>
+            <pose>35.76067979063412 -12.51153276456539 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 19">
+            <static>1</static>
+            <pose>12.635679790634121 0.8218005687679408 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 20">
+            <static>1</static>
+            <pose>31.13567979063412 18.59957834654572 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 22">
+            <static>1</static>
+            <pose>3.3856797906341214 5.266245013212387 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 23">
+            <static>1</static>
+            <pose>10.323179790634121 -16.955977209009838 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 24">
+            <static>1</static>
+            <pose>28.82317979063412 -3.6226438756765056 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 25">
+            <static>1</static>
+            <pose>19.57317979063412 9.710689457656834 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 26">
+            <static>1</static>
+            <pose>38.07317979063412 11.685998099632144 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 28">
+            <static>1</static>
+            <pose>33.44817979063412 -1.6473352337011988 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 29">
+            <static>1</static>
+            <pose>24.19817979063412 16.130442544076587 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 30">
+            <static>1</static>
+            <pose>5.698179790634121 -10.536224122590081 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 31">
+            <static>1</static>
+            <pose>7.432554790634121 2.797109210743251 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 32">
+            <static>1</static>
+            <pose>25.93255479063412 -19.425113011478974 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 33">
+            <static>1</static>
+            <pose>16.68255479063412 -6.091779678145635 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 36">
+            <static>1</static>
+            <pose>30.55755479063412 -13.499187085553048 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 37">
+            <static>1</static>
+            <pose>21.30755479063412 -0.16585375221971077 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 38">
+            <static>1</static>
+            <pose>39.80755479063412 17.611924025558068 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 39">
+            <static>1</static>
+            <pose>9.745054790634121 -9.054742641108602 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 40">
+            <static>1</static>
+            <pose>28.24505479063412 4.2785906922247285 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 42">
+            <static>1</static>
+            <pose>37.49505479063412 -4.610298196664155 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 43">
+            <static>1</static>
+            <pose>14.370054790634121 8.723035136669175 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 44">
+            <static>1</static>
+            <pose>32.87005479063412 14.648961062595099 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 45">
+            <static>1</static>
+            <pose>23.62005479063412 -12.017705604071569 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 47">
+            <static>1</static>
+            <pose>8.588804790634121 19.09340550703955 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 49">
+            <static>1</static>
+            <pose>17.83880479063412 5.760072173706206 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 50">
+            <static>1</static>
+            <pose>36.33880479063412 -16.46215004851601 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 51">
+            <static>1</static>
+            <pose>13.213804790634121 -3.1288167151826762 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 52">
+            <static>1</static>
+            <pose>31.71380479063412 10.204516618150656 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 54">
+            <static>1</static>
+            <pose>3.9638047906341214 -14.486841406540698 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 55">
+            <static>1</static>
+            <pose>10.901304790634121 -1.1535080732073695 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 56">
+            <static>1</static>
+            <pose>29.40130479063412 16.62426970457041 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 57">
+            <static>1</static>
+            <pose>20.15130479063412 -10.042396962096252 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 58">
+            <static>1</static>
+            <pose>38.65130479063412 3.29093637123707 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 59">
+            <static>1</static>
+            <pose>15.526304790634121 -18.931285850985144 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 60">
+            <static>1</static>
+            <pose>34.02630479063412 -5.597952517651805 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 61">
+            <static>1</static>
+            <pose>24.77630479063412 7.735380815681516 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 63">
+            <static>1</static>
+            <pose>7.143492290634121 -13.005359925059219 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 64">
+            <static>1</static>
+            <pose>25.64349229063412 0.3279734082741115 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 65">
+            <static>1</static>
+            <pose>16.39349229063412 18.10575118605189 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 66">
+            <static>1</static>
+            <pose>34.89349229063412 -8.560915480614772 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 68">
+            <static>1</static>
+            <pose>30.26849229063412 -17.449804369503667 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 69">
+            <static>1</static>
+            <pose>21.01849229063412 -4.116471036170335 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 71">
+            <static>1</static>
+            <pose>9.455992290634121 15.142788223088928 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 73">
+            <static>1</static>
+            <pose>18.70599229063412 1.8094548897555995 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 75">
+            <static>1</static>
+            <pose>14.080992290634121 -7.079433999133293 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 76">
+            <static>1</static>
+            <pose>32.58099229063412 6.253899334200035 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 77">
+            <static>1</static>
+            <pose>23.33099229063412 -15.968322888022186 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 78">
+            <static>1</static>
+            <pose>4.830992290634121 -2.634989554688847 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 79">
+            <static>1</static>
+            <pose>8.299742290634121 10.698343778644485 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 80">
+            <static>1</static>
+            <pose>26.79974229063412 11.356779992636255 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 81">
+            <static>1</static>
+            <pose>17.54974229063412 -15.30988667403041 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 83">
+            <static>1</static>
+            <pose>12.924742290634121 15.801224437080698 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 84">
+            <static>1</static>
+            <pose>31.42474229063412 -10.865442229585973 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 85">
+            <static>1</static>
+            <pose>22.17474229063412 2.467891103747366 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 86">
+            <static>1</static>
+            <pose>3.6747422906341214 -19.75433111847486 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 87">
+            <static>1</static>
+            <pose>10.612242290634121 -6.420997785141527 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 89">
+            <static>1</static>
+            <pose>19.86224229063412 12.838261474117736 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 90">
+            <static>1</static>
+            <pose>38.36224229063412 -13.828405192548932 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 91">
+            <static>1</static>
+            <pose>15.237242290634121 -0.49507185921559227 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 92">
+            <static>1</static>
+            <pose>33.73724229063412 17.28270591856218 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 93">
+            <static>1</static>
+            <pose>24.48724229063412 -9.383960748104485 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 95">
+            <static>1</static>
+            <pose>7.721617290634121 -18.272849636993378 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 96">
+            <static>1</static>
+            <pose>26.22161729063412 -4.939516303660039 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 97">
+            <static>1</static>
+            <pose>16.97161729063412 8.393817029673283 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 98">
+            <static>1</static>
+            <pose>35.47161729063412 14.319742955599217 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 100">
+            <static>1</static>
+            <pose>30.84661729063412 0.986409622265878 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 101">
+            <static>1</static>
+            <pose>21.59661729063412 18.764187400043667 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 102">
+            <static>1</static>
+            <pose>3.0966172906341214 -7.902479266623006 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 103">
+            <static>1</static>
+            <pose>10.034117290634121 5.4308540667103244 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 104">
+            <static>1</static>
+            <pose>28.53411729063412 -16.79136815551189 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 105">
+            <static>1</static>
+            <pose>19.28411729063412 -3.4580348221785613 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 107">
+            <static>1</static>
+            <pose>14.659117290634121 11.850607153130085 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 108">
+            <static>1</static>
+            <pose>33.15911729063412 -14.81605951353659 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 109">
+            <static>1</static>
+            <pose>23.90911729063412 -1.482726180203251 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 110">
+            <static>1</static>
+            <pose>5.409117290634121 16.295051597574528 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 111">
+            <static>1</static>
+            <pose>8.877867290634121 -10.371615069092144 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 112">
+            <static>1</static>
+            <pose>27.37786729063412 2.9617182642411954 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 113">
+            <static>1</static>
+            <pose>18.12786729063412 -19.26050395798103 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 114">
+            <static>1</static>
+            <pose>36.62786729063412 -5.927170624647697 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 115">
+            <static>1</static>
+            <pose>13.502867290634121 7.406162708685642 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 116">
+            <static>1</static>
+            <pose>32.00286729063412 13.332088634611566 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 117">
+            <static>1</static>
+            <pose>22.75286729063412 -13.334578032055102 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 122">
+            <static>1</static>
+            <pose>38.94036729063412 -17.77902247649955 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 124">
+            <static>1</static>
+            <pose>34.31536729063412 8.887644190167112 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 125">
+            <static>1</static>
+            <pose>25.06536729063412 14.813570116093047 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 128">
+            <static>1</static>
+            <pose>25.49896104063412 19.25801456053749 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 129">
+            <static>1</static>
+            <pose>16.24896104063412 -7.4086521061291855 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 130">
+            <static>1</static>
+            <pose>34.74896104063412 5.924681227204154 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 131">
+            <static>1</static>
+            <pose>11.623961040634121 -16.297540995018068 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 132">
+            <static>1</static>
+            <pose>30.12396104063412 -2.964207661684739 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 133">
+            <static>1</static>
+            <pose>20.87396104063412 10.3691256716486 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 134">
+            <static>1</static>
+            <pose>39.37396104063412 12.344434313623907 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 135">
+            <static>1</static>
+            <pose>9.311461040634121 -14.32223235304276 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 136">
+            <static>1</static>
+            <pose>27.81146104063412 -0.9888990197094216 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 137">
+            <static>1</static>
+            <pose>18.56146104063412 16.788878758068357 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 138">
+            <static>1</static>
+            <pose>37.06146104063412 -9.877787908598314 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 140">
+            <static>1</static>
+            <pose>32.43646104063412 -18.766676797487207 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 141">
+            <static>1</static>
+            <pose>23.18646104063412 -5.433343464153868 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 142">
+            <static>1</static>
+            <pose>4.686461040634121 7.899989869179464 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 143">
+            <static>1</static>
+            <pose>8.155211040634121 13.825915795105395 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 145">
+            <static>1</static>
+            <pose>17.40521104063412 0.49258246177205933 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 146">
+            <static>1</static>
+            <pose>35.90521104063412 18.27036023954983 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 147">
+            <static>1</static>
+            <pose>12.780211040634121 -8.396306427116826 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 148">
+            <static>1</static>
+            <pose>31.28021104063412 4.937026906216495 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 149">
+            <static>1</static>
+            <pose>22.03021104063412 -17.28519531600572 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 150">
+            <static>1</static>
+            <pose>3.5302110406341214 -3.9518619826723906 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 152">
+            <static>1</static>
+            <pose>28.96771104063412 15.307397276586869 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 154">
+            <static>1</static>
+            <pose>38.21771104063412 1.9740639432535367 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 155">
+            <static>1</static>
+            <pose>15.092711040634121 19.75184172103132 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 156">
+            <static>1</static>
+            <pose>33.59271104063412 -6.914824945635356 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_9/meshes/tree_9.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 157">
+            <static>1</static>
+            <pose>24.34271104063412 6.418508387697983 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+        <model name="Tree 158">
+            <static>1</static>
+            <pose>5.842711040634121 -15.80371383452424 0 1.57079 -0 0</pose>
+            <link name="link">
+                <pose>0 0 0 0 -0 0</pose>
+                <collision name="collision">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                    <max_contacts>10</max_contacts>
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/>
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name="visual">
+                    <geometry>
+                        <mesh>
+                            <scale>3.5 5 3.5</scale>
+                            <uri>model://tree_2/meshes/tree_2.obj</uri>
+                        </mesh>
+                    </geometry>
+                </visual>
+                <self_collide>0</self_collide>
+                <enable_wind>0</enable_wind>
+                <kinematic>0</kinematic>
+            </link>
+        </model>
+    </world>
+</sdf>
