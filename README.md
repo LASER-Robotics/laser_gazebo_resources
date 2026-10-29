@@ -1,79 +1,51 @@
 # LASER Gazebo Resources
 
-`laser_gazebo_resources` provides the Gazebo Classic plugins, models and worlds used by the LASER UAV System (LUS). `laser_uav_simulation` loads these resources when it builds and spawns a vehicle model.
+`laser_gazebo_resources` provides the Gazebo Classic plugins, models and worlds used by the LASER UAV System (LUS). `laser_uav_simulation` loads these resources when it generates and spawns a vehicle model.
 
-The plugins simulate sensors, rotor forces and communication with SITL firmware. They are shared libraries loaded from SDF model files, rather than standalone ROS executables.
+The plugins simulate sensors, rotor forces and communication with SITL firmware. Gazebo loads them as shared libraries from the model's SDF description.
 
-## Plugins and interfaces
+## Build
 
-| Library | Role and interfaces |
-| --- | --- |
-| `libLivoxPluginGazebo.so` | Uses CSV scan patterns to simulate Livox LiDAR. Publishes a ROS point cloud or custom Livox-style message and sensor transforms. |
-| `libMotorPluginGazebo.so` | Receives motor commands through Gazebo transport, applies rotor forces and moments, and publishes motor speed. Supports the coefficient-based model and an optional blade-element model. |
-| `libPx4PluginGazebo.so` | Exchanges simulator sensor data and actuator commands with PX4 through MAVLink. |
-| `libArdupilotPluginGazebo.so` | Connects the simulated vehicle to ArduPilot SITL. |
-| `libImuPluginGazebo.so` | Publishes `sensor_msgs/msg/Imu`; the plugin's `~/out` topic is remapped by the model. |
-| `libP3dPluginGazebo.so` | Publishes `nav_msgs/msg/Odometry` for simulated ground truth. |
-| `libRealsensePluginGazebo.so` | Simulates RealSense camera streams. |
-| `libLidarPluginGazebo.so`, `libVelodynePluginGazebo.so` | Additional LiDAR simulation plugins. |
-| `liblink_static_tf_publisher.so` | Publishes the fixed transform between two model links on `/tf_static`. |
-
-Topic names, vehicle namespaces, sensor poses and update rates are configured in the model SDF. Motor commands and Protobuf sensor data use Gazebo transport; these are separate from ROS topics.
-
-## Configuration
-
-### Livox LiDAR
-
-The `LivoxPointsPlugin` loads its scan pattern from a CSV in [resources/](resources/). Available patterns include Mid-360, Mid-40, Mid-70, Avia, Horizon and Tele.
-
-| SDF field | Meaning |
-| --- | --- |
-| `csv_file_name` | Scan-pattern CSV path. |
-| `robot_namespace` | ROS namespace prefix for sensor output. |
-| `topic_lidar_name` | Point-cloud topic name. |
-| `parent_frame_name`, `sensor_frame_name`, `lidar_frame_name`, `imu_frame_name` | Frames used for the sensor transforms. |
-| `sensor_*`, `lidar_*` | Sensor and LiDAR position and rotation relative to the model frames. |
-| `samples` | Number of scan-pattern samples processed per update. |
-| `downsample` | Scan-pattern sampling stride; at least 1. |
-| `publish_pointcloud_type` | `0`: `sensor_msgs/msg/PointCloud`; `1`: XYZ `PointCloud2`; `2`: Livox-field `PointCloud2`; `3`: `laser_gazebo_resources/msg/CustomMsg`. |
-| `ray.range.min`, `ray.range.max` | Simulated minimum and maximum range in metres. |
-
-`CustomMsg` contains the scan's point data using the package's `CustomPoint` type. Select a format accepted by the downstream LiDAR estimator.
-
-### Motor model
-
-| SDF field | Meaning |
-| --- | --- |
-| `jointName`, `linkName`, `motorNumber`, `turningDirection` | Rotor joint, body link, command index and rotation direction. |
-| `commandSubTopic`, `motorSpeedPubTopic`, `windSubTopic` | Gazebo transport command, speed-feedback and wind topics. |
-| `motorConstant`, `momentConstant` | Thrust and reaction-torque coefficients. |
-| `timeConstantUp`, `timeConstantDown` | Spin-up and spin-down time constants in seconds. |
-| `maxRotVelocity` | Maximum rotor angular velocity. |
-| `rotorVelocitySlowdownSim` | Scale used to slow the rendered rotor rotation. |
-| `rotorDragCoefficient`, `rollingMomentCoefficient` | Rotor drag and rolling-moment coefficients. |
-| `motorQuadraticA`, `motorQuadraticB` | Normalized-command motor-curve coefficients. |
-| `commandDeadband`, `commandMax`, `reversible` | Command range and reversible-rotation settings. |
-| `useBem` | Enables the blade-element model and its required propeller/aerodynamic settings. |
-
-The blade-element model additionally uses `commandMode`, `bemRho`, `propDiameterInches`, `propPitchInches`, `propChordM`, `propNb`, `bemA`, `bemCd0`, `bemXRoot`, `bemRadialStations`, `bemAzimuthStations` and `bemCorrectPitchInterpolation`. These describe command interpretation, air density, propeller geometry and the numerical integration. Use a complete calibrated set; the plugin rejects missing or invalid required values.
-
-### Static link transforms
-
-The static-TF plugin reads `robotNamespace`, `parentLink` and `childLink`. The links must exist in the model. It calculates their relative pose when loaded and publishes a static transform; use it for links whose relationship remains fixed.
-
-## Models and worlds
-
-[models/](models/) contains a Livox sensor resource, a tree model and a wall with an opening. [worlds/](worlds/) includes `custom_empty.world`, `forest.world`, `hole.world`, `walls.world`, `c.world` and `u.world`.
-
-The [proto_msg/](proto_msg/) directory defines Gazebo transport messages for motor commands, IMU, GPS, odometry, range, wind and other simulator data.
-
-## Build and use
-
-Build from a ROS 2 workspace with the Gazebo Classic dependencies installed:
+From a ROS 2 workspace with the Gazebo Classic dependencies installed:
 
 ```bash
 colcon build --packages-up-to laser_gazebo_resources
 source install/setup.bash
 ```
 
-Load plugins from the UAV model SDF or start a world through `laser_uav_simulation`. The LUS installer sets up the simulation environment; the package also installs an environment hook for its resources.
+## Use in a simulation
+
+Load model plugins inside the SDF `<model>` element and sensor plugins inside the corresponding `<sensor>` element. Each plugin's page lists its library filename, inputs, outputs and configuration.
+
+Libraries are installed under `lib/`; models, worlds and scan patterns are installed under `share/laser_gazebo_resources/`. The package's environment hook adds its model and resource directories to the Gazebo search paths.
+
+For complete vehicle launch sessions, use [laser_uav_simulation](https://github.com/LASER-Robotics/laser_uav_simulation). ROS namespaces, topic remappings and frame names come from the model configuration. Gazebo transport topics and ROS topics use separate communication systems.
+
+## Plugins
+
+| Plugin | Library | Role |
+| --- | --- | --- |
+| [LivoxPointsPlugin](docs/livox_points_plugin/README.md) | `libLivoxPluginGazebo.so` | LiDAR scans generated from Livox CSV patterns. |
+| [GazeboMotorModel](docs/gazebo_motor_model/README.md) | `libMotorPluginGazebo.so` | Rotor forces, moments, motor dynamics and failure injection. |
+| [GazeboMavlinkInterface](docs/gazebo_mavlink_interface/README.md) | `libPx4PluginGazebo.so` | Sensor and actuator communication with PX4. |
+| [ArduPilotPlugin](docs/ardupilot_plugin/README.md) | `libArdupilotPluginGazebo.so` | Sensor and actuator communication with ArduPilot SITL. |
+| [GazeboRosImuSensor](docs/gazebo_ros_imu_sensor/README.md) | `libImuPluginGazebo.so` | IMU measurements published to ROS 2. |
+| [GazeboRosP3D](docs/gazebo_ros_p3d/README.md) | `libP3dPluginGazebo.so` | Ground-truth odometry for a model link. |
+| [GazeboRosRealsense](docs/gazebo_ros_realsense/README.md) | `libRealsensePluginGazebo.so` | Color, infrared and depth images, camera information and point clouds. |
+| [LidarPlugin](docs/gazebo_lidar_plugin/README.md) | `libLidarPluginGazebo.so` | Rangefinder measurements for the firmware bridge. |
+| [GazeboRosVelodyneLaser](docs/gazebo_ros_velodyne_laser/README.md) | `libVelodynePluginGazebo.so` | Point clouds from ray or GPU-ray sensors. |
+| [LinkStaticTFPublisher](docs/link_static_tf_publisher/README.md) | `liblink_static_tf_publisher.so` | Fixed transforms between model links. |
+
+## Models and worlds
+
+| Directory | Contents |
+| --- | --- |
+| [models/](models/) | Livox sensor resources, a tree model and a wall with an opening. |
+| [worlds/](worlds/) | `custom_empty.world`, `forest.world`, `hole.world`, `walls.world`, `c.world` and `u.world`. |
+| [resources/](resources/) | Livox scan patterns for Mid-360, Mid-40, Mid-70, Avia, Horizon and Tele. |
+
+## Messages
+
+The [msg/](msg/) directory defines the ROS 2 `CustomMsg` and `CustomPoint` types used by the Livox plugin. These types describe a scan and its individual points.
+
+[proto_msg/](proto_msg/) contains Protobuf definitions for Gazebo transport, including motor commands, IMU, GPS, odometry, range and wind. They support communication between simulation plugins and firmware bridges.
