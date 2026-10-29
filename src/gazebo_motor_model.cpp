@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cctype>
+#include <functional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -52,6 +54,9 @@ bool is_finite_positive(double value) {
 
 GazeboMotorModel::~GazeboMotorModel() {
   update_connection_.reset();
+  efficiency_sub_.reset();
+  state_pub_.reset();
+  ros_node_.reset();
   command_sub_.reset();
   motor_failure_sub_.reset();
   wind_sub_.reset();
@@ -70,6 +75,140 @@ void GazeboMotorModel::Publish() {
 
   // The publisher is intentionally disabled to avoid queue-overflow warnings.
   // motor_velocity_pub_->Publish(turning_velocity_message_);
+  publish_motor_state();
+}
+
+void GazeboMotorModel::load_ros_interface(const sdf::ElementPtr & sdf) {
+  getSdfParam<double>(sdf, "motorEfficiency", initial_efficiency_, 1.0);
+  getSdfParam<double>(sdf, "motorStatePublishRate", state_publish_rate_, 50.0);
+  if (!std::isfinite(initial_efficiency_) || initial_efficiency_ < 0.0 ||
+    initial_efficiency_ > 1.0 || !std::isfinite(state_publish_rate_) ||
+    state_publish_rate_ < 0.0)
+  {
+    gzthrow("[gazebo_motor_model] Invalid motorEfficiency or motorStatePublishRate.");
+  }
+  // The SDF plugin names are numeric (e.g. 0_motor_model) and repeat across
+  // vehicles. Give ROS a valid, vehicle-specific node name instead.
+  std::string model_name = model_->GetName();
+  for (char & character : model_name) {
+    if (!std::isalnum(static_cast<unsigned char>(character)) && character != '_') {
+      character = '_';
+    }
+  }
+  if (model_name.empty() || std::isdigit(static_cast<unsigned char>(model_name.front()))) {
+    model_name = "model_" + model_name;
+  }
+  ros_node_ = gazebo_ros::Node::Get(
+    sdf, "motor_model_" + model_name + "_" + std::to_string(motor_number_));
+  if (!ros_node_) {
+    gzthrow("[gazebo_motor_model] Could not create a unique ROS node.");
+  }
+  const std::string topic_prefix = "/" + model_name + "/simulation/";
+  state_pub_ = ros_node_->create_publisher<laser_gazebo_resources::msg::MotorState>(
+    topic_prefix + "motor_state", rclcpp::QoS(100).reliable().durability_volatile());
+  reset_efficiency();
+  efficiency_sub_ =
+    ros_node_->create_subscription<laser_gazebo_resources::msg::MotorFailureCommand>(
+    topic_prefix + "motor_failure", rclcpp::QoS(32).reliable().durability_volatile(),
+    std::bind(&GazeboMotorModel::efficiency_callback, this, std::placeholders::_1));
+  RCLCPP_INFO(ros_node_->get_logger(), "Motor %d: failure input %s, state output %s",
+    motor_number_, efficiency_sub_->get_topic_name(), state_pub_->get_topic_name());
+}
+
+void GazeboMotorModel::efficiency_callback(
+  const laser_gazebo_resources::msg::MotorFailureCommand::SharedPtr message)
+{
+  if (message->motor_id != motor_number_) {
+    return;
+  }
+  std::lock_guard<std::mutex> lock(state_mutex_);
+  if (pending_failures_.size() >= 32) {
+    motor_state_.last_request_id = message->request_id;
+    motor_state_.request_accepted = false;
+    motor_state_.request_status = "rejected: pending command queue is full";
+    state_event_ = true;
+    RCLCPP_WARN(ros_node_->get_logger(), "Motor %d request %llu: %s", motor_number_,
+      static_cast<unsigned long long>(message->request_id),
+      motor_state_.request_status.c_str());
+    return;
+  }
+  pending_failures_.push_back(*message);
+}
+
+void GazeboMotorModel::update_efficiency(double now) {
+  // Consume one request per step so each request result can be published.
+  if (!pending_failures_.empty()) {
+    const auto message = pending_failures_.front();
+    pending_failures_.pop_front();
+    const laser_gazebo_resources::MotorEfficiency::Request request{
+      message.failure_start_time, message.target_efficiency,
+      message.failure_type, message.transition_duration};
+    const std::string error = efficiency_schedule_.schedule(request, now);
+    motor_state_.last_request_id = message.request_id;
+    motor_state_.request_accepted = error.empty();
+    motor_state_.request_status = error.empty() ? "accepted" : "rejected: " + error;
+    if (error.empty()) {
+      motor_state_.request_id = message.request_id;
+    } else {
+      RCLCPP_WARN(ros_node_->get_logger(), "Motor %d request %llu: %s", motor_number_,
+        static_cast<unsigned long long>(message.request_id), error.c_str());
+    }
+    state_event_ = true;
+  }
+  const bool scheduled = efficiency_schedule_.pending(now);
+  const bool transitioning = efficiency_schedule_.transitioning(now);
+  const double next_efficiency = efficiency_schedule_.value(now);
+  // Publish transition boundaries even if periodic diagnostics are disabled.
+  state_event_ = state_event_ || scheduled != motor_state_.scheduled ||
+    transitioning != motor_state_.transitioning ||
+    (!transitioning && next_efficiency != efficiency_);
+  efficiency_ = next_efficiency;
+  motor_state_.scheduled = scheduled;
+  motor_state_.transitioning = transitioning;
+  motor_state_.failure_start_time = efficiency_schedule_.start_time();
+}
+
+void GazeboMotorModel::reset_efficiency() {
+  pending_failures_.clear();
+  efficiency_schedule_.reset(initial_efficiency_);
+  efficiency_ = initial_efficiency_;
+  motor_state_ = laser_gazebo_resources::msg::MotorState{};
+  motor_state_.request_status = "reset; no runtime schedule";
+  last_state_publish_time_ = -1.0;
+  state_event_ = true;
+}
+
+void GazeboMotorModel::Reset() {
+  std::lock_guard<std::mutex> lock(state_mutex_);
+  reset_efficiency();
+  // Keep the existing motor dynamics and legacy failure mechanism independent.
+  prev_sim_time_ = model_->GetWorld()->SimTime().Double();
+}
+
+void GazeboMotorModel::publish_motor_state() {
+  if (!state_pub_ || state_pub_->get_subscription_count() == 0) {
+    return;
+  }
+  if (!state_event_ && (state_publish_rate_ == 0.0 ||
+    prev_sim_time_ - last_state_publish_time_ < 1.0 / state_publish_rate_))
+  {
+    return;
+  }
+  const common::Time stamp(prev_sim_time_);
+  motor_state_.header.stamp.sec = stamp.sec;
+  motor_state_.header.stamp.nanosec = stamp.nsec;
+  motor_state_.header.frame_id = link_->GetScopedName();
+  motor_state_.motor_id = motor_number_;
+  motor_state_.use_bem = use_bem_;
+  motor_state_.command_mode = use_bem_ ? command_mode_ : "legacy";
+  motor_state_.command_received = command_received_;
+  motor_state_.command_limited = ref_motor_rot_vel_;
+  motor_state_.efficiency = efficiency_;
+  motor_state_.omega = actual_motor_omega_;
+  motor_state_.legacy_failure_active = motor_failed_;
+  state_pub_->publish(motor_state_);
+  last_state_publish_time_ = prev_sim_time_;
+  state_event_ = false;
 }
 
 void GazeboMotorModel::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
@@ -129,6 +268,9 @@ void GazeboMotorModel::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
     gzthrow("[gazebo_motor_model] Missing required parameter <motorNumber>.");
   }
   motor_number_ = sdf->GetElement("motorNumber")->Get<int>();
+  if (motor_number_ < 0) {
+    gzthrow("[gazebo_motor_model] motorNumber must be nonnegative.");
+  }
 
   if (!sdf->HasElement("turningDirection")) {
     gzthrow("[gazebo_motor_model] Missing required parameter <turningDirection>.");
@@ -206,6 +348,8 @@ void GazeboMotorModel::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
 
   rotor_velocity_filter_ = std::make_unique<FirstOrderFilter<double>>(
     time_constant_up_, time_constant_down_, 0.0);
+
+  load_ros_interface(sdf);
 
   update_connection_ = event::Events::ConnectWorldUpdateBegin(
     boost::bind(
@@ -368,13 +512,19 @@ void GazeboMotorModel::initialize_bem_model() {
 }
 
 void GazeboMotorModel::on_update(const common::UpdateInfo & info) {
+  std::lock_guard<std::mutex> lock(state_mutex_);
   sampling_time_ = info.simTime.Double() - prev_sim_time_;
+  if (sampling_time_ < 0.0) {
+    // Also handle reset_time, which need not call ModelPlugin::Reset().
+    reset_efficiency();
+  }
   prev_sim_time_ = info.simTime.Double();
 
   if (!std::isfinite(sampling_time_) || sampling_time_ <= 0.0) {
     return;
   }
 
+  update_efficiency(prev_sim_time_);
   update_motor_failure();
   UpdateForcesAndMoments();
   Publish();
@@ -382,6 +532,7 @@ void GazeboMotorModel::on_update(const common::UpdateInfo & info) {
 
 void GazeboMotorModel::velocity_callback(
   const CommandMotorSpeedPtr & motor_speeds) {
+  std::lock_guard<std::mutex> lock(state_mutex_);
   if (!motor_speeds || motor_speeds->motor_speed_size() <= motor_number_) {
     const int message_size = motor_speeds ? motor_speeds->motor_speed_size() : 0;
     gzerr << "[gazebo_motor_model] Invalid motor index " << motor_number_
@@ -390,6 +541,7 @@ void GazeboMotorModel::velocity_callback(
   }
 
   const double command = motor_speeds->motor_speed(motor_number_);
+  command_received_ = command;
 
   if (use_bem_ && command_mode_ == "throttle") {
     ref_motor_rot_vel_ = std::clamp(command, 0.0, command_max_);
@@ -403,12 +555,14 @@ void GazeboMotorModel::velocity_callback(
 
 void GazeboMotorModel::motor_failure_callback(
   const boost::shared_ptr<const msgs::Int> & failure_message) {
+  std::lock_guard<std::mutex> lock(state_mutex_);
   if (failure_message) {
     motor_failure_number_ = failure_message->data();
   }
 }
 
 void GazeboMotorModel::wind_velocity_callback(const WindPtr & wind_message) {
+  std::lock_guard<std::mutex> lock(state_mutex_);
   if (!wind_message) {
     return;
   }
@@ -420,6 +574,13 @@ void GazeboMotorModel::wind_velocity_callback(const WindPtr & wind_message) {
 }
 
 void GazeboMotorModel::UpdateForcesAndMoments() {
+  // Clear every step, including early-return BEM paths (stopped/invalid rotor).
+  motor_state_.nominal_thrust = 0.0;
+  motor_state_.actual_thrust = 0.0;
+  motor_state_.nominal_reaction_torque = 0.0;
+  motor_state_.actual_reaction_torque = 0.0;
+  motor_state_.loads_valid = true;
+  motor_state_.bem_solver_fallback = false;
   if (use_bem_) {
     update_bem_forces_and_moments();
   } else {
@@ -760,6 +921,7 @@ void GazeboMotorModel::update_bem_forces_and_moments() {
     induced_velocity_ = std::max(
       0.0, bem_static_induced_velocity_ratio_ * actual_motor_omega_);
     ++bem_solver_failure_count_;
+    motor_state_.bem_solver_fallback = true;
     if (bem_solver_failure_count_ % 1000U == 1U) {
       gzerr << "[gazebo_motor_model] BEM inflow solver fallback, motor "
             << motor_number_ << ", failures=" << bem_solver_failure_count_
@@ -776,6 +938,7 @@ void GazeboMotorModel::update_bem_forces_and_moments() {
     !std::isfinite(loads.drag_torque)) {
     gzerr << "[gazebo_motor_model] Non-finite BEM load on motor "
           << motor_number_ << ". Force skipped.\n";
+    motor_state_.loads_valid = false;
     return;
   }
 
@@ -784,7 +947,9 @@ void GazeboMotorModel::update_bem_forces_and_moments() {
   }
 
   // Apply axial thrust and in-plane BEM force in the rotor-local frame.
-  ignition::math::Vector3d force_rotor(0.0, 0.0, loads.thrust);
+  motor_state_.nominal_thrust = loads.thrust;
+  motor_state_.actual_thrust = efficiency_ * loads.thrust;
+  ignition::math::Vector3d force_rotor(0.0, 0.0, motor_state_.actual_thrust);
   if (horizontal_velocity > 1.0e-6) {
     force_rotor.X(
       -loads.horizontal_force * velocity_x / horizontal_velocity);
@@ -803,6 +968,7 @@ void GazeboMotorModel::apply_reaction_torque(double torque_z_rotor_frame) {
   const physics::Link_V parent_links = link_->GetParentJointsLinks();
   if (parent_links.empty() || !parent_links.front()) {
     gzerr << "[gazebo_motor_model] Rotor link has no parent link.\n";
+    motor_state_.loads_valid = false;
     return;
   }
 
@@ -814,8 +980,10 @@ void GazeboMotorModel::apply_reaction_torque(double torque_z_rotor_frame) {
     link_->GetWorldCoGPose() - parent_links.front()->GetWorldCoGPose());
 #endif
 
+  motor_state_.nominal_reaction_torque = torque_z_rotor_frame;
+  motor_state_.actual_reaction_torque = efficiency_ * torque_z_rotor_frame;
   const ignition::math::Vector3d torque_rotor(
-    0.0, 0.0, torque_z_rotor_frame);
+    0.0, 0.0, motor_state_.actual_reaction_torque);
   const ignition::math::Vector3d torque_parent =
     pose_difference.Rot().RotateVector(torque_rotor);
   parent_links.front()->AddRelativeTorque(torque_parent);
@@ -848,7 +1016,10 @@ void GazeboMotorModel::update_legacy_forces_and_moments() {
   if (!reversible_) {
     force = std::abs(force);
   }
-  link_->AddRelativeForce(ignition::math::Vector3d(0.0, 0.0, force));
+  motor_state_.nominal_thrust = force;
+  motor_state_.actual_thrust = efficiency_ * force;
+  link_->AddRelativeForce(
+    ignition::math::Vector3d(0.0, 0.0, motor_state_.actual_thrust));
 
 #if GAZEBO_MAJOR_VERSION >= 9
   const ignition::math::Vector3d velocity_world = link_->WorldLinearVel();

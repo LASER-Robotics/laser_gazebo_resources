@@ -30,6 +30,8 @@ These plugins are exported as shared libraries and can be referenced in SDF/URDF
     -   Configurable motor constants and propeller dynamics.
     -   Simulates motor time constant (spin-up/spin-down delay).
     -   Interacts with `rotors_model` logic.
+    -   Per-rotor efficiency injection through ROS 2, with scheduled steps/ramps
+        and actuator telemetry. See [usage and validation](docs/motor_failure.md).
 
 ### 3. `LinkStaticTfPublisher`
 -   **Description:** A helper plugin that publishes a static TF transform for a specific link in the simulation, useful for ground truth or sensor frames that are fixed relative to the world or parent.

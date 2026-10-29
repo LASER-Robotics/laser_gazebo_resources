@@ -47,6 +47,8 @@ TBB
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CustomMsg.msg"
   "msg/CustomPoint.msg"
+  "msg/MotorFailureCommand.msg"
+  "msg/MotorState.msg"
   DEPENDENCIES std_msgs
 )
 
@@ -137,7 +139,7 @@ add_gazebo_plugin_target(LivoxPluginGazebo
 add_gazebo_plugin_target(MotorPluginGazebo
   SRCS src/gazebo_motor_model.cpp
   DEPENDS ${dependencies}
-  LIBS ${Boost_LIBRARIES} proto_msg
+  LIBS ${Boost_LIBRARIES} proto_msg ${cpp_typesupport_target}
 )
 
 add_gazebo_plugin_target(LidarPluginGazebo
@@ -211,8 +213,49 @@ install(TARGETS csv_main
 )
 
 install(DIRECTORY models worlds resources DESTINATION share/${PROJECT_NAME})
+install(PROGRAMS scripts/motor_failure_experiment.py DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY docs DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_motor_efficiency test/test_motor_efficiency.cpp)
+  target_include_directories(test_motor_efficiency PRIVATE include)
+  # Gazebo Classic's global world state is initialized once per test process.
+  function(add_motor_physics_checks target domain port)
+    foreach(mode quadratic bem)
+      if(mode STREQUAL "quadratic")
+        set(index 0)
+      else()
+        set(index 1)
+      endif()
+      set(test_name "${target}_${mode}")
+      set(result_file "${AMENT_TEST_RESULTS_DIR}/${PROJECT_NAME}/${test_name}.gtest.xml")
+      ament_add_test(${test_name}
+        COMMAND "$<TARGET_FILE:${target}>" "--gtest_filter=*/${index}"
+          "--gtest_output=xml:${result_file}"
+        RESULT_FILE "${result_file}" TIMEOUT 120
+        ENV "ROS_LOG_DIR=${CMAKE_CURRENT_BINARY_DIR}/ros_logs"
+          "ROS_DOMAIN_ID=${domain}" "ROS_LOCALHOST_ONLY=1"
+          "GAZEBO_MASTER_URI=http://127.0.0.1:${port}"
+          "LD_LIBRARY_PATH=${CMAKE_CURRENT_BINARY_DIR}:$ENV{LD_LIBRARY_PATH}")
+      set_tests_properties(${test_name} PROPERTIES RESOURCE_LOCK "motor_gazebo_${port}")
+    endforeach()
+  endfunction()
+  ament_add_gtest_executable(test_motor_fault_gazebo test/test_motor_fault_gazebo.cpp)
+  ament_target_dependencies(test_motor_fault_gazebo rclcpp gazebo_ros)
+  target_link_libraries(test_motor_fault_gazebo MotorPluginGazebo gazebo_ode ${cpp_typesupport_target})
+  add_motor_physics_checks(test_motor_fault_gazebo 87 11487)
+  set(LASER_MOTOR_BASELINE_DIR "" CACHE PATH "Optional extracted motor baseline for regression")
+  if(LASER_MOTOR_BASELINE_DIR)
+    ament_add_gtest_executable(test_motor_fault_baseline test/test_motor_fault_gazebo.cpp
+      "${LASER_MOTOR_BASELINE_DIR}/motor_baseline.cpp")
+    target_include_directories(test_motor_fault_baseline PRIVATE
+      "${LASER_MOTOR_BASELINE_DIR}" include/laser_gazebo_resources)
+    target_compile_definitions(test_motor_fault_baseline PRIVATE LASER_COMPARE_MOTOR_BASELINE)
+    ament_target_dependencies(test_motor_fault_baseline rclcpp gazebo_ros)
+    target_link_libraries(test_motor_fault_baseline MotorPluginGazebo gazebo_ode ${cpp_typesupport_target})
+    add_motor_physics_checks(test_motor_fault_baseline 88 11488)
+  endif()
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_cpplint_FOUND TRUE)
   set(ament_cmake_copyright_FOUND TRUE)

@@ -11,7 +11,9 @@
 #define LASER_GAZEBO_RESOURCES__GAZEBO_MOTOR_MODEL_HPP_
 
 #include <limits>
+#include <deque>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include <boost/shared_ptr.hpp>
@@ -23,6 +25,11 @@
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
 #include <ignition/math.hh>
+#include <gazebo_ros/node.hpp>
+
+#include "laser_gazebo_resources/motor_efficiency.hpp"
+#include "laser_gazebo_resources/msg/motor_failure_command.hpp"
+#include "laser_gazebo_resources/msg/motor_state.hpp"
 
 #include "CommandMotorSpeed.pb.h"
 #include "Float.pb.h"
@@ -49,6 +56,7 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
 
   void InitializeParams() override;
   void Publish() override;
+  void Reset() override;
 
  protected:
   void UpdateForcesAndMoments() override;
@@ -69,6 +77,12 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   void update_legacy_forces_and_moments();
   void update_motor_failure();
   void on_update(const common::UpdateInfo & info);
+  void load_ros_interface(const sdf::ElementPtr & sdf);
+  void efficiency_callback(
+    const laser_gazebo_resources::msg::MotorFailureCommand::SharedPtr message);
+  void update_efficiency(double now);
+  void reset_efficiency();
+  void publish_motor_state();
 
   BemLoads compute_blade_element_loads(
     double omega,
@@ -116,6 +130,22 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   int motor_number_{0};
   int turning_direction_{turning_direction::kClockwise};
   int motor_failure_number_{0};
+
+  // Serializes Gazebo transport inputs, ROS requests, reset and the physics step.
+  std::mutex state_mutex_;
+  gazebo_ros::Node::SharedPtr ros_node_;
+  rclcpp::Subscription<laser_gazebo_resources::msg::MotorFailureCommand>::SharedPtr
+    efficiency_sub_;
+  rclcpp::Publisher<laser_gazebo_resources::msg::MotorState>::SharedPtr state_pub_;
+  std::deque<laser_gazebo_resources::msg::MotorFailureCommand> pending_failures_;
+  laser_gazebo_resources::MotorEfficiency efficiency_schedule_;
+  laser_gazebo_resources::msg::MotorState motor_state_;
+  double initial_efficiency_{1.0};
+  double efficiency_{1.0};
+  double state_publish_rate_{50.0};
+  double last_state_publish_time_{-1.0};
+  bool state_event_{true};
+  double command_received_{0.0};
 
   double max_force_{std::numeric_limits<double>::max()};
   double max_rot_velocity_{838.0};
